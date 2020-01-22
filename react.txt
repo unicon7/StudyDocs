@@ -2674,4 +2674,52 @@ class RefsDemo extends Component {
 }
 
 ReactJS Tutorial - 29 - Refs with Class Components
+이전에 HTML element에 refs를 추가하는 방법을 배웠다.
+class component에도 refs 추가가 가능하다.
+
+Input.js
+import React, { Component } from 'react'
+class Input extends Component {
+  constructor(props) {
+    super(props);
+    this.inputRef = React.createRef()
+  }
+
+  focusInput() {  <= 이전 예제에서는 componentDidMount에서 inputRef를 사용했지만 이번에는 parent에서 버튼을 클릭하면 focus를 주는 것으로 하자! parent에서 focusInput()을 호출하면 될듯!
+    this.inputRef.current.focus();
+  }
+
+  return (
+    <div className="App">
+      <input type="text" ref={this.inputRef} />
+    </div>
+  );
+}
+export default Input
+
+FocusInput.js
+import React, { Component } from 'react'
+class FocusInput extends Component {
+  constructor(props) {
+    super(props);
+    this.componentRef = React.createRef()  <= 1. Ref를 만든다.
+  }
+
+  clickHandler = () =>{
+    this.componentRef.current.focusInput();  <= 3. ref하고 있는 child class component의 메서드를 호출한다.
+  }
+
+  return (
+    <div>
+      <Input ref={this.componentRef} /> <= 2. ref=""으로 넘긴다.
+      <button onClick={this.clickHandler}>Focus Input</button>
+    </div>
+  );
+}
+
+특수한 상황에서 parent component에서 child component의 refs를 가질수 있다.
+하지만 component는 class component이어야 한다. functional component에는 refs가 attache될수 없다.
+
+ReactJS Tutorial - 30 - Forwarding Refs
+
 
