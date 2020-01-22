@@ -1,0 +1,1686 @@
+https://www.youtube.com/watch?v=aoFDyt8oG0k&list=PL6n9fhu94yhX5dzHunAI2t4kE0kOuv4D7
+
+1강 What is ADO.NET - Part 1
+ADO.NET은 별 다른 기술이 아니다. 간단히 이야기하면 데이타베이스들과 XML같은 데이타소스들과 상호작용하는데 쓰이는 class집합(Framework)이다.
+이 데이타들은 어떠한 .net어플리케이션에의해 소비되어질수 있다. 
+
+ADO 는 Microsoft ActiveX Data Objects를 의미한다.
+
+다음과 같은 다른 타입의 .net어플리케이션에서 데이타베이스에 connect, command 실행, data retrieve를 하기위해 ADO.NET을 쓴다.
+ASP.NET Web Applications
+Windows Applications
+Console Applications
+
+.NET Data Provider?
+데이타베이스들은 sql만을 이해한다. 만약 .NET어플리케이션이 data를 가져와야 한다면 어플리케이션은 다음을 할 필요가있다.
+1. 데이타베이스에 Connect
+2. sql command를 준비한다.
+3. command를 실행한다.
+4. 결과를 받고 어플리케이션에 표시한다.
+
+다음은 sql server 데이타베이스에 접속하고 데이타를 가져오는 간단한 ADO.NET 코드이다. 
+SQLConnection, SQLCommand, SQLDataReader를 쓰고 있음에 유의하자. 모든 Object들이 접두어 SQL을 가지고 있다.
+이 모든 클래스들은 System.Data.SqlClient namespace에 있다.
+.NET data Provider for Sql Server는 System.Data.SqlClient라고 할수있다.
+
+SqlConnection con = new SqlConnection("data source=.; database=Sample; integrated security=SSPI");
+SqlCommand cmd = new SqlCommand("Select * from tblProduct", con);
+con.Open();
+SqlDataReader rdr = cmd.ExecuteReader();
+GridView1.DataSource = rdr;
+GridView1.DataBind();
+con.Close();
+
+다음은 oracle 데이타베이스에 접속하고 데이타를 가져오는 간단한 ADO.NET 코드이다.
+OracleConnection, OracleCommand, OracleDataReader를 쓰고 있음에 유의하자. 모든 Object들이 접두어 Oracle을 가지고 있다.
+이 모든 클래스들은 System.Data.OracleClient namespace에 있다.
+.NET data Provider for Oracle은 System.Data.OracleClient라고 할수있다.
+
+OracleConnection con = new OracleConnection("Oracle Database Connection String");
+OracleCommand cmd = new OracleCommand("Select * from tblProduct", con);
+con.Open();
+OracleDataReader rdr = cmd.ExecuteReader();
+GridView1.DataSource = rdr;
+GridView1.DataBind();
+con.Close();
+
+만약 Excel, Access등의 OLEDB 데이타소스에 접속하고 싶다면 OleDbConnection, OleDbCommand, OleDbDataReader클래스를 쓸수있다.
+.NET data provider for OLEDB는 System.Data.OleDb이다.
+
+여러가지 .NET Data Providers
+Data Provider for SQL Server - System.Data.SqlClient
+Data Provider for Oracle - System.Data.OracleClient
+Data Provider for OLEDB - System.Data.OleDb
+Data Provider for ODBC - System.Data.Odbc
+
+provider에따라 다음의 ADO.NET object들은 다른 접두어를 가진다.
+1. Connection - SQLConnection, OracleConnection, OleDbConnection, OdbcConnection etc
+2. Command - SQLCommand, OracleCommand, OleDbCommand, OdbcCommand etc
+3. DataReader - SQLDataReader, OracleDataReader, OleDbDataReader, OdbcDataReader etc
+4. DataAdapter - SQLDataAdapter, OracleDataAdapter, OleDbDataAdapter, OdbcDataAdapter etc
+
+DataSet object는 provider사양이 아니다. 일단 데이타베이스에 접속, command실행, .NET어플리케이션에 데이타를 가져온 뒤에는
+데이타를 DataSet에 데이타베이스와는 상관없이 DataSet에 저장될수 있다.
+
+
+강좌2 SqlConnection in asp.net
+ADO.net 이해의 핵심은 다음 object들을 이해하는 것이다.
+1. Connection
+2. Command
+3. DataReader
+4. DataAdapter
+5. DataSet
+Connection, Command, DataReader, DataAdapter object들은 provider specific하며 DataSet은 provider에 독립적이다.
+provider종속적인 object들은 접두어를 바꾸어 사용하면된다.
+
+데이타베이스와 작업을 하기 위해 가장 먼저 해야하는 일은 connection object를 만드는 것이다.
+아래와 같이 2가지 방법으로 SqlConnection의 인스턴스를 생성한다.
+
+ConnectionString 파라메터를 가진 생성자를 사용해서 생성하는 방법
+SqlConnection connection = new SqlConnection("data source=.; database=SampleDB; integrated security=SSPI");
+
+/First create an instance of SqlConnection class using the parameter-less constructor 
+SqlConnection connection = new SqlConnection();
+//Then set the ConnectionString property of the connection object
+connection.ConnectionString = "data source=.; database=SampleDB; integrated security=SSPI";
+
+ConnectionString은 connection object를 생성할때 필요한 정보들의 key/value pair로 구성되어있다.
+//To create a connection object with windows authentication
+string ConnectionString = "data source=.; database=SampleDB; integrated security=SSPI";
+
+//To create a connection object with SQL Server authentication
+string ConnectionString = "data source=.; database=SampleDB; user id=MyUserName; password=MyPassword";
+
+"data source"는 연결할 SQL server의 이름이거나 IP이다.
+로컬 sql server 인스턴스와 작업을할때는 .을 사용할수 있고 네트워크에 서버가 있다면 이름이나 IP를 사용한다.
+
+샘플 ADO.net 코드이다.
+1. connection 생성
+2. 생성된 connection object는 command object로 패스된다. 이를 통해  command object는 실행할 command가 어떤 server에서 실행되어야하는지
+알게된다.
+3. command를 실행하고 command 결과를 grideview control의 datasource로 지정한다.
+4. DataBind()를 호출
+5. finally block에서 connection을 close한다. connection은 제한적이고 가치있다. connection은 더 나은 퍼포먼스와 scalability를 위해 반드시 close되어야 한다.
+주목: connection들은 가능한한 늦게 open되어야 하고 가능한한 빠르게 close되어야한다.
+
+protected void Page_Load(object sender, EventArgs e)
+{
+    //Create the connection object
+    SqlConnection connection = new SqlConnection("data source=.; database=Sample_Test_DB; integrated security=SSPI");;
+    try
+    {
+        // Pass the connection to the command object, so the command object knows on which
+        // connection to execute the command
+        SqlCommand cmd = new SqlCommand("Select * from tblProductInventory", connection);
+        // Open the connection. Otherwise you get a runtime error. An open connection is
+        // required to execute the command
+        connection.Open();
+        GridView1.DataSource = cmd.ExecuteReader();
+        GridView1.DataBind();
+    }
+    catch (Exception ex)
+    {
+        // Handle Exceptions, if any
+    }
+    finally
+    {
+        // The finally block is guarenteed to execute even if there is an exception.
+        //  This ensures connections are always properly closed.
+        connection.Close();
+    }
+}
+
+아래의 코드와 같이 using문을 써서 connection을 close할수있다.
+using을 썼을 경우 Close()를 명시적으로 호출할 필요가 없다. 자동으로 Close될것이다.
+protected void Page_Load(object sender, EventArgs e)
+{
+    using (SqlConnection connection = new SqlConnection("data source=.; database=Sample_Test_DB; integrated security=SSPI"))
+    {
+        SqlCommand cmd = new SqlCommand("Select * from tblProductInventory", connection);
+        connection.Open();
+        GridView1.DataSource = cmd.ExecuteReader();
+        GridView1.DataBind();
+    }
+}
+
+일반적인 인터뷰 질문으로 c#에서 using문을 사용하는 2가지 용도는 무엇인가?
+1. namespace를 import하기위해 : using System;
+2. 위의 예처럼 connection을 적절히 close하기위해 <= 흠..약간 설명이..별로다..
+
+
+3강 ConnectionStrings in web.config configuration file
+connection string을 application code에 넣는 방법의 단점
+=>하드 코딩시 데이타베이스가 바뀌었을때 앱의 리빌드가 필요
+
+configuration file에 connection string 저장하기
+web.config 화일(asp.net web application일경우!), app.config 화일 (Windows, console application일경우)
+<configuration>
+  <connectionStrings>
+    <add name="ApplicationServices"
+      connectionString="data source=.; database=Sample_Test_DB; integrated security=SSPI"
+      providerName="System.Data.SqlClient>
+  </connectionStrings>
+
+web.config와 app.config 화일로부터 connection string 읽기
+using System.Configuration;
+protected void Page_Load(object sender, EventArgs e)
+{
+    string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection(CS))
+    {
+        SqlCommand cmd = new SqlCommand("Select * from tblProductInventory", connection);
+        connection.Open();
+        GridView1.DataSource = cmd.ExecuteReader();
+        GridView1.DataBind();
+    }
+}
+
+4강 SqlCommand
+SqlCommand 클래스는 데이타베이스에서 실행하기위해 쓰여지는 SQL문 혹은 StoredProcedure를 준비하는데 쓰여진다.
+
+SqlCommand클래스에서 일반적으로 쓰는 메서드들
+1.ExecuteReader : 1개 이상의 값을 리턴하는 SQL문을 쓸때 사용. 예) rows of data
+2.ExecuteNonQuery : Insert, Update, Delete등을 쓸때 사용.
+3.ExecuteScalar : query가 scalar value(값이 한개)를 리턴할때 사용 예) 테이블에 있는 행갯수 리턴
+
+ExecuteReader예제
+protected void Page_Load(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DatabaseConnectionString"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection("data source=.; database=Sample_Test_DB; integrated security=SSPI"))
+    {
+        //Create an instance of SqlCommand class, specifying the T-SQL command that
+        //we want to execute, and the connection object.
+        SqlCommand cmd = new SqlCommand("Select Id,ProductName,QuantityAvailable from tblProductInventory", connection);
+        connection.Open();
+        //As the T-SQL statement that we want to execute return multiple rows of data, 
+        //use ExecuteReader() method of the command object.
+        GridView1.DataSource = cmd.ExecuteReader();
+        GridView1.DataBind();
+    }
+}
+
+protected void Page_Load(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DatabaseConnectionString"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection("data source=.; database=Sample_Test_DB; integrated security=SSPI"))
+    {
+        //Create an instance of SqlCommand class using the parameter less constructor
+        SqlCommand cmd = new SqlCommand();
+        //Specify the command, we want to execute using the CommandText property
+        cmd.CommandText = "Select Id,ProductName,QuantityAvailable from tblProductInventory";
+        //Specify the connection, on which we want to execute the command
+        //using the Connection property
+        cmd.Connection = connection;
+        connection.Open();
+        //As the T-SQL statement that we want to execute return multiple rows of data,
+        //use ExecuteReader() method of the command object.
+        GridView1.DataSource = cmd.ExecuteReader();
+        GridView1.DataBind();
+    }
+}
+
+ExecuteScalar예제
+protected void Page_Load(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DatabaseConnectionString"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection("data source=.; database=Sample; integrated security=SSPI"))
+    {
+        //Create an instance of SqlCommand class, specifying the T-SQL command
+        //that we want to execute, and the connection object.
+        SqlCommand cmd = new SqlCommand("Select Count(Id) from tblProductInventory", connection);
+        connection.Open();
+        //As the T-SQL statement that we want to execute return a single value,
+        //use ExecuteScalar() method of the command object.
+        //Since the return type of ExecuteScalar() is object, we are type casting to int datatype
+        int TotalRows = (int)cmd.ExecuteScalar();
+        Response.Write("Total Rows = " + TotalRows.ToString());
+    }
+}
+
+ExecuteNonQuery 예제
+protected void Page_Load(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DatabaseConnectionString"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection("data source=.; database=Sample_Test_DB; integrated security=SSPI"))
+    {
+        //Create an instance of SqlCommand class, specifying the T-SQL command
+        //that we want to execute, and the connection object.
+        SqlCommand cmd = new SqlCommand("insert into tblProductInventory values (103, 'Apple Laptops', 100)", connection);
+        connection.Open();
+        //Since we are performing an insert operation, use ExecuteNonQuery()
+        //method of the command object. ExecuteNonQuery() method returns an
+        //integer, which specifies the number of rows inserted
+        int rowsAffected = cmd.ExecuteNonQuery();
+        Response.Write("Inserted Rows = " + rowsAffected.ToString() + "<br/>");
+
+        //Set to CommandText to the update query. We are reusing the command object,
+        //instead of creating a new command object
+
+ 
+
+        cmd.CommandText = "update tblProductInventory set QuantityAvailable = 101 where Id = 101";
+        //use ExecuteNonQuery() method to execute the update statement on the database
+        rowsAffected = cmd.ExecuteNonQuery();
+        Response.Write("Updated Rows = " + rowsAffected.ToString() + "<br/>");
+
+        //Set to CommandText to the delete query. We are reusing the command object,
+        //instead of creating a new command object
+        cmd.CommandText = "Delete from tblProductInventory where Id = 102";
+        //use ExecuteNonQuery() method to delete the row from the database
+        rowsAffected = cmd.ExecuteNonQuery();
+        Response.Write("Deleted Rows = " + rowsAffected.ToString() + "<br/>");
+    }
+}
+
+5강 Sql injection tutorial
+ip만 입력으로 받아서  iphone, ipad를 검색하는 쿼리를 만든다.
+protected void GetProductsButton_Click(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DatabaseConnectionString"].ConnectionString;
+    using (SqlConnection connection = new SqlConnection("DatabaseConnectionString"))
+    {
+        //Build the query dynamically, by concatenating the text, that the user has
+        //typed into the ProductNameTextBox. This is a bad way of constructing
+        //queries. This line of code will open doors for sql injection attack
+        SqlCommand cmd = new SqlCommand("Select * from tblProductInventory where ProductName like '" + ProductNameTextBox.Text + "%'", connection);
+        connection.Open();
+        ProductsGridView.DataSource = cmd.ExecuteReader();
+        ProductsGridView.DataBind();
+    }
+}
+
+위의 코드는 문제가 있다. 유저입력을 string concatenate하고 있다.
+만약 유저가 다음을 입력한다면?
+i'; Delete from tblProductInventory --
+
+Select * from tblProductInventory where ProductName like 'i'; Delete from tblProductInventory --%
+
+위의 query가 되고 공격받게 된다.(Delete from tblProductInventory)
+
+6강 Sql injection prevention
+sql injection을 방지하는 방법은 parameterized query 또는 StoredProcedure를 사용하는 것이다.
+
+@ProductName으로 파라메터를 사용하고 있는 것을 주목할것.
+AddWithValue()를 사용하여 파라메터의 값을 제공하고 있다.
+command object의 Parameters collection property에 으해 command object와 연관되게 된다.
+
+string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+using (SqlConnection con = new SqlConnection(CS))
+{
+    // Parameterized query. @ProductName is the parameter
+    string Command = "Select * from tblProductInventory where ProductName like @ProductName" ;
+    SqlCommand cmd = new SqlCommand(Command, con);
+    // Provide the value for the parameter
+    cmd.Parameters.AddWithValue("@ProductName", TextBox1.Text + "%");
+    con.Open();
+    GridView1.DataSource = cmd.ExecuteReader();
+    GridView1.DataBind();
+}
+
+혹은 다음과 같은 sp를 만들자
+Create Procedure spGetProductsByName
+@ProductName nvarchar(50)
+as
+Begin
+ Select * from tblProductInventory 
+ where ProductName like @ProductName + '%'
+End
+
+실행시키려면 다음과 같이한다.
+Execute spGetProductsByName 'ip'
+
+
+이제 sp를 호출하는 코드를 살펴보자
+string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+using (SqlConnection con = new SqlConnection(CS))
+{
+    // The command, that we want to execute is a stored procedure,
+    // so specify the name of the procedure as cmdText
+    SqlCommand cmd = new SqlCommand("spGetProductsByName", con);
+    // Specify that the T-SQL command is a stored procedure
+    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+    // Associate the parameter and it's value with the command object
+    cmd.Parameters.AddWithValue("@ProductName", TextBox1.Text + "%");  <= %는 필요 없어 보이는데?
+    con.Open();
+    GridView1.DataSource = cmd.ExecuteReader();
+    GridView1.DataBind();
+}
+
+ssms의 sql profiler를 통해 trace를 해보면 i'; Delete from tblProductInventory --이 전부 N'i''; Delete from tblProductInventory --'로
+교체되어 있다. 입력이 별도의 sql문이 아닌 입력 전부가 @ProductName 파라메터의 값으로 쓰이고 있다.
+
+결론 : 항상 parameterized query 또는 stored procedure를 사용하라!
+
+7강 Calling a stored procedure with output Parameters
+다음과 같은 테이블을 기준으로 작업한다.
+Create Table tblEmployees
+(
+ EmployeeId int identity primary key,
+ Name nvarchar(50),
+ Gender nvarchar(10),
+ Salary int
+)
+
+다음과 같은 sp를 작성한다.
+Create Procedure spAddEmployee  
+@Name nvarchar(50),  
+@Gender nvarchar(20),  
+@Salary int,  
+@EmployeeId int Out  
+as  
+Begin  
+ Insert into tblEmployees values(@Name, @Gender, @Salary)  
+ Select @EmployeeId = SCOPE_IDENTITY()  
+End
+
+protected void btnSubmit_Click(object sender, EventArgs e)
+{
+    string ConnectionString = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+    using (SqlConnection con = new SqlConnection(ConnectionString))
+    {
+         SqlCommand cmd = new SqlCommand("spAddEmployee", con); 
+        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+        //Add the input parameters to the command object
+        cmd.Parameters.AddWithValue("@Name", txtEmployeeName.Text);
+        cmd.Parameters.AddWithValue("@Gender", ddlGender.SelectedValue);
+        cmd.Parameters.AddWithValue("@Salary", txtSalary.Text);
+
+        //Add the output parameter to the command object
+        SqlParameter outPutParameter = new SqlParameter();
+        outPutParameter.ParameterName = "@EmployeeId";
+        outPutParameter.SqlDbType = System.Data.SqlDbType.Int;
+        outPutParameter.Direction = System.Data.ParameterDirection.Output;
+        cmd.Parameters.Add(outPutParameter);
+
+        //Open the connection and execute the query
+        con.Open();
+        cmd.ExecuteNonQuery();
+                
+        //Retrieve the value of the output parameter
+        string EmployeeId = outPutParameter.Value.ToString();
+        lblMessage.Text = "Employee Id = " + EmployeeId;
+    }
+}
+
+8강 SqlDataReader
+SqlDataReader은 가능한 가장 효과적인 방법으로 data를 읽는다. 
+SqlDataReader는 read-only, forward-only이다. 일단 하나의 레코드를 읽으면 다음 레코드로 가게되며 전의 레코드로 돌아갈수 없다.
+또한 SqlDataReader를 사용하여 data를 바꾸는것은 불가능하다.
+SqlDataReader는 connection oriented이다. data를 읽을때 datasource에대한 active connection이 필요하다는 의미이다.
+forward-only의 특성은 data 읽기에 효과적인 선택을 할수 있게 한다.
+
+SqlDataReader는 new를 통해 생성할수없다.
+SqlDataReader rd = new SqlDataReader();
+The type 'System.Data.SqlClient.SqlDataReader' has no constructors defined.
+
+SqlCommand object의 ExecuteReader()는 SqlDataReader의 인스턴스를 리턴한다.
+SqlCommand command = new SqlCommand("Select * from tblProductInventory", connection);
+SqlDataReader reader = command.ExecuteReader();
+
+다른 중요한 SqlDataReader의 중요한점은 SqlDataReader는 connection oriented라는 것이다.
+command object의 ExecuteReader()를 호출하기전 connection object의 Open()을 호출함으로서 명시적으로 connection이 Open될 필요가 있다.
+
+GridView(Data-bound control)에 SqlDataReader를 bind하는 가장 간단한 방법은 GridView의 DataSource 프로퍼티에 할당하고 DataBind()를 호출하는것이다.
+SqlConnection object와 같이 SqlDataReader도 using block을 사용함을 주목하라. using 대신 finally를 사용할수도 있다.
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    connection.Open();
+    SqlCommand command = new SqlCommand("Select * from tblProductInventory", connection);
+    using (SqlDataReader reader = command.ExecuteReader())
+    {
+        ProductsGridView.DataSource = reader;
+        ProductsGridView.DataBind();
+    }
+}
+
+만약 어떤 이유로 SqlDataReader에 있는 각 행들을 loop돌고 싶다면 Read()를 사용한다.
+Read()는 읽은 행을 있을때 true를 리턴한다. 만약 더 읽을 행이 없다면 false를 리턴한다.
+아래 코드는 행단위로 루프를 돌며 10% 할인 가격을 계산한다.
+
+using System.Data <= DataTable, DataRow가 있다.
+
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    connection.Open();
+    SqlCommand command = new SqlCommand("Select * from tblProductInventory", connection);
+    using (SqlDataReader reader = command.ExecuteReader())
+    {
+        // Create the DataTable and columns. This will 
+        // be used as the datasource for the GridView
+        DataTable sourceTable = new DataTable();
+        sourceTable.Columns.Add("ID");
+        sourceTable.Columns.Add("Name");
+        sourceTable.Columns.Add("Price");
+        sourceTable.Columns.Add("DiscountedPrice");
+
+        while (reader.Read())
+        {
+            //Calculate the 10% discounted price
+            int OriginalPrice = Convert.ToInt32(reader["UnitPrice"]);
+            double DiscountedPrice = OriginalPrice * 0.9;
+
+            // Populate datatable column values from the SqlDataReader
+            DataRow datarow = sourceTable.NewRow();
+            datarow["ID"] = reader["ProductId"];
+            datarow["Name"] = reader["ProductName"];
+            datarow["Price"] = OriginalPrice;
+            datarow["DiscountedPrice"] = DiscountedPrice;
+
+            //Add the DataRow to the DataTable
+            sourceTable.Rows.Add(datarow);
+        }
+
+        // Set sourceTable as the DataSource for the GridView
+        ProductsGridView.DataSource = sourceTable;
+        ProductsGridView.DataBind();
+    }
+}
+
+9강 SqlDataReader object's NextResult method
+SqlDataReader object의 NextResult() 메서드를 사용하여 2개 이상의 result set들을 뽑아내는 것에 대해 알아보자
+다음의 sql 명령은 2개의 result set을 리턴한다. tblProductInventory로부터 한개, tblProductCategories로 부터 하나.
+SqlCommand command = new SqlCommand("select * from tblProductInventory; select * from tblProductCategories", connection) <= 세미콜론으로 select가 2개이므로 2개의 결과셋를 얻는다.
+
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    connection.Open();
+    SqlCommand command = new SqlCommand("select * from tblProductInventory; select * from tblProductCategories", connection);
+    using (SqlDataReader reader = command.ExecuteReader())
+    {
+        ProductsGridView.DataSource = reader;
+        ProductsGridView.DataBind();
+
+        CategoriesGridView.DataSource = reader;
+        CategoriesGridView.DataBind();
+    }
+}
+위의 코드를 실행시키면 tblProductInventory로부터의 result set만이 표시된다. tblProductCategories의 내용은 표시 되지 않는다.
+
+두번째 result set을 SqlDataReader object로부터 뽑아내려면 NextResult()를 아래 같은 코드로 사용해야한다.
+NextResult()메서드는 true를 리턴하고 다음 result set으로 이동한다.
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    connection.Open();
+    SqlCommand command = new SqlCommand("select * from tblProductInventory; select * from tblProductCategories", connection);
+    using (SqlDataReader reader = command.ExecuteReader())
+    {
+        ProductsGridView.DataSource = reader;
+        ProductsGridView.DataBind();
+
+        while (reader.NextResult())
+        {
+            CategoriesGridView.DataSource = reader;
+            CategoriesGridView.DataBind();
+        }
+    }
+}
+
+SqlDataReader의 Read()는 어떠한 result set의 행들의 루프를 도는데 쓰이고, NextResult()는 여러 result set들의 루프를 도는데 사용된다.
+
+
+10강 SqlDataAdapter
+SqlDataReader를 이전에 배웠다. SqlDataReader는 connection oriented이며 이는 datasource에 대한 active open connection이 필요하다는 뜻이다.
+SqlDataAdapter와 DataSet은 disconnected data access model을 제공한다.
+일단 이번장에서 SqlDataAdapter와 DataSet에대해 배우고 다음 세션에 disconnected data access model이 쓰일 수 있는 곳에 대해 이야기한다.
+
+4강에서 SqlCommand object에대해 배웠다. SqlCommand object의 인스턴스를 생성할때 다음 2가지 파라메터를 넘긴다.
+1. 실행할 커맨드
+2. 커맨드를 실행하길 원하는 connection
+
+비슷하게 SqlDataAdapter의 인스턴스를 생성할때 다음 2가지를 넘긴다.
+1. 실행하길 원하는 sql 커맨드
+2. 커맨드를 실행하길 원하는 connection
+
+SqlDataAdapter 사용법
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    // Create an instance of SqlDataAdapter. Spcify the command and the connection
+    SqlDataAdapter dataAdapter = new SqlDataAdapter("select * from tblProductInventory", connection);
+
+    // Create an instance of DataSet, which is an in-memory datastore for storing tables
+    DataSet dataset = new DataSet(); <= DataSet은 in-memory 데이타 베이스이다. 테이블, Relation등을 저장할수 있다.
+    
+    // Call the Fill() methods, which automatically opens the connection, executes the command 
+    // and fills the dataset with data, and finally closes the connection.
+    dataAdapter.Fill(dataset);
+
+    GridView1.DataSource = dataset;
+    GridView1.DataBind();
+}
+
+SqlDataAdapter를 사용하여 stored procedure호출 방법
+Create procedure spGetProductInventory 
+as
+Begin
+ Select ProductId, ProductName, UnitPrice 
+ from tblProductInventory
+End
+
+SqlDataAdapter dataAdapter = new SqlDataAdapter("spGetProductInventory", connection);
+dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+
+
+SqlDataAdapter를 사용하여 파라메터를 가진 stored procedure호출하기
+Create procedure spGetProductInventoryById
+@ProductId int
+as
+Begin
+ Select ProductId, ProductName, UnitPrice 
+ from tblProductInventory
+ where ProductId = @ProductId
+End
+
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    // Create an instance of SqlDataAdapter, specifying the stored procedure
+    // and the connection object to use
+    SqlDataAdapter dataAdapter = new SqlDataAdapter("spGetProductInventoryById", connection);
+    // Specify the command type is an SP
+    dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+    // Associate the parameter with the stored procedure
+    dataAdapter.SelectCommand.Parameters.AddWithValue("@ProductId", 1);
+    
+    DataSet dataset = new DataSet();
+    dataAdapter.Fill(dataset);
+
+    GridView1.DataSource = dataset;
+    GridView1.DataBind();
+}
+또는
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    SqlDataAdapter dataAdapter = new SqlDataAdapter(); <= 생성자에 command, connection을 안넣었을경우!
+    dataAdapter.SelectCommand = new SqlCommand("spGetProductInventoryById", connection)    
+    dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+    dataAdapter.SelectCommand.Parameters.AddWithValue("@ProductId", 1);
+    
+    DataSet dataset = new DataSet();
+    dataAdapter.Fill(dataset);
+
+    GridView1.DataSource = dataset;
+    GridView1.DataBind();
+}
+
+11강 DataSet
+Create procedure spGetProductAndCategoriesData
+as
+Begin
+ Select ProductId, ProductName, UnitPrice 
+ from tblProductInventory
+
+ Select CategoryId, CategoryName
+ from tblProductCategories
+End
+
+위의 sp를 호출하면 2개의 result set을 얻는다.
+
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    SqlDataAdapter dataAdapter = new SqlDataAdapter("spGetProductAndCategoriesData", connection);
+    dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+    DataSet dataset = new DataSet();
+    dataAdapter.Fill(dataset);
+
+    GridViewProducts.DataSource = dataset;
+    GridViewProducts.DataBind();
+
+    GridViewCategories.DataSource = dataset;
+    GridViewCategories.DataBind();
+}
+예상대로 위의 코드는 1개의 result set밖에 얻지 못한다. 이유는 디폴트로 dataset의 첫번재 table이 2개의 GridView의 DataSource로 쓰였기때문이다.
+(참고로 디버깅을 해서 dataset의 내용을 볼수도 있다. 돋보기를 찍으면 dataset이 가진 table도 보여준다.)
+
+아래와 같이 Tables property를 사용한다.
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    SqlDataAdapter dataAdapter = new SqlDataAdapter("spGetProductAndCategoriesData", connection);
+    dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+    DataSet dataset = new DataSet();
+    dataAdapter.Fill(dataset);
+
+    GridViewProducts.DataSource = dataset.Tables[0];
+    GridViewProducts.DataBind();
+
+    GridViewCategories.DataSource = dataset.Tables[1];
+    GridViewCategories.DataBind();
+}
+
+디폴트로 Tables안의 table이름들은 Table, Table1, Table2과 같이 지어지며 의미있지 않다.
+이름을 의미있기 만드려면 다음과 같이한다.
+string ConnectionString = ConfigurationManager.ConnectionStrings["DBConnectionString"].ConnectionString;
+using (SqlConnection connection = new SqlConnection(ConnectionString))
+{
+    SqlDataAdapter dataAdapter = new SqlDataAdapter("spGetProductAndCategoriesData", connection);
+    dataAdapter.SelectCommand.CommandType = CommandType.StoredProcedure;
+    DataSet dataset = new DataSet();
+    dataAdapter.Fill(dataset);
+
+    dataset.Tables[0].TableName = "Products";
+    dataset.Tables[1].TableName = "Categories";
+
+    GridViewProducts.DataSource = dataset.Tables["Products"];
+    GridViewProducts.DataBind();
+
+    GridViewCategories.DataSource = dataset.Tables["Categories"];
+    GridViewCategories.DataBind();
+}
+
+12강 Caching dataset in asp.net
+
+Now, copy and paste the following code in the code behind page
+protected void btnLoadData_Click(object sender, EventArgs e)
+{
+    // Check if the DataSet is present in the cache
+    if (Cache["Data"] == null)
+    {
+        // If the dataset is not in the cache load data from the database into the DataSet
+        string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+        using (SqlConnection connection = new SqlConnection(CS))
+        {
+            SqlDataAdapter dataAdapter = new SqlDataAdapter("Select * from tblProductInventory", connection);
+            DataSet dataset = new DataSet();
+            dataAdapter.Fill(dataset);
+
+            gvProducts.DataSource = dataset;
+            gvProducts.DataBind();
+
+            // Store the DataSet in the Cache
+            Cache["Data"] = dataset;
+            lblMessage.Text = "Data loaded from the Database";
+        }
+    }
+    // If the DataSet is in the Cache
+    else 
+    {
+        // Retrieve the DataSet from the Cache and type cast to DataSet
+        gvProducts.DataSource = (DataSet)Cache["Data"];
+        gvProducts.DataBind();
+        lblMessage.Text = "Data loaded from the Cache";
+    }
+}
+
+protected void btnClearnCache_Click(object sender, EventArgs e)
+{
+    // Check if the DataSet is present in the cache
+    if (Cache["Data"] != null)
+    {
+        // Remove the DataSet from the Cache
+        Cache.Remove("Data");
+        lblMessage.Text = "DataSet removed from the cache";
+    }
+    // If the DataSet is not in the Cache
+    else
+    {
+        lblMessage.Text = "There is nothing in the cache to remove";
+    }
+}
+
+위와 같이 Cache를 사용해 cache하면 sql server를 service에서 stop 시키더라도 asp.net은 잘 동작할수 있게된다.
+
+13강 What is SqlCommandBuilder
+SqlCommandBuilder는 한테이블에 대한 Select문을 기초로 INSERT, UPDATE, DELETE문을 자동으로 생성한다.
+SqlCommandBuilder를 사용해서 생성되어지는 sql문을 쓰기 위해서는 2가지 단계가 있다.
+step1 : SqlDataAdapter object의 "SelectCommand" 프로퍼티를 세팅한다.
+SqlDataAdapter dataAdapter = new SqlDataAdapter();
+dataAdapter.SelectCommand = new SqlCommand("SELECT_Query", con);
+
+step2 : SqlCommandBuilder의 인스턴스를 생성하고 위에서 SqlCommandBuilder의 DataAdapter 프로퍼티에 위에서 만든 SqlDataAdapter object를
+연관시킨다.
+SqlCommandBuilder builder = new SqlCommandBuilder();
+builder.DataAdapter = dataAdapter;
+
+다음과 같이 생성자를 사용하여 한줄로 쓸수도 있다.
+SqlCommandBuilder builder = new SqlCommandBuilder(dataAdapter);
+
+ASP.net WebForm 코드
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+public partial class WebForm1 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+    }
+
+    protected void btnGetStudent_Click(object sender, EventArgs e)
+    {
+        string connectionString =
+            ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+        SqlConnection connection = new SqlConnection(connectionString);
+
+ 
+
+        string selectQuery = "Select * from tblStudents where ID = " +
+            txtStudentID.Text;
+        SqlDataAdapter dataAdapter = new SqlDataAdapter(selectQuery, connection);
+
+        DataSet dataSet = new DataSet();
+        dataAdapter.Fill(dataSet, "Students");
+
+        // Store DataSet and the select query in ViewState, so they can be used
+        // later to generate the T-SQL commands using SqlCommandBuilder class
+        ViewState["DATASET"] = dataSet;
+        ViewState["SELECT_QUERY"] = selectQuery;
+
+        if (dataSet.Tables["Students"].Rows.Count > 0)
+        {
+            DataRow dataRow = dataSet.Tables["Students"].Rows[0];
+            txtStudentName.Text = dataRow["Name"].ToString();
+            txtTotalMarks.Text = dataRow["TotalMarks"].ToString();
+            ddlGender.SelectedValue = dataRow["Gender"].ToString();
+            lblStatus.Text = "";
+        }
+        else
+        {
+            lblStatus.ForeColor = System.Drawing.Color.Red;
+            lblStatus.Text = "No record with ID = " + txtStudentID.Text;
+        }
+    }
+
+    protected void btnUpdate_Click(object sender, EventArgs e)
+    {
+        string connectionString =
+            ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+        SqlConnection con = new SqlConnection(connectionString);
+
+        SqlDataAdapter dataAdapter = new SqlDataAdapter();
+
+ 
+
+        // Retrieve the Select query from ViewState and use it to build
+        // SqlCommand command object, which will then be set as the 
+        // SelectCommand of the SqlDataAdapter object
+        dataAdapter.SelectCommand = 
+            new SqlCommand((string)ViewState["SELECT_QUERY"], con);
+
+        // Associate SqlDataAdapter object with SqlCommandBuilder. At this point
+        // SqlCommandBuilder should generate T-SQL statements automatically
+        SqlCommandBuilder builder = new SqlCommandBuilder(dataAdapter);
+
+        DataSet ds = (DataSet)ViewState["DATASET"];
+        DataRow dr = ds.Tables["Students"].Rows[0];
+        dr["Name"] = txtStudentName.Text;
+        dr["Gender"] = ddlGender.SelectedValue;
+        dr["TotalMarks"] = txtTotalMarks.Text;
+        dr["Id"] = txtStudentID.Text;
+
+        int rowsUpdated = dataAdapter.Update(ds, "Students");  <= SqlCommandBuilder가 아닌 SqlDataAdapter의 Update()를 호출했다!
+        if (rowsUpdated == 0)
+        {
+            lblStatus.ForeColor = System.Drawing.Color.Red;
+            lblStatus.Text = "No rows updated";
+        }
+        else
+        {
+            lblStatus.ForeColor = System.Drawing.Color.Green;
+            lblStatus.Text = rowsUpdated.ToString() + " row(s) updated";
+        }
+    }
+}
+
+14강 Sqlcommandbuilder update not working
+13강에 이어서 계속
+SqlDataAdapter.Update()가 작동하지 않는 2개의 일반적인 이유
+
+1. SqlCommandBuilder object가 SqlDataAdapter object와 연관되지 않았을때.
+builder.DataAdapter = dataAdapter;
+이와같은 연관이 없다면 SqlCommandBuilder는 어떻게 INSERT, UPDATE, DELETE문을 만들어야 하는지 모른다.
+SqlCommandBuilder builder = new SqlCommandBuilder(dataAdapter);
+위와 같은 문장이 없다면 SqlDataAdapter.Update() 메서드는 익셉션을 발생시킨다.
+Update requires a valid UpdateCommand when passed DataRow collection with modified rows.
+
+2. SqlDataAdapter와 연관된 SelectCommand가 최소 하나의 Primary key 혹은 unique colume을 리턴하지 않을때.
+이런경우 다음과 같은 익셉션을 발생시킨다.
+ Dynamic SQL generation for the UpdateCommand is not supported against a SelectCommand that does not return any key column information.
+
+ 트러블슈팅을 하기위한 목적으로 자동으로 생성된 INSER, UPDATE, DELETE문을 보려며 GetInsertCommand(), GetUpateCommand(), GetDeleteCommand()를
+ 사용할수 있다.
+
+lblInsert.Text = builder.GetInsertCommand().CommandText;
+lblUpdate.Text = builder.GetUpdateCommand().CommandText;
+lblDelete.Text = builder.GetDeleteCommand().CommandText;
+
+15강 Disconnected data access in asp net
+ADO.NET은 2가지 data access mode를 제공한다.
+1. Connection oriented data access
+2. Disconnected data access
+
+SqlDataAdapter와 DataSet은 함께 disconnected data access를 제공한다.
+
+DataSet은 1개 이상의 테이블을 가질수 있는 in-memory data store이다. DataSet은 data를 가지고 있을 뿐 기저의 database table과
+상호작용하지 않는다. DataSet object는 기저 Data Source에 대한 지식이 없다. datasource로부터 data를 가져오는것은 SqlDataAdapter이다.
+
+다음과 같이 동작한다.
+1. select명령과 connection object를 써서 SqlDataAdapter의 인스턴스를 생성한다.
+
+string connectionString = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+SqlConnection connection = new SqlConnection(connectionString);
+string selectQuery = "Select * from tblStudents";
+SqlDataAdapter dataAdapter = new SqlDataAdapter(selectQuery, connection);
+
+2. SqlDataAdapter.Fill()이 호출될때 SqlDataAdapter는 database에의 접속을 Open하고 Select 명령을 실행하여 DataSet이 뽑혀진 data로 채워지게된다.
+SqlDataAdapter는 connection을 자동으로 Close한다.
+
+DataSet dataSet = new DataSet();
+dataAdapter.Fill(dataSet, "Students");
+
+3. 이제 DataSet에 data를 가지고 있으며 database에대한 active connection도 없다. 이 시점부터 DataSet에 있는 data에 어떠한 변경(INSERT, UPDATE, DELETE)도
+할수있다. DataSet에 있는 data들만 변경되는것이며 기저의 database table data는 변경되지 않는다.
+
+4. 기저의 database table을 update학 위해서는 SqlDataAdapter.Update()를 호출한다.
+Update()가 호출되는순간 SqlDataAdapter에 UPDATE, DELETE, INSERT command가 연결되어있어야한다. 그렇지 않으면 runtime exception이 발생한다.
+
+dataAdapter.Update(DataSetObject, "Students");
+
+ASPX Code:
+<div style="font-family: Arial">
+    <asp:Button ID="btnGetDataFromDB" runat="server" Text="Get Data from Database" 
+        onclick="btnGetDataFromDB_Click" />
+    <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" 
+        DataKeyNames="ID" onrowediting="GridView1_RowEditing" 
+        onrowcancelingedit="GridView1_RowCancelingEdit" 
+        onrowdeleting="GridView1_RowDeleting" 
+        onrowupdating="GridView1_RowUpdating">
+        <Columns>
+            <asp:CommandField ShowDeleteButton="True" ShowEditButton="True" />
+            <asp:BoundField DataField="ID" HeaderText="ID" InsertVisible="False" 
+                ReadOnly="True" SortExpression="ID" />
+            <asp:BoundField DataField="Name" HeaderText="Name" SortExpression="Name" />
+            <asp:BoundField DataField="Gender" HeaderText="Gender" 
+                SortExpression="Gender" />
+            <asp:BoundField DataField="TotalMarks" HeaderText="TotalMarks" 
+                SortExpression="TotalMarks" />
+        </Columns>
+    </asp:GridView>
+    <asp:Button ID="btnUpdateDatabaseTable" runat="server" 
+        Text="Update Database Table" onclick="btnUpdateDatabaseTable_Click" />
+
+ 
+
+    <asp:Label ID="lblStatus" runat="server"></asp:Label>
+</div>
+
+ASPX.CS Code:
+public partial class WebForm1 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+    }
+
+    private void GetDataFromDB()
+    {
+        string connectionString = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+        SqlConnection connection = new SqlConnection(connectionString);
+        string selectQuery = "Select * from tblStudents";
+        SqlDataAdapter dataAdapter = new SqlDataAdapter(selectQuery, connection);
+
+        DataSet dataSet = new DataSet();
+        dataAdapter.Fill(dataSet, "Students");
+        // Set ID column as the primary key
+        dataSet.Tables["Students"].PrimaryKey =
+            new DataColumn[] { dataSet.Tables["Students"].Columns["ID"] };
+        // Store the dataset in Cache
+        Cache.Insert("DATASET", dataSet, null, DateTime.Now.AddHours(24),
+            System.Web.Caching.Cache.NoSlidingExpiration);
+
+        GridView1.DataSource = dataSet;
+        GridView1.DataBind();
+
+        lblStatus.Text = "Data loded from Database";
+    }
+
+    private void GetDataFromCache()
+    {
+        if (Cache["DATASET"] != null)
+        {
+            GridView1.DataSource = (DataSet)Cache["DATASET"];
+            GridView1.DataBind();
+        }
+    }
+
+    protected void GridView1_RowEditing(object sender, GridViewEditEventArgs e)
+    {
+        // Set row in editing mode
+        GridView1.EditIndex = e.NewEditIndex;
+        GetDataFromCache();
+    }
+
+    protected void GridView1_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+    {
+        GridView1.EditIndex = -1;
+        GetDataFromCache();
+    }
+
+    protected void GridView1_RowUpdating(object sender, GridViewUpdateEventArgs e)
+    {
+        // Retrieve dataset from cache
+        DataSet dataSet = (DataSet)Cache["DATASET"];
+        // Find datarow to edit using primay key
+        DataRow dataRow = dataSet.Tables["Students"].Rows.Find(e.Keys["ID"]);
+        // Update datarow values
+        dataRow["Name"] = e.NewValues["Name"];
+        dataRow["Gender"] = e.NewValues["Gender"];
+        dataRow["TotalMarks"] = e.NewValues["TotalMarks"];
+        // Overwrite the dataset in cache
+        Cache.Insert("DATASET", dataSet, null, DateTime.Now.AddHours(24),
+            System.Web.Caching.Cache.NoSlidingExpiration);
+        // Remove the row from edit mode
+        GridView1.EditIndex = -1;
+        // Reload data to gridview from cache
+        GetDataFromCache();
+    }
+
+    protected void GridView1_RowDeleting(object sender, GridViewDeleteEventArgs e)
+    {
+        DataSet dataSet = (DataSet)Cache["DATASET"];
+        dataSet.Tables["Students"].Rows.Find(e.Keys["ID"]).Delete();
+        Cache.Insert("DATASET", dataSet, null, DateTime.Now.AddHours(24),
+            System.Web.Caching.Cache.NoSlidingExpiration);
+        GetDataFromCache();
+    }
+
+    protected void btnGetDataFromDB_Click(object sender, EventArgs e)
+    {
+        GetDataFromDB();
+    }
+
+    protected void btnUpdateDatabaseTable_Click(object sender, EventArgs e)
+    {
+        if (Cache["DATASET"] != null)
+        {
+            string connectionString =
+            ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+            SqlConnection connection = new SqlConnection(connectionString);
+            string selectQuery = "Select * from tblStudents";
+            SqlDataAdapter dataAdapter = new SqlDataAdapter(selectQuery, connection);
+
+            // Update command to update database table
+            string strUpdateCommand = "Update tblStudents set Name = @Name, Gender = @Gender, TotalMarks = @TotalMarks where Id = @Id";
+            // Create an instance of SqlCommand using the update command created above
+
+ 
+
+            SqlCommand updateCommand = new SqlCommand(strUpdateCommand, connection);
+            // Specify the parameters of the update command
+            updateCommand.Parameters.Add("@Name", SqlDbType.NVarChar, 50, "Name");
+            updateCommand.Parameters.Add("@Gender", SqlDbType.NVarChar, 20, "Gender");
+            updateCommand.Parameters.Add("@TotalMarks", SqlDbType.Int, 0, "TotalMarks");
+            updateCommand.Parameters.Add("@Id", SqlDbType.Int, 0, "Id");
+            // Associate update command with SqlDataAdapter instance
+            dataAdapter.UpdateCommand = updateCommand;
+
+            // Delete command to delete data from database table
+            string strDeleteCommand = "Delete from tblStudents where Id = @Id";
+            // Create an instance of SqlCommand using the delete command created above
+            SqlCommand deleteCommand = new SqlCommand(strDeleteCommand, connection);
+            // Specify the parameters of the delete command
+            deleteCommand.Parameters.Add("@Id", SqlDbType.Int, 0, "Id");
+            // Associate delete command with SqlDataAdapter instance
+            dataAdapter.DeleteCommand = deleteCommand;
+
+            // Update the underlying database table
+            dataAdapter.Update((DataSet)Cache["DATASET"], "Students");
+            lblStatus.Text = "Database table updated";
+        }
+    }
+}
+
+16강 Dataset.rejectchanges and dataset.acceptchanges methods
+AcceptChanges()와 RejectChanges()을 더 잘 이해하기 위해서는 Row States와 Row Versions를 이해할 필요가 있다.
+
+DataSet의 DataTable안에 있는 모든 DataRow들은 RowState 프로퍼티를 가지고 있다.
+또한 DataRowVersion 열거값들도 다음 링크에 있다.
+http://msdn.microsoft.com/en-us/library/ww3k31w0.aspx
+
+HasVersion()을 사용하여 어떠한 행이 특정 DataRowVersion을 갖고 있는지 체크할수 있다.
+DataRow.HasVersion(DataRowVersion.Original)
+
+DataAdapter.Fill()을 호출할때 DataSet으로 data가 로드되고 모든 행들의 RowState는 Unchanged이다.
+행을 수정했을경우 상태는 Modified가된다. 행을 지웠을경우 RowState는 Deleted가된다.
+이 시점에 DataSet안에는 Unchanged, Modified, Deleted행들을 갖게된다.
+DataAdapter.Update()를 호출하게되면 RowState에 기반해 INSERT, UPDATE, DELETE command가 기반 database table에 실행되어지며
+AcceptChanges()가 자동적으로 호출된다.
+
+AcceptChanges()가 호출되어지면 각각의 DataRow의 RowState 프로퍼티가 변경된다.
+Added와 Modified 행은 Unchanged가 되며 Deleted 행은 제거된다.
+
+RejectChanges()가 호출되어지면 각각의 DataRow의 RowState 프로퍼티가 변경된다.
+Added행은 제거되고, Modified와 Deleted행은 Unchanged로 변경된다.
+
+AcceptChanged(), RejectChanges()는 다음과 같은 레벨에서 호출할수있다.
+1.DataSet level : DataSet안에 있는 모든 DataTable들과 각각의 DataTable안에있는 각각의 DataRow에 대해 자동적으로 호출된다.
+2.DataTable level : 각각의 DataTable안에있는 각각의 DataRow에 자동적으로 호출된다.
+3.DataRow level : 호출된 행에만 호출되어진다.
+
+
+protected void Button1_Click(object sender, EventArgs e)
+{
+    DataSet ds = (DataSet)Cache["DATASET"];
+    DataRow newDataRow = ds.Tables["Students"].NewRow();
+    newDataRow["Id"] = 101;
+    ds.Tables.["Students"].Rows.Add(newDataRow);
+}
+
+protected void Button1_Click(object sender, EventArgs e)
+{
+    DataSet ds = (DataSet)Cache["DATASET"];
+    DataRow newDataRow = ds.Tables["Students"].NewRow();
+    newDataRow["Id"] = 101;
+
+    foreach(DataRow dr in ds.Tables["Students"].Rows)
+    {
+        if(dr.RowState == DataRowState.Deleted)
+        {
+            //Original version 접근방법
+            Response.Write(dr["Id", DataRowVersion.Original].ToString() + " - " + dr.RowState.ToString() + "<br/>");
+        }
+        else
+        {
+            //current version 접근
+            Response.Write(dr["Id"].ToString() + " - " + dr.RowState.ToString() + "<br/>");
+        }
+        Response.Write(newDataRow.RowState.ToString());
+    }
+}
+
+17강 Strongly typed datasets
+Strongly typed dataset이란?
+1. Strongly typed dataset은 Database Schema에 기초하여 생성된다.
+2. Strongly typed dataset은 DataSet을 상속받는다.
+3. Strongly typed dataset에서는 테이블 컬럼이 프로퍼티가 되며 각 컬럼과 연관된 타입이 디자인타임에 알려진다.
+
+Strongly typed dataset이 untyped dataset에 대해 가지는 장점
+Strongly typed dataset에서는 테이블 컬럼이 프로퍼티가 되고 각 컬럼과 대응하는 타입이 디자인시 알수 있기때문에
+1. 인텔리센스의 도움을 받아 프로그래미이 쉬워진다.
+2. 컬럼 이름의 오타를 컴파일 타임에 잡아낼수 있다.
+
+typed dataset 생성방법
+1. 프로젝트에서 오른쪽 클릭 Add - New Item
+2. "DataSet"선택, 이름을 주고 "Add"클릭 => 이때 .XSD(Xml Schema Definition) 확장자를 가진 화일이 추가된다.
+3. view메뉴 server explorer선택
+4. server explorer에서 원하는 테이블 선택
+5. 선택한 테이블을 드래그 앤 드랍하면 strongly typed dataset생성된다.
+
+프로그램에서 정의하는 Student class
+public class Student
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    public string Gender { get; set; }
+    public int TotalMarks { get; set; }
+}
+
+untyped dataset 사용
+public partial class WebForm1 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            string connectionString =
+            ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+            SqlConnection connection = new SqlConnection(connectionString);
+            string selectQuery = "Select * from tblStudents";
+            SqlDataAdapter dataAdapter = new SqlDataAdapter(selectQuery, connection);
+
+            DataSet dataSet = new DataSet();
+            dataAdapter.Fill(dataSet, "Students");
+
+            Session["DATASET"] = dataSet;
+
+            GridView1.DataSource = from dataRow in dataSet.Tables["Students"].AsEnumerable() 
+                select new Student 
+                { 
+                    ID = Convert.ToInt32(dataRow["Id"]), <=형번환이 필요하다! 그리고 문자열로 값을 가져오기때문에 오타등을 찾기 어렵다!
+                    Name = dataRow["Name"].ToString(), 
+                    Gender = dataRow["Gender"].ToString(), 
+                    TotalMarks = Convert.ToInt32(dataRow["TotalMarks"]) 
+                };
+            GridView1.DataBind();
+        }
+    }
+
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        DataSet dataSet = (DataSet)Session["DATASET"];
+
+        if (string.IsNullOrEmpty(TextBox1.Text))
+        {
+            GridView1.DataSource = from dataRow in dataSet.Tables["Students"].AsEnumerable() 
+                select new Student 
+                { 
+                    ID = Convert.ToInt32(dataRow["Id"]), 
+                    Name = dataRow["Name"].ToString(), 
+                    Gender = dataRow["Gender"].ToString(), 
+                    TotalMarks = Convert.ToInt32(dataRow["TotalMarks"]) 
+                };
+            GridView1.DataBind();
+        }
+        else
+        {
+            GridView1.DataSource = from dataRow in dataSet.Tables["Students"].AsEnumerable() 
+                where dataRow["Name"].ToString().ToUpper().StartsWith(TextBox1.Text.ToUpper()) 
+                select new Student 
+                { 
+                    ID = Convert.ToInt32(dataRow["Id"]), 
+                    Name = dataRow["Name"].ToString(), 
+                    Gender = dataRow["Gender"].ToString(), 
+                    TotalMarks = Convert.ToInt32(dataRow["TotalMarks"]) 
+                };
+            GridView1.DataBind();
+        }
+    }
+}
+
+
+strongly typed dataset 사용
+public partial class WebForm2 : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            StudentDataSetTableAdapters.StudentsTableAdapter studentsTableAdapter = 
+                new StudentDataSetTableAdapters.StudentsTableAdapter();
+
+ 
+
+            StudentDataSet.StudentsDataTable studentsDataTable = 
+                new StudentDataSet.StudentsDataTable();
+            studentsTableAdapter.Fill(studentsDataTable);
+
+            Session["DATATABLE"] = studentsDataTable;
+
+            GridView1.DataSource = from student in studentsDataTable 
+                select new { student.ID, student.Name, student.Gender, student.TotalMarks };  <= 타입 및 프로퍼티명이 컬럼을 기초로 정해진다. 컴파일타임 에러체크 가능!
+            GridView1.DataBind();
+        }
+    }
+
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        StudentDataSet.StudentsDataTable studentsDataTable = 
+            (StudentDataSet.StudentsDataTable)Session["DATATABLE"];
+
+        if (string.IsNullOrEmpty(TextBox1.Text))
+        {
+            GridView1.DataSource = from student in studentsDataTable 
+                select new { student.ID, student.Name, student.Gender, student.TotalMarks };
+            GridView1.DataBind();
+        }
+        else
+        {
+            GridView1.DataSource = from student in studentsDataTable 
+                where student.Name.ToUpper().StartsWith(TextBox1.Text.ToUpper()) 
+                select new { student.ID, student.Name, student.Gender, student.TotalMarks };
+            GridView1.DataBind();
+        }
+    }
+}
+
+18강 Load xml data into sql server table using sqlbulkcopy
+SqlBulkCopy 클래스는?
+SqlBulkCopy는 다른 data source로부터 SQL Server database에 bulk copy하기 위해 쓴다.
+System.Data.SqlClient namespace에 있다. 이 클래스는 SQL Server에 데이타를 쓸때만 쓸수있다.
+하지만 data source는 SQL Server에 제한되지 않으며, data가 DataTable에 로드 될수 있거나 IDataReader 인스턴스를 사용해 
+읽을수 있는 한 어떠한 data source도 사용할수있다.
+
+퍼포먼스 관점에서 봤을때 SqlBulkCopy는 아주 큰 데이타를 복사하는데 쉽고 효율적이다.
+
+SqlBulkCopy를 사용하여 xml data를 sql server에 로드하기
+
+step1:
+Step 1 : 다음 sql 스크립트를 사용하여 데이타베이스 테이블을 생성
+Create table Departments
+(
+     ID int primary key,
+     Name nvarchar(50),
+     Location nvarchar(50)
+)
+GO
+
+Create table Employees
+(
+     ID int primary key,
+     Name nvarchar(50),
+     Gender nvarchar(50),
+     DepartmentId int foreign key references Departments(Id)
+)
+GO
+
+Step 2 : Create a new empty asp.net web application project. Name it Demo.
+
+Step 3 : Add a new xml file to the project. Name it Data.xml. Copy and paste the following XML.
+<Data>
+  <Department Id="1">
+    <Name>IT</Name>
+    <Location>New York</Location>
+  </Department>
+  <Department Id="2">
+    <Name>HR</Name>
+    <Location>London</Location>
+  </Department>
+  <Department Id="3">
+    <Name>Payroll</Name>
+    <Location>Mumbai</Location>
+  </Department>
+  <Employee Id="1">
+    <Name>Mark</Name>
+    <Gender>Male</Gender>
+    <DepartmentId>1</DepartmentId>
+  </Employee>
+  <Employee Id="2">
+    <Name>John</Name>
+    <Gender>Male</Gender>
+    <DepartmentId>1</DepartmentId>
+  </Employee>
+  <Employee Id="3">
+    <Name>Mary</Name>
+    <Gender>Female</Gender>
+    <DepartmentId>2</DepartmentId>
+  </Employee>
+  <Employee Id="4">
+    <Name>Steve</Name>
+    <Gender>Male</Gender>
+    <DepartmentId>2</DepartmentId>
+  </Employee>
+  <Employee Id="5">
+    <Name>Ben</Name>
+    <Gender>Male</Gender>
+    <DepartmentId>3</DepartmentId>
+  </Employee>
+</Data>
+
+Step 4 : Include the database connection string in web.config file
+<connectionStrings>
+  <add name="CS"
+           connectionString="server=.;database=Sample;integrated security=true"/>
+</connectionStrings>
+
+Step 5 : Add a new WebForm to the project. 
+Drag and drop a button control on the webform. 
+Double click the button control to generate the click event handler. 
+Copy and paste the following code in the the click event handler method.
+
+string cs = ConfigurationManager.ConnectionStrings["CS"].ConnectionString;
+
+using (SqlConnection con = new SqlConnection(cs))
+{
+    DataSet ds = new DataSet();
+    ds.ReadXml(Server.MapPath("~/Data.xml"));
+
+    DataTable dtDept = ds.Tables["Department"];
+    DataTable dtEmp = ds.Tables["Employee"];
+    con.Open();
+    using (SqlBulkCopy bc = new SqlBulkCopy(con))
+    {
+        bc.DestinationTableName = "Departments";
+        bc.ColumnMappings.Add("ID", "ID");
+        bc.ColumnMappings.Add("Name", "Name");
+        bc.ColumnMappings.Add("Location", "Location");
+        bc.WriteToServer(dtDept);
+    }
+
+    using (SqlBulkCopy bc = new SqlBulkCopy(con))
+    {
+        bc.DestinationTableName = "Employees";
+        bc.ColumnMappings.Add("ID", "ID");
+        bc.ColumnMappings.Add("Name", "Name");
+        bc.ColumnMappings.Add("Gender", "Gender");
+        bc.ColumnMappings.Add("DepartmentId", "DepartmentId");
+        bc.WriteToServer(dtEmp);
+    }
+}
+
+19강 Copying data from one table to another table using SqlBulkCopy
+source와 destination 테이블들은 같은 데이타이베이스거나 다른 데이타베이스 일수 있다. 데이타베이스는 같은 sql server일수도 있고
+다른 server들 일수 있다. 
+Step 1 : 새로운 데이타 베이스 생성, SrouceDB라 이름짓는다.
+다음 sql script를 실행해서 Departments, Employees 테이블 생성
+data를 채워 넣는다.
+
+Create table Departments
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Location nvarchar(50)
+)
+GO
+
+Create table Employees
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Gender nvarchar(50),
+     DepartmentId int foreign key references Departments(Id)
+)
+GO
+
+Insert into Departments values ('IT', 'New York')
+Insert into Departments values ('HR', 'London')
+Insert into Departments values ('Payroll', 'Muumbai')
+GO
+
+Insert into Employees values ('Mark', 'Male', 1)
+Insert into Employees values ('John', 'Male', 1)
+Insert into Employees values ('Mary', 'Female', 2)
+Insert into Employees values ('Steve', 'Male', 2)
+Insert into Employees values ('Ben', 'Male', 3)
+GO
+
+Step 2 : 또다른 데이타베이스 생성. DestinationDB라 이름 짓는다.
+create sql script만 실행하여  Departments, Employees 테이블 생성
+이제 구조만 있고 데이타는 없는 테이블을 가지고 있다.
+SourceDB 테이블에서 DestinationDB의 테이블로 데이타를 옮겨보자 
+
+Step 3 : 
+web.config화일에 다음과 같은 2개의 connection string을 포함시킨다.
+<connectionStrings>
+  <add name="SourceCS"
+        connectionString="server=.;database=SourceDB;integrated security=true"/>
+  <add name="DestinationCS"
+        connectionString="server=.;database=DestinationDB;integrated security=true"/>
+</connectionStrings>
+
+Step 4 : button click event handler method에 다음을 붙여넣는다.
+string sourceCS = 
+      ConfigurationManager.ConnectionStrings["SourceCS"].ConnectionString;
+string destinationCS = 
+      ConfigurationManager.ConnectionStrings["DestinationCS"].ConnectionString;
+using (SqlConnection sourceCon = new SqlConnection(sourceCS))
+{
+    SqlCommand cmd = new SqlCommand("Select * from Departments", sourceCon);
+    sourceCon.Open();
+
+    using (SqlDataReader rdr = cmd.ExecuteReader())
+    {
+        using (SqlConnection destinationCon = new SqlConnection(destinationCS))
+        {
+            using (SqlBulkCopy bc = new SqlBulkCopy(destinationCon))
+            {
+                bc.DestinationTableName = "Departments";
+                destinationCon.Open();
+                bc.WriteToServer(rdr);  <= 같은 구조의 테이블이므로 ColumnMappings가 필요없다.
+            }
+        }
+    }
+
+    cmd = new SqlCommand("Select * from Employees", sourceCon);
+
+    using (SqlDataReader rdr = cmd.ExecuteReader())
+    {
+        using (SqlConnection destinationCon = new SqlConnection(destinationCS))
+        {
+            using (SqlBulkCopy bc = new SqlBulkCopy(destinationCon))
+            {
+                bc.DestinationTableName = "Employees";
+                destinationCon.Open();
+                bc.WriteToServer(rdr);
+            }
+        }
+    }
+}
+
+20강 sqlbulkcopy notifyafter example
+SqlBulkCopy의 프로퍼티들
+BatchSize property : 배치에서 destination table로 복사되어지는 행의 갯수
+BatchSize는 data 전송 퍼포먼스에 있어 매우 중요하다. 디폴트는 1이다.
+아래의 예에서 BatchSize는 10000이며 이는 reader가 10000개의 행들을 읽게되면 bulk copy operation을 하기위해
+한배치로 보내어 진다는 것을 의미한다.
+
+NotifyAfter property: SqlRowsCopied 이벤트 발생전 처리되어야 하는 행들의 갯수를 정의한다.
+아래의 예에서는  NotifyAfter 프로퍼티를 5000으로 설정했으며 이는 5000행이 복사될때마다  SqlRowsCopied 이벤트가 발생한다는 것을 의미한다.
+
+SqlRowsCopied event : 이 이벤트는 NotifyAfter 프로퍼티에 설정된 행들의 갯수가 처리될때마다 발생하는 이벤트이다. data 전송의 진행 상황을 표시할때
+유용하다.
+
+Step 1 : Products_Source table 생성하고 data를 넣는다.
+Create Table Products_Source
+(
+ [Id] int primary key,
+ [Name] nvarchar(50),
+ [Description] nvarchar(250)
+)
+GO
+
+Declare @Id int
+Set @Id = 1
+
+While(@Id <= 300000)
+Begin
+ Insert into Products_Source values
+ (@Id, 'Product - ' + CAST(@Id as nvarchar(20)),
+ 'Product - ' + CAST(@Id as nvarchar(20)) + ' Description')
+
+ Print @Id
+ Set @Id = @Id + 1
+End
+GO
+
+Step 2 : Products_Destination table 생성
+Create Table Products_Destination
+(
+ [Id] int primary key,
+ [Name] nvarchar(50),
+ [Description] nvarchar(250)
+)
+GO
+
+Step 3 : console application 생성. Demo로 이름지은뒤 database connection string 을 App.config 화일에 추가
+<connectionStrings>
+  <add name="CS"
+        connectionString="server=.;database=Sample;integrated security=SSPI"/>
+</connectionStrings>
+
+Step 4 : Program.cs화일에 아래 소스 복붙
+using System;
+using System.Configuration;
+using System.Data.SqlClient;
+
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            string cs = ConfigurationManager.ConnectionStrings["CS"].ConnectionString;
+            using (SqlConnection sourceCon = new SqlConnection(cs))
+            {
+                SqlCommand cmd = new SqlCommand("Select * from Products_Source", sourceCon);
+                sourceCon.Open();
+                using (SqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    using (SqlConnection destinationCon = new SqlConnection(cs))
+                    {
+                        using (SqlBulkCopy bc = new SqlBulkCopy(destinationCon))
+                        {
+                            bc.BatchSize = 10000;
+                            bc.NotifyAfter = 5000;
+                            bc.SqlRowsCopied += new SqlRowsCopiedEventHandler(bc_SqlRowsCopied);
+                            bc.DestinationTableName = "Products_Destination";
+                            destinationCon.Open();
+                            bc.WriteToServer(rdr);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void bc_SqlRowsCopied(object sender, SqlRowsCopiedEventArgs e)
+        {
+            Console.WriteLine(e.RowsCopied + " loaded....");
+        }
+    }
+} 
+
+bc_SqlRowsCopied() 함수를 따로 생성하는 대신 다음과 같이 람다함수를 쓸수도 있다.
+bc.SqlRowsCopied += (sender, eventArgs) =>
+{
+    Console.WriteLine(eventArgs.RowsCopied + " loaded....");
+};
+
+21강 Transactions in ADO.NET
+Transaction이란?
+모든 database operation이 성공하거나 모두 실패하도록 보장한다.
+이는 일이 절대 중간까지만 하지 않는다는 것을 의미한다. 전부되거나 전부 안되는것이다.
+설명 안함..
+
+Step 1 : Accounts table 생성
+Create Table Accounts
+(
+     AccountNumber nvarchar(10) primary key,
+     CustomerName nvarchar(50),
+     Balance int
+)
+GO
+
+Insert into Accounts values('A1', 'Mark', 100)
+Insert into Accounts values('A2', 'Steve', 100)
+GO
+
+Step 2 : Create a new empty asp.net web application. Name it Demo.
+
+Step 3 : Include connection string in web.config file
+<connectionStrings>
+  <add name="CS"
+           connectionString="server=.;database=Sample;integrated security=SSPI"/>
+</connectionStrings>
+
+Step 4 : Add a WebForm. Copy and paste the following HTML.
+<div style="font-family: Arial">
+<table border="1" style="background: brown; color: White">
+    <tr>
+        <td>
+            <b>Account Number </b>
+        </td>
+        <td>
+            <asp:Label ID="lblAccountNumber1" runat="server"></asp:Label>
+        </td>
+        <td>
+            <asp:Label ID="lblAccountNumber2" runat="server"></asp:Label>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>Customer Name </b>
+        </td>
+        <td>
+            <asp:Label ID="lblName1" runat="server"></asp:Label>
+        </td>
+        <td>
+            <asp:Label ID="lblName2" runat="server"></asp:Label>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>Balance </b>
+        </td>
+        <td>
+            <asp:Label ID="lblBalance1" runat="server"></asp:Label>
+        </td>
+        <td>
+            <asp:Label ID="lblBalance2" runat="server"></asp:Label>
+        </td>
+    </tr>
+</table>
+<br />
+<asp:Button ID="btnTransfer" runat="server"
+            Text="Transfer $10 from Account A1 to Account A2"
+            OnClick="btnTransfer_Click" />
+<br />
+<br />
+<asp:Label ID="lblMessage" runat="server" Font-Bold="true"></asp:Label>
+</div>
+
+Step 5 : Copy and paste the following code in the code-behind file.
+using System;
+using System.Configuration;
+using System.Data.SqlClient;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                GetAccountsData();
+            }
+        }
+
+        private void GetAccountsData()
+        {
+            string cs = ConfigurationManager.ConnectionStrings["CS"].ConnectionString;
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                SqlCommand cmd = new SqlCommand("Select * from Accounts", con);
+                con.Open();
+                SqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (rdr["AccountNumber"].ToString() == "A1")
+                    {
+                        lblAccountNumber1.Text = "A1";
+                        lblName1.Text = rdr["CustomerName"].ToString();
+                        lblBalance1.Text = rdr["Balance"].ToString();
+                    }
+                    else
+                    {
+                        lblAccountNumber2.Text = "A2";
+                        lblName2.Text = rdr["CustomerName"].ToString();
+                        lblBalance2.Text = rdr["Balance"].ToString();
+                    }
+                }
+            }
+        }
+
+        protected void btnTransfer_Click(object sender, EventArgs e)
+        {
+            string cs = ConfigurationManager.ConnectionStrings["CS"].ConnectionString;
+
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                con.Open();
+                // Begin a transaction. The connection needs to 
+                // be open before we begin a transaction
+                SqlTransaction transaction = con.BeginTransaction();
+                try
+                {
+                    // Associate the first update command with the transaction
+                    SqlCommand cmd = new SqlCommand("Update Accounts set Balance = Balance - 10 where AccountNumber = 'A1'", con, transaction);
+                    cmd.ExecuteNonQuery();
+                    // Associate the second update command with the transaction
+                    cmd = new SqlCommand("Update Accounts set Balance = Balance + 10 where AccountNumber = 'A2'", con, transaction);
+                    cmd.ExecuteNonQuery();
+                    // If all goes well commit the transaction
+                    transaction.Commit();
+                    lblMessage.ForeColor = System.Drawing.Color.Green;
+                    lblMessage.Text = "Transaction committed";
+                }
+                catch
+                {
+                    // If anything goes wrong, rollback the transaction
+                    transaction.Rollback();
+                    lblMessage.ForeColor = System.Drawing.Color.Red;
+                    lblMessage.Text = "Transaction rolled back";
+                }
+            }
+            GetAccountsData();
+        }
+    }
+}
+
+테스트 하려면 2번째 update문의 database이름을 Accounts1등으로 바꾸어보자..rollback되는 것을 확인할수 있다.

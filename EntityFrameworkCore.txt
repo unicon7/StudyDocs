@@ -1,0 +1,238 @@
+https://www.youtube.com/watch?v=74dUI14tfmE&list=PLlOmmbwfd9VDedbo1tY0hHC3d3nZKtAJ8
+https://www.entityframeworktutorial.net/efcore/one-to-many-conventions-entity-framework-core.aspx
+https://docs.microsoft.com/en-us/ef/core/modeling/keys
+https://www.learnentityframeworkcore.com/ <= 여기가 좋다!
+https://www.learnentityframeworkcore.com/configuration/fluent-api/ondelete-method
+https://www.learnentityframeworkcore.com/concurrency
+https://www.entityframeworktutorial.net/efcore/logging-in-entityframework-core.aspx  <= EF에 logger 다는법
+
+https://docs.microsoft.com/ko-kr/ef/ef6/saving/change-tracking/entity-state?redirectedfrom=MSDN
+Adding a new entity to the context
+using (var context = new BloggingContext())
+{
+    var blog = new Blog { Name = "ADO.NET Blog" };
+    context.Blogs.Add(blog);
+    context.SaveChanges();
+}
+
+using (var context = new BloggingContext())
+{
+    var blog = new Blog { Name = "ADO.NET Blog" };
+    Console.WriteLine(context.Entry(blog)) => Detached 출력
+    context.Entry(blog).State = EntityState.Added;   <= Entry()함수로 state를 Added로 바꾸는 것 만으로도 추가된다. collection의 Add를 호출하지 않았음에도
+
+    context.Entry(blog).State = EntityState.Unchanged;  <= context.Attach(blog)와 똑같다!
+    context.SaveChanges();
+}
+
+Attaching an existing entity to the context
+var existingBlog = new Blog { BlogId = 1, Name = "ADO.NET Blog" };  <= 이미 DB에 있다는 것을 알고 있는데 DB로 부터 읽은것이 아니라 코드로 만들었다! BlogId로 PK가 있다는 것에 주목!
+
+using (var context = new BloggingContext())
+{
+    context.Blogs.Attach(existingBlog);  <=이순간 existingBlog는 Detached에서 Unchanged로 바뀐다.
+    context.Entry(existingBlog).State = EntityState.Unchanged; <= 솔직히 필요없는 코드!
+
+    // Do some more work...  
+
+    context.SaveChanges();
+}
+
+using (var context = new BloggingContext())
+{
+    context.Entry(existingBlog).State = EntityState.Unchanged;  <= Attach함수를 사용한 것과 같다!
+
+    // Do some more work...  
+
+    context.SaveChanges();
+}
+
+
+var existingBlog = new Blog { Name = "ADO.NET Blog" }; <= 만약 PK가 없이 생성되고 Attach된다면?(BlogId값이 0이면)
+using (var context = new BloggingContext())
+{
+    context.Blogs.Attach(existingBlog);  <=이순간 existingBlog는 Detached에서 Added로 바뀐다.
+    // Do some more work...  
+
+    context.SaveChanges();  <= PK가 제공되지 않은 instance들은 자동으로 add된다.
+}
+
+var existingBlog = new Blog { BlogId =100, Name = "ADO.NET Blog" }; <= 만약 PK가 0이 아닌 값으로 제공되면?
+using (var context = new BloggingContext())
+{
+    context.Blogs.Attach(existingBlog);  <= 이순간 existingBlog는 Detached에서 Unchanged로 바뀐다.
+    // Do some more work...  
+
+    context.SaveChanges();  <= existingBlog를 위에서 손대지 않았다면 아무일도 일어나지 않는다.
+}
+
+Deleting data via the DbContext
+context.Remove(context.Authors.Single(a => a.AuthorId == 1));
+context.SaveChanges();
+위의 문제점은 2개의 sql문을 생성한다는것이다. 하나는 entity를 가져오기 위해 다른 하나는 delete문 생성!
+
+위의 문제점을 다음과 같이 해결!
+You can instead use a stub to prevent the need for a SQL query to retrieve the entity. 
+A stub is representation of the entity that is to be operated on. All that is required for a valid stub is the entity key value.
+
+var context = new SampleContext();
+var author = new Author { AuthorId = 1 };  <= PK만 줘도 된다!
+context.Remove(author);
+context.SaveChanges();
+혹은
+var context = new SampleContext();
+var author = new Author { AuthorId = 1 };
+context.Entry(author).State = EntityState.Deleted;
+context.SaveChanges();
+
+
+var db = new TestContext();
+var book = new Book { 
+    BookId = 1, 
+    Author = new Author {
+        FirstName = "Charles", 
+        LastName = "Dickens" 
+    } 
+};
+db.Attach(book); // Book은Modified, Author Added - no "store generated key"
+
+
+Depending on the diagramming software that you use, the side of the relationship that has a multiplicity of 1 is normally depicted by a figure 1 or a key. 
+The side of the relationship with a multiplicity of many is usually depicted by an asterisk (*) or an infinity symbol (∞). 
+Multiplicity describes the potential number of items that can be found at one end of a relationship.
+
+
+CONSTRAINT [FK_Books_Authors_AuthorId] FOREIGN KEY ([AuthorId]) REFERENCES [Authors] ([AuthorId])
+The ON DELETE or ON UPDATE clause is usually appended to this.
+
+
+One To Many Relationships
+
+public class Author
+{
+    public int AuthorId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public ICollection<Book> Books { get; set; }
+}
+
+아래와 같이 2개의 Book class는 Foreign Key를 지정하지 않았다! 이때 Shadow property로 FK가 만들어진다.
+FK는 nullable이며 referential constraint는 디폴트인 NO Action으로 설정된다.
+public class Book
+{
+    public int BookId { get; set; }
+    public string Title { get; set; }
+}
+
+public class Book
+{
+    public int BookId { get; set; }
+    public string Title { get; set; }
+    public Author Author { get; set; }  <= Inverse Navigation Property
+}
+
+Fully Defined Relationship
+양쪽클래스에서 Navigation property와 동시에 Foreign key property를 갖게되면 Fully Defined Relationship이라한다.
+public class Author
+{
+    public int AuthorId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public ICollection<Book> Books { get; set; }
+}
+
+public class Book
+{
+    public int BookId { get; set; }
+    public string Title { get; set; }
+    public int AuthorId { get; set; } <= Foreign key property
+    public Author Author { get; set; } <= Navigation property
+}
+
+
+이때 FK는 not NULL(required)이며(public int? AuthorId가 아니므로), referential constraint는 cascading으로 바뀌게된다.
+
+아래와 같이 inverse Navigation property를 빼먹어도 principal navigational property(Books)와 foreign key property으로 같은 설정이 가능하다.
+public class Author
+{
+    public int AuthorId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public ICollection<Book> Books { get; set; }
+}
+public class Book
+{
+    public int BookId { get; set; }
+    public string Title { get; set; }
+    public int AuthorId { get; set; }
+}
+
+
+Optional Relationships
+Required relationship : dependent는 principal없이는 존재할수 없는 관계
+Optional Relationship : dependent가 principal없어도 존재할수 없는 관계
+
+만약 dependent에 foreign key가 없으면 디폴트로 optional relation을 생성한다.(nullable)
+foreign key가 nullable로 선언되면 optional relation이다. 이를 바꾸려면 fluent api사용해서 SetNull등으로 수정할것!
+
+public class Property 땅
+{
+    public int PropertyId { get; set; }
+    public string Address { get; set; }
+    public List<Tenant> Tenants { get; set; }
+}
+public class Tenant 소작인
+{
+    public int TenantId { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public int? PropertyId { get; set; }  <= foreign key가 있지만 nullable이므로 optional relationshop을 설정한다.
+    public Property Property { get; set; }
+}
+
+이러한 관계에서는 referential constraint는 디폴트로 Restrict이다.
+Restrict: No Action과 거의 기능이같다. No Action은 실제로 일단 수정, 삭제하고 ROLLBACK하여 검사를 미루는 것이지 글자 그대로 NO ACTION이 아니다.
+Restrict는 참조 하고 있는 것이 있으면 실제 수정, 삭제를 하지 않는다.
+
+One To One Relationships
+principal과 dependent에 각각의 Navigation property가 있고 dependent에 foreign key property가 있으면 one to one relationship 생성
+public class Author
+{
+    public int AuthorId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public AuthorBiography Biography { get; set; }
+}
+public class AuthorBiography
+{
+    public int AuthorBiographyId { get; set; }
+    public string Biography { get; set; }
+    public DateTime DateOfBirth { get; set; }
+    public string PlaceOfBirth { get; set; }
+    public string Nationality { get; set; }
+    public int AuthorId { get; set; }  <= unique index를 생성하여 one to one을 만든다.
+    public Author Author { get; set; }
+}
+
+many to many relationship은 fluent api가 필요하다.(convention 방법이 없다.)
+
+configuration은 attribute와 fluent api를 통해 할수있다.
+
+attribute를 쓰는 2가지 방법
+[MyFirstAttribute]
+[MySecondAttribute]
+[MyThirdAttribute]
+public int MyProperty { get; set; }
+
+[MyFirstAttribute, MySecondAttribute, MyThirdAttribute]
+public int MyProperty { get; set; }
+
+attribute를 쓸것인가? fluent api를 쓸것인가?
+fluent api는 단점이 없다. 흠...fluent로? 전부 configuration? 흠..나중에 한번 도전해보자.
+
+
+Concurrency Management
+Last In Wins
+Pessimistic Concurrency 
+Optimistic Concurrency
+

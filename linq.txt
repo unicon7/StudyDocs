@@ -1,0 +1,2417 @@
+https://www.youtube.com/playlist?list=PL6n9fhu94yhWi8K02Eqxp3Xyh_OmQ0Rp6
+
+1강 What is LINQ
+LINQ는 Language Integrated Query의 의미한다.
+LINQ는 우리가 어떤 타입의 datasource이든지(SQL Server, XML doucument, Object in Memory등) query할수있게 한다.
+
+만약 .NET Application을 개발하고 있다면
+a)SQL Server로 부터 data가 필요하다 : 그렇다면 ADO.NET과 SQL을 알아야한다.
+b)XML문서로부터 data가 필요하다 : 그렇다면 XSLT와 XPATH query들에 대해 알아야한다.
+c)메모리에있는 object들(List<Customer>, List<Order> 등)의 query가 필요하다 : 그렇다면 메모리에있는 object를 어떻게 다루는지 알아야한다.
+
+LINQ는 비슷한 코딩 스타일을 사용해서 각각의 data source에대해 문법등을 알필요없이 이런 다른 data source들의 작업을 할수 있게 해준다.
+
+다른 장점으로는 인텔리센스와 컴파일시간 에러 체크가 가능하다.
+
+1. LINQ query는 어떠한 .net 프로그래밍 언어에서도 쓰일수 있다.
+2. LINQ provider는 LINQ query와 실제 data source사이의 컴포넌트이다. LINQ provider는 LINQ query를 근본적인 data source가 이해할수 있는 포맷으로
+변환한다.
+
+예를 들어보자.
+ADO.NET을 사용하여 SQL Server에 접근해보자
+Step 1: We first create the required table
+Create Table Students
+(
+     ID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50)
+)
+GO
+
+Insert into Students values ('Mark', 'Hastings', 'Male')
+Insert into Students values ('Steve', 'Pound', 'Male')
+Insert into Students values ('Ben', 'Hoskins', 'Male')
+Insert into Students values ('Philip', 'Hastings', 'Male')
+Insert into Students values ('Mary', 'Lambeth', 'Female')
+GO
+
+Step 2: Write the required ADO.NET code to retrieve data from SQL Server database as shown below.
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            string cs = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
+            SqlConnection con = new SqlConnection(cs);
+            SqlCommand cmd = new SqlCommand("Select ID, FirstName, LastName, Gender from Students where Gender='Male'", con);
+            <= 테이블이나 컬럼 이름을 잘못쓰면 컴파일 시간에 알수 없다. 인텔리센스도 지원 할수 없다.
+            List<Student> listStudents = new List<Student>();
+            con.Open();
+            SqlDataReader rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                Student student = new Student();
+                student.ID = Convert.ToInt32(rdr["ID"]);
+                student.FirstName = rdr["FirstName"].ToString();
+                student.LastName = rdr["LastName"].ToString();
+                student.Gender = rdr["Gender"].ToString();
+
+                listStudents.Add(student);
+            }
+            con.Close();
+
+            GridView1.DataSource = listStudents;
+            GridView1.DataBind();
+        }
+    }
+
+    public class Student
+    {
+        public int ID { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+    }
+}
+
+같은 작업을 LINQ to SQL을 사용해 똑같이 만들어보자.
+Step 1: Create a new empty asp.net web application and name it Demo
+
+Step 2: Click on "View" menu item and select "Server Explorer"
+
+Step 3: In "Server Explorer" window, right click on "Data Connections" and select "Add Connection" option
+
+Step 4: Specify your SQL Server name and the credentials to connect to SQL Server. At this point we should be connected to SQL Server from Visual Studio.
+
+Step 5: Adding LINQ to SQL Classes
+a) Right click on the "Demo" project in solution explorer and select "Add New Item" option
+b) In the "Add New Item" dialog box, select "Data" under "Installed Templates"
+c) Select "LINQ to SQL Classes"
+d) Set Name = Sample.dbml
+e) Finally click "Add" button
+
+Step 6: From "Server Explorer" window drag and drop "Students" table onto "Sample.dbml" designer file.
+
+Step 7: Add a webform. Drag and drop a gridview control.
+
+Step 8: Copy and paste the following code in the code-behind file
+using System;
+using System.Linq;
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            SampleDataContext dataContext = new SampleDataContext();
+            GridView1.DataSource = from student in dataContext.Students
+                                   where student.Gender == "Male"
+                                   select student;
+            GridView1.DataBind();
+        }
+    }
+}
+
+2강 Writing LINQ Queries
+LINQ query를 쓰기위해 LINQ Standard Query Operators를 사용한다. 아래는 몇가지 예이다.
+select
+from
+where 
+orderby 
+join
+groupby
+
+LINQ query를 쓰는 방법은 2가지가 있다.
+1. Lambda식
+2. SQL 비슷한 query식
+
+ Standard Query Operator들은 IEnumerable<T> 인터페이스에대해 extention method들로 구현되어있다.
+ 나중에 extension method와 어떻게 구현하는지 알아볼 것이다.
+
+ LINQ query를 쓰는 2가지 방법에 집중해보자.
+ 퍼포먼스 관점에서 봤을때 2가지 방법은 차이가 없다. 개인적 취향에 따라 쓰면된다.
+ 하지만 SQL형식으로 쓰여진 LINQ query는 람다식형태로 변환뒤 컴파일된다는 것은 기억하자.
+
+데모에서는 Student 클래스를 사용한다.
+GetAllStudents()는 List<Student>를 리턴한다.
+List<Student>는 IEnumerable<T>를 구현하므로 LINQ Standard Query Operator가 사용가능할것이며
+List<Student>에 적용할수있다.
+public class Student
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    public string Gender { get; set; }
+
+    public static List<Student> GetAllStudents()
+    {
+        List<Student> listStudents = new List<Student>();
+
+        Student student1 = new Student
+        {
+            ID = 101,
+            Name = "Mark",
+            Gender = "Male"
+        };
+        listStudents.Add(student1);
+
+        Student student2 = new Student
+        {
+            ID = 102,
+            Name = "Mary",
+            Gender = "Female"
+        };
+        listStudents.Add(student2);
+
+        Student student3 = new Student
+        {
+            ID = 103,
+            Name = "John",
+            Gender = "Male"
+        };
+        listStudents.Add(student3);
+
+        Student student4 = new Student
+        {
+            ID = 104,
+            Name = "Steve",
+            Gender = "Male"
+        };
+        listStudents.Add(student4);
+
+        Student student5 = new Student
+        {
+            ID = 105,
+            Name = "Pam",
+            Gender = "Female"
+        };
+        listStudents.Add(student5);
+
+        return listStudents;
+    }
+}
+
+
+람다 형식을 쓰는 형태
+IEnumerable<Student> students = Student.GetAllStudents().Where(student => student.Gender == "Male");
+
+SQL형태로 쓰는 형태
+IEnumerable<Student> students = from student in Student.GetAllStudents()
+                                where student.Gender == "Male"
+                                select student;
+
+Gridview에 LINKQ query의 결과를 바인드
+GridView1.DataSource = students;
+GridView1.DataBind();
+
+3강 Extension Methods in C#
+MSDN에 따르면, Extension method는 새로운 derived type, 재컴파일, Original Type의 수정 없이 이미 존재하는 Type에 method를
+추가 할 수 있게한다.
+Extention method는 특별한 종류의 static method이다. 하지만 확장된 type의 instance method처럼 호출된다.
+
+c#과 basic 코드에서 extension method의 호출과 type에 정의되어진 method의 차이는 없다.
+
+정의를 이해해보자.
+LINQ이 standard query operator(select, where등)는 IEnumerable<T> interface에대해 extension method로 Enumerable class에 구현되어있다.
+
+다음 query를 보자
+List<int> Numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+IEnumerable<int> EvenNumbers = Numbers.Where(n => n % 2 == 0);
+
+List<T>에 Where가 속해있지 않음에도 List<T>에 속해 있는 것처럼 쓸수있다. 이것은 Where() method가 IEnumerable<T>에 extension method로 구현되어서이다.
+List<T> 는 IEnumerable<T> interface를 구현한다.
+
+어떻게 extension method를 구현하는가?
+public static class StringHelper
+{
+    public static string ChangeFirstLetterCase(this string inputString)
+    {
+        if (inputString.Length > 0)
+        {
+            char[] charArray = inputString.ToCharArray();
+            charArray[0] = char.IsUpper(charArray[0]) ?
+                char.ToLower(charArray[0]) : char.ToUpper(charArray[0]);
+            return new string(charArray);
+        }
+
+        return inputString;
+    }
+}
+
+2개의 형식으로 호출 가능
+string result = strName.ChangeFirstLetterCase();
+string result = StringHelper.ChangeFirstLetterCase(strName);
+
+LINQ extension method들도 2가지 방법으로 호출 가능하다. 모든 LINQ extension method들이 Enumerable class에 정의되어 있기때문에 다음과 같은
+문법이 가능하다.
+List<int> Numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+IEnumerable<int> EvenNumbers = Enumerable.Where(Numbers, n => n % 2 == 0);
+
+4강 LINQ Aggregate Functions
+LINQ extension method라고도 불리는 LINQ Standard Query Operator는 다음과 같은 카테고리로 대충 분류된다.
+
+Aggregate Operators
+Grouping Operators
+Restriction Operators
+Projection Operators
+Set Operators
+Partitioning Operators
+Conversion Operators
+Element Operators
+Ordering Operators
+Generation Operators
+Query Execution
+Join Operators
+Custom Sequence Operators
+Quantifiers Operators
+Miscellaneous Operators
+
+밑에있는 LINQ Aggregate Operator들을 알아보자.
+Min
+Max
+Sum
+Count
+Average
+Aggregate (Next Video)
+
+예제1)
+using System;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            int[] Numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+            int smallestNumber = Numbers.Min();
+            int smallestEvenNumber = Numbers.Where(n => n % 2 == 0).Min();
+
+            int largestNumber = Numbers.Max();
+            int largestEvenNumber = Numbers.Where(n => n % 2 == 0).Max();
+
+            int sumOfAllNumbers = Numbers.Sum();
+            int sumOfAllEvenNumbers = Numbers.Where(n => n % 2 == 0).Sum();
+
+            int countOfAllNumbers = Numbers.Count();
+            int countOfAllEvenNumbers = Numbers.Where(n => n % 2 == 0).Count();
+
+            double averageOfAllNumbers = Numbers.Average();
+            double averageOfAllEvenNumbers = Numbers.Where(n => n % 2 == 0).Average();
+
+            Console.WriteLine("Smallest Number = " + smallestNumber);
+            Console.WriteLine("Smallest Even Number = " + smallestEvenNumber);
+
+            Console.WriteLine("Largest Number = " + largestNumber);
+            Console.WriteLine("Largest Even Number = " + largestEvenNumber);
+
+            Console.WriteLine("Sum of All Numbers = " + sumOfAllNumbers);
+            Console.WriteLine("Sum of All Even Numbers = " + sumOfAllEvenNumbers);
+
+            Console.WriteLine("Count of All Numbers = " + countOfAllNumbers);
+            Console.WriteLine("Count of All Even Numbers = " + countOfAllEvenNumbers);
+
+            Console.WriteLine("Average of All Numbers = " + averageOfAllNumbers);
+            Console.WriteLine("Average of All Even Numbers = " + averageOfAllEvenNumbers);
+        }
+    }
+}
+
+예제2
+using System;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            string[] countries = { "India", "USA", "UK" };
+
+            int minCount = countries.Min(x => x.Length); <= 안쪽에 람다식이 들어가서 동작하는것에 주목~
+            int maxCount = countries.Max(x => x.Length);
+
+            Console.WriteLine("The shortest country name has {0} characters in its name", minCount);
+            Console.WriteLine("The longest country name has {0} characters in its name", maxCount);
+        }
+    }
+}
+
+5강  Aggregate function in LINQ
+string[] countries = { "India", "US", "UK", "Canada", "Australia" };
+single comma separated string으로 만들고 싶다. 출력은 아래와 같아야한다.
+India, US, UK, Canada, Australia
+
+LINQ 없이 구현
+using System;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            string[] countries = { "India", "US", "UK", "Canada", "Australia" };
+
+            string result = string.Empty;
+            for (int i = 0; i < countries.Length; i++)
+            {
+                result = result + countries[i] + ", ";
+            }
+
+            int lastIndex = result.LastIndexOf(",");
+            result = result.Remove(lastIndex);
+
+            Console.WriteLine(result);
+        }
+    }
+}
+
+LINQ Aggregate function으로 구현
+using System;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            string[] countries = { "India", "US", "UK", "Canada", "Australia" };
+
+            string result = countries.Aggregate((a, b) => a + ", " + b);
+
+            Console.WriteLine(result);
+        }
+    }
+}
+
+Aggregate()함수는 어떻게 동작하는가?
+Step1 : 먼저 "India"가 "US"와 연결되어 "India, US"를 결과로 생성
+Step2 : Step1의 결과가 "UK"와 연결되어 "India, US, UK"를 결과로 생성
+Step3 : Step2의 결과가 "Canada"와 연결되어 "India, US, UK, Canada"를 결과로 생성
+위의 과정이 마지막 요소까지 계속되어 "India, US, UK, Canada, Australia"를 결과로 생성한다.
+
+모든 숫자의 곱을 생성하라
+LINQ 없이
+using System;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            int[] Numbers = { 2, 3, 4, 5 };
+
+            int result = 1;
+            foreach (int i in Numbers)
+            {
+                result = result * i;
+            }
+
+            Console.WriteLine(result);
+        }
+    }
+}
+
+LINQ 사용
+using System;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            int[] Numbers = { 2, 3, 4, 5 };
+
+            int result = Numbers.Aggregate((a, b) => a * b);
+
+            Console.WriteLine(result);
+        }
+    }
+}
+
+Aggregate()함수는 어떻게 동작하는가?
+Setp 1: 2x3 결과 6생성
+Setp 2: Step 1의 결과 6과 4의 곱 24생성
+Setp 3: Step 2의 결과 24과 5의 곱 120생성
+
+Aggregate()함수의 오버로드 버전은 Seed파라메터를 갖는다.
+int[] Numbers = { 2, 3, 4, 5 };
+int result = Numbers.Aggregate(10, (a, b) => a * b); <=10이 seed
+Step 1: 10 x 2 = 20
+Step 2: 20 x 3 = 60
+Step 3: 60 x 4 = 240
+Step 3: 240 x 5 = 1200
+
+6강 Restriction Operators in LINQ
+Where operator는 LINQ에서 Restriction Operators category에 속한다.
+SQL처럼 Where operator는 행들을 필터링 하는데 쓰여진다.
+filter expression은 predicate로 쓴다.
+
+다음은 WHERE extension method의 2가지 오버로드이다.
+public static IEnumerable<TSource> Where<TSource>(
+    this IEnumerable<TSource> source,
+    Func<TSource, bool> predicate); <= 요소,리턴값
+
+public static IEnumerable<TSource> Where<TSource>(
+    this IEnumerable<TSource> source,
+    Func<TSource, int, bool> predicate);  <= 요소,인덱스,리턴값
+
+다음 예제에서는 List<int>의 각 요소마다 람다식을 실행한다. 만약 숫자가 2로 나누어 떨어지면 true리턴, 아닌경우 false 리턴
+using System;
+using System.Collections.Generic;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            IEnumerable<int> evenNumbers = numbers.Where(num => num % 2 == 0);
+
+            foreach (int evenNumber in evenNumbers)
+            {
+                Console.WriteLine(evenNumber);
+            }
+        }
+    }
+}
+
+// Using SQL like syntax
+IEnumerable<int> evenNumbers = from num in numbers
+                              where num % 2 == 0
+                              select num;
+
+다음은 짝수의 index를 출력하는 프로그램이다.
+using System;
+using System.Collections.Generic;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+            IEnumerable<int> evenNumberIndexPositions = numbers
+                .Select((num, index) => new { Number = num, Index = index })
+                .Where(x => x.Number % 2 == 0)
+                .Select(x => x.Index);
+
+            foreach (int evenNumber in evenNumberIndexPositions)
+            {
+                Console.WriteLine(evenNumber);
+            }
+        }
+    }
+}
+
+예제3
+Use the following SQL to create Departments and Employees tables
+
+Create table Departments
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Location nvarchar(50)
+)
+GO
+
+Create table Employees
+(
+     ID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+     Salary int,
+     DepartmentId int foreign key references Departments(Id)
+)
+GO
+
+Insert into Departments values ('IT', 'New York')
+Insert into Departments values ('HR', 'London')
+Insert into Departments values ('Payroll', 'Sydney')
+GO
+
+Insert into Employees values ('Mark', 'Hastings', 'Male', 60000, 1)
+Insert into Employees values ('Steve', 'Pound', 'Male', 45000, 3)
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 70000, 1)
+Insert into Employees values ('Philip', 'Hastings', 'Male', 45000, 2)
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 30000, 2)
+Insert into Employees values ('Valarie', 'Vikings', 'Female', 35000, 3)
+Insert into Employees values ('John', 'Stanmore', 'Male', 80000, 1)
+GO
+
+IT와 HR 부서의 Male의 이름을 출력하고 싶다.
+
+ADO.NET entity data model을 추가한다.
+add > ADO.NET entity data model (EmployeeModel.edmx화일 생성)>entity connection settings(EmployeeDBContext) > Database table 추가 뒤 NameSpace(EmployeeModel)
+로 세팅
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        static void Main()
+        {
+            EmployeeDBContext context = new EmployeeDBContext();
+
+            IEnumerable<Department> departments = context.Departments
+                .Where(dept => dept.Name == "IT" || dept.Name == "HR");
+
+            foreach (Department department in departments)
+            {
+                Console.WriteLine("Department Name = " + department.Name);
+                foreach (Employee employee in department.Employees.Where(emp => emp.Gender == "Male"))
+                {
+                    Console.WriteLine("\tEmployee Name = " + employee.FirstName + " " + employee.LastName);
+                }
+                Console.WriteLine();
+            }
+        }
+    }
+}
+
+
+7강 Projection Operators in LINQ
+다음의 2개의 standard LINQ query operator는 Projection Operators category에 속한다.
+Select
+SelectMany
+
+Projection Operators(Select & SelectMany)는 query의 결과를 변환하는데 쓴다.
+일단 Select만 살펴보자.
+
+SQL의 Select절은 우리가 뽑아낼 컬럼이 무엇인지 명시할수있게해준다. 비슷하게 LINQ SELECT standard query operator는 우리가 뽑아낼
+프로퍼티를 명시할수 있게 한다. 또한 계산도 수행할수 있게 한다.
+
+예제1: 모든 employee에서 EmployeeID 프로퍼티만 뽑아라
+IEnumerable<int> employeeIds = Employee.GetAllEmployees().Select(emp => emp.EmployeeID);
+foreach (int id in employeeIds)
+{
+    Console.WriteLine(id);
+}
+
+예제2: 모든 Employee의 FirstName과 Gender 프로퍼티를 익명형식에 프로젝트하라.
+var result = Employee.GetAllEmployees().Select(emp => new
+                    {
+                        FirstName = emp.FirstName,
+                        Gender = emp.Gender
+                    });
+foreach (var v in result)
+{
+    Console.WriteLine(v.FirstName + " - " + v.Gender);
+}
+
+예제3: 모든 employee의 FullName과 Monthly Salay를 계산하여 익명형식으로 프로젝트하라.
+var result = Employee.GetAllEmployees().Select(emp => new
+{
+    FullName = emp.FirstName + " " + emp.LastName,
+    MonthlySalary = emp.AnnualSalary / 12
+});
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.FullName + " - " + v.MonthlySalary);
+}
+
+예제4: annual salary가 50000이상인 모든 employee에게 10% bonus를 주고, FirstName, AnnualSalay, Bonus 익명형식에 프로젝트하라.
+var result = Employee.GetAllEmployees()
+                .Where(emp => emp.AnnualSalary > 50000)
+                .Select(emp => new
+                 {
+                    Name = emp.FirstName,
+                    Salary = emp.AnnualSalary,
+                    Bonus = emp.AnnualSalary * .1
+                 });
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.Name + " : " + v.Salary + " - " + v.Bonus);
+}
+
+8강 SelectMany Operator in LINQ
+SelectMany Operator는 Projection Operators category에 속한다.
+시퀀스의 각 요소를 IEnumerable<T>에 프로젝션하고 결과 시퀀스를 단일 시퀀스로 평면화한다.
+
+예제에 쓰일 class
+public class Student
+{
+    public string Name { get; set; }
+    public string Gender { get; set; }
+    public List<string> Subjects { get; set; }
+
+    public static List<Student> GetAllStudents()
+    {
+        List<Student> listStudents = new List<Student>
+        {
+            new Student
+            {
+                Name = "Tom",
+                Gender = "Male",
+                Subjects = new List<string> { "ASP.NET", "C#" }
+            },
+            new Student
+            {
+                Name = "Mike",
+                Gender = "Male",
+                Subjects = new List<string> { "ADO.NET", "C#", "AJAX" }
+            },
+            new Student
+            {
+                Name = "Pam",
+                Gender = "Female",
+                Subjects = new List<string> { "WCF", "SQL Server", "C#" }
+            },
+            new Student
+            {
+                Name = "Mary",
+                Gender = "Female",
+                Subjects = new List<string> { "WPF", "LINQ", "ASP.NET" }
+            },
+        };
+
+        return listStudents;
+    }
+}
+
+예제1: 주어진 학생의 모든 subject string을 IEnumerable<string>에 프로젝트하라.
+이 예제에서는 students가 4개 있기때문에 IEnumerable<string> 시퀀스가 4개 있다.
+그리고 단일한 시퀀스를 형성하기 위해 평면화된다.(예를 들면 IEnumerable<string> 시퀀스)
+
+IEnumerable<string> allSubjects = Student.GetAllStudents().SelectMany(s => s.Subjects);
+foreach (string subject in allSubjects)
+{
+    Console.WriteLine(subject);
+}
+
+출력
+ASP.NET
+C#
+ADO.NET
+C#
+AJAX
+WCF
+SQL Server
+C#
+WPF
+LINQ
+ASP.NET
+
+예제2 : 예제1을 SQL 스타일로 다시 써라. SQL스타일을 쓸때 SelectMany 를 쓰지 않는다. 대신 from절을 쓰며 추가된 from은 첫번째 from절로부터 data를
+얻게된다.
+IEnumerable<string> allSubjects = from student in Student.GetAllStudents()
+                                  from subject in student.Subjects
+                                  select subject;
+
+foreach (string subject in allSubjects)
+{
+    Console.WriteLine(subject);
+}
+
+예제3 :각각의 string을 IEnumerable<char>로 투영하라. 이 예제에서는 2개의 sting을 갖고 있어서 2개의 IEnumerable<char> 시퀀스가 있다.
+그리고 한개의 시퀀스를 형성하기 위해 평면화된다.
+string[] stringArray =
+{
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "0123456789"
+};
+
+IEnumerable<char> result = stringArray.SelectMany(s => s);
+
+foreach (char c in result)
+{
+    Console.WriteLine(c);
+}
+출력
+A
+B
+C
+...
+0
+1
+...
+9
+
+예제4 : 예제3을 SQL 스타일로 다시 써라
+string[] stringArray =
+{
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "0123456789"
+};
+
+IEnumerable<char> result = from s in stringArray
+                           from c in s
+                           select c;
+
+foreach (char c in result)
+{
+    Console.WriteLine(c);
+}
+
+예제5: distict subject만 출력하라
+IEnumerable<string> allSubjects = Student.GetAllStudents().SelectMany(s => s.Subjects).Distinct();
+foreach (string subject in allSubjects)
+{
+    Console.WriteLine(subject);
+}
+
+예제6 : 예제5를 SQL 스타일로
+IEnumerable<string> allSubjects = (from student in Student.GetAllStudents()
+                                   from subject in student.Subjects
+                                   select subject).Distinct();
+
+foreach (string subject in allSubjects)
+{
+    Console.WriteLine(subject);
+}
+
+예제7 : 이름과 subject를 같이 출력하라
+var result = Student.GetAllStudents().SelectMany(s => s.Subjects, (student, subject) =>
+    new { StudentName = student.Name, Subject = subject });
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.StudentName + " - " + v.Subject);
+}
+
+예제8 : 예제7을 SQL문으로
+var result = from student in Student.GetAllStudetns()
+             from subject in student.Subjects
+             select new { StudnetName = student.Name, Subject = subject };
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.StudnetName + " - " + v.Subject);
+}
+
+9강 Difference between Select and SelectMany in LINQ
+Select()는 List<string>의 List를 리턴한다. 2중 루프가 필요하다.
+IEnumerable<List<string>> result = Student.GetAllStudetns().Select(s => s.Subjects);
+foreach (List<string> stringList in result)
+{
+    foreach (string str in stringList)
+    {
+        Console.WriteLine(str);
+    }
+}
+
+반면에 SelectMany()는 List의 List를 한개의 List로 평면화한다. => 평면화는 각 리스트들을 풀어서 하나의 리스트로 만드는 것을 말하는듯...
+IEnumerable<string> result = Student.GetAllStudetns().SelectMany(s => s.Subjects);
+foreach (string str in result)
+{
+    Console.WriteLine(str);
+}
+
+10강 Ordering Operators in LINQ
+아래 5개의 query operator는 Ordering Operators category에 속한다.
+OrderBy
+OrderByDescending
+ThenBy
+ThenByDescending
+Reverse
+
+OrderBy,OrderByDescending,ThenBy,ThenByDescending은 sort할때 쓰인다.
+Reverse는 주어진 collection의 item들의 순서를 reverse한다.
+public class Student
+{
+    public int StudentID { get; set; }
+    public string Name { get; set; }
+    public int TotalMarks { get; set; }
+
+    public static List<Student> GetAllStudents()
+    {
+        List<Student> listStudents = new List<Student>
+        {
+            new Student
+            {
+                StudentID= 101,
+                Name = "Tom",
+                TotalMarks = 800
+            },
+            new Student
+            {
+                StudentID= 102,
+                Name = "Mary",
+                TotalMarks = 900
+            },
+            new Student
+            {
+                StudentID= 103,
+                Name = "Valarie",
+                TotalMarks = 800
+            },
+            new Student
+            {
+                StudentID= 104,
+                Name = "John",
+                TotalMarks = 800
+            },
+        };
+
+        return listStudents;
+    }
+}
+
+예제1 : Name을 ascending으로 Student를 정렬
+IEnumerable<Student> result = Student.GetAllStudents().OrderBy(s => s.Name);
+foreach (Student student in result)
+{
+    Console.WriteLine(student.Name);
+}
+
+예제2 : 예제1을 SQL 스타일로
+IEnumerable<Student> result = from student in Student.GetAllStudents()
+                              orderby student.Name
+                              select student;
+
+foreach (Student student in result)
+{
+    Console.WriteLine(student.Name);
+}
+
+예제3: Name을 descending으로 Student를 정렬
+IEnumerable<Student> result = Student.GetAllStudents().OrderByDescending(s => s.Name);
+foreach (Student student in result)
+{
+    Console.WriteLine(student.Name);
+}
+
+예제4 : 예제3을 SQL스타일로
+IEnumerable<Student> result = from student in Student.GetAllStudents()
+                              orderby student.Name descending
+                              select student;
+
+foreach (Student student in result)
+{
+    Console.WriteLine(student.Name);
+}
+
+11강 Ordering Operators in LINQ II
+한개의 값 혹은 표현식으로 정렬하고 싶을때 OrderBy 또는 OrderByDescending은 잘 작동한다.
+만약 한개 이상의 값, 표현식으로 정렬하고 싶은 경우 그때가  OrderBy 또는 OrderByDescending과 함께 ThenBy 또는 ThenByDescending 쓸때이다.
+OrderBy 또는 OrderByDescending는 primary sort를 수행한다. ThenBy 또는 ThenByDescending은 secondary sort를 할때 쓴다.
+secondary sort operator는 같은 LINQ query에 한번 이상 쓰여질수 있다.
+
+예1
+a) 먼저 TotalMarks를 ascending order로 Student를 정렬한다(Primary sort)
+b) TotalMarks가 800인 4개의 Student는 Name의 ascending order로 정렬된다.(First secondary Sort)
+c) Name이 John인 2개의 Student는 StudentID의 ascending order로 정렬된다.(Second secondary Sort)
+
+IEnumerable<Student> result = Student.GetAllStudetns()
+    .OrderBy(s => s.TotalMarks).ThenBy(s => s.Name).ThenBy(s => s.StudentID);
+foreach (Student student in result)
+{
+    Console.WriteLine(student.TotalMarks + "\t" + student.Name + "\t" + student.StudentID);
+}
+
+예2: 예1을 다시 SQL 스타일로 다시 쓴다. SQL 스타일에서는 ThenBy 또는 ThenByDescending을 쓰지 않는다.
+대신 comma separated list를 사용하여 sort expression을 명시한다.
+첫번째 sort expression이 primary sort에 쓰여지며 뒤따르는 sort expression들은 secondary sort에 쓰여진다.
+IEnumerable<Student> result = from student in Student.GetAllStudetns()
+                                                      orderby student.TotalMarks, student.Name, student.StudentID
+                                                      select student;
+foreach (Student student in result)
+{
+    Console.WriteLine(student.TotalMarks + "\t" + student.Name + "\t" + student.StudentID);
+}
+
+예3: reverse 예제
+IEnumerable<Student> students = Student.GetAllStudetns();
+
+Console.WriteLine("Before calling Reverse");
+foreach (Student s in students)
+{
+    Console.WriteLine(s.StudentID + "\t" + s.Name + "\t" + s.TotalMarks);
+}
+
+Console.WriteLine();
+IEnumerable<Student> result = students.Reverse();
+
+Console.WriteLine("After calling Reverse");
+foreach (Student s in result)
+{
+    Console.WriteLine(s.StudentID + "\t" + s.Name + "\t" + s.TotalMarks);
+}
+
+12강 Partitioning Operators in LINQ
+아래 4개의 query operator는 Partitioning Operators category에 속한다.
+Take
+Skip
+TakeWhile
+SkipWhile
+
+Take() collection의 시작부터 명시된 숫자만큼을 리턴한다.
+Skip() collection의 시작부터 명시된 숫자만큼을 스킵하고 나머지를 리턴한다.
+같은 아규먼트값을 가질때 Skip()은 Take()가 리턴하지 않은 모든 값을 리턴하는것을 주목.
+
+TakeWhile() collection의 시작부터 주어진 predicate를 만족하는한 계속 리턴
+SkipWhile() collection의 시작부터 주어진 predicate를 만족하는한 계속 스킵한뒤 나머지를 리턴
+
+예제1: 처음 3개의 country만 가져와라.
+string[] countries = { "Australia", "Canada", "Germany", "US", "India", "UK", "Italy" };
+
+IEnumerable<string> result = countries.Take(3);
+
+foreach (string country in result)
+{
+    Console.WriteLine(country);
+}
+
+예제2: 예제1을 SQL 스타일로 다시
+ring[] countries = { "Australia", "Canada", "Germany", "US", "India", "UK", "Italy" };
+
+IEnumerable<string> result = (from country in countries
+                              select country).Take(3);
+
+foreach (string country in result)
+{
+    Console.WriteLine(country);
+}
+
+예제3: 처음 3나라를 스킵하고 나머지를 뽑는다.
+string[] countries = { "Australia", "Canada", "Germany", "US", "India", "UK", "Italy" };
+
+IEnumerable<string> result = countries.Skip(3);
+
+foreach (string country in result)
+{
+    Console.WriteLine(country);
+}
+
+예제4: 배열의 처음부터 주어진 조건을 만족할때까지만 뽑는다.
+string[] countries = { "Australia", "Canada", "Germany", "US", "India", "UK", "Italy" };
+
+IEnumerable<string> result = countries.TakeWhile(s => s.Length > 2);
+
+foreach (string country in result)
+{
+    Console.WriteLine(country);
+}
+
+출력
+Australia
+Canada
+Germany
+
+예제5: 
+string[] countries = { "Australia", "Canada", "Germany", "US", "India", "UK", "Italy" };
+
+IEnumerable<string> result = countries.SkipWhile(s => s.Length > 2);
+
+foreach (string country in result)
+{
+    Console.WriteLine(country);
+}
+
+출력
+US
+India
+UK
+Italy
+
+13강 Implement paging using skip and take operators
+public class Student
+{
+    public int StudentID { get; set; }
+    public string Name { get; set; }
+    public int TotalMarks { get; set; }
+
+    public static List<Student> GetAllStudetns()
+    {
+        List<Student> listStudents = new List<Student>
+        {
+            new Student { StudentID= 101, Name = "Tom", TotalMarks = 800 },
+            new Student { StudentID= 102, Name = "Mary", TotalMarks = 900 },
+            new Student { StudentID= 103, Name = "Pam", TotalMarks = 800 },
+            new Student { StudentID= 104, Name = "John", TotalMarks = 800 },
+            new Student { StudentID= 105, Name = "John", TotalMarks = 800 },
+            new Student { StudentID= 106, Name = "Brian", TotalMarks = 700 },
+            new Student { StudentID= 107, Name = "Jade", TotalMarks = 750 },
+            new Student { StudentID= 108, Name = "Ron", TotalMarks = 850 },
+            new Student { StudentID= 109, Name = "Rob", TotalMarks = 950 },
+            new Student { StudentID= 110, Name = "Alex", TotalMarks = 750 },
+            new Student { StudentID= 111, Name = "Susan", TotalMarks = 860 },
+        };
+
+        return listStudents;
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    class Program
+    {
+        public static void Main()
+        {
+            IEnumerable<Student> students = Student.GetAllStudetns();
+
+            do
+            {
+                Console.WriteLine("Please enter Page Number - 1,2,3 or 4");
+                int pageNumber = 0;
+
+                if (int.TryParse(Console.ReadLine(), out pageNumber))
+                {
+                    if (pageNumber >= 1 && pageNumber <= 4)
+                    {
+                        int pageSize = 3;
+                        IEnumerable<Student> result = students
+                                                     .Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Displaying Page " + pageNumber);
+                        foreach (Student student in result)
+                        {
+                            Console.WriteLine(student.StudentID + "\t" + 
+                                                                        student.Name + "\t" + student.TotalMarks);
+                        }
+                        Console.WriteLine();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Page number must be an integer between 1 and 4");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Page number must be an integer between 1 and 4");
+                }
+            } while (1 == 1);
+        }
+    }
+}
+
+14강 LINQ query deferred execution
+deferred execution의 개념을 알아보자.
+LINQ는 2가지 다른 behaviors of execution을 가지고 있다.
+1.Deferred execution <= query가 define되는 시점에 실행되지 않는다.
+2.Immediate execution <= query가 define되는 시점에 실행되어 결과를 얻는다.
+
+LINQ operator는 behavior of query execution을 기초해 2가지 category로 분류된다.
+1. Deferred or Lazy Operators : deferred execution을 사용하는 operator들
+select, where, Take, Skip등
+2. Immediate or Greedy Operators : Immediate execution을 사용하는 operator들
+count, average, min, max, ToList등
+
+LINQ Deferred Execution Example
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    public class Student
+    {
+        public int StudentID { get; set; }
+        public string Name { get; set; }
+        public int TotalMarks { get; set; }
+    }
+
+    class Program
+    {
+        public static void Main()
+        {
+            List<Student> listStudents = new List<Student>
+            {
+                new Student { StudentID= 101, Name = "Tom", TotalMarks = 800 },
+                new Student { StudentID= 102, Name = "Mary", TotalMarks = 900 },
+                new Student { StudentID= 103, Name = "Pam", TotalMarks = 800 }
+            };
+
+            // LINQ Query is only defined here and is not executed at this point
+            // If the query is executed at this point, the result should not display Tim
+            IEnumerable<Student> result = from student in listStudents
+                                          where student.TotalMarks == 800
+                                          select student;
+
+            // Add a new student object with TotalMarks = 800 to the source
+            listStudents.Add(new Student { StudentID = 104, Name = "Tim", TotalMarks = 800 });
+
+            // The above query is actually executed when we iterate thru the sequence
+            // using the foreach loop. This is proved as Tim is also included in the result
+            foreach (Student s in result)
+            {
+                Console.WriteLine(s.StudentID + "\t" + s.Name + "\t" + s.TotalMarks);
+            }
+        }
+    }
+}
+
+출력
+101 Tom 800
+103 Pam 800
+104 Tim 800  <= 이게 찍혔다!
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    public class Student
+    {
+        public int StudentID { get; set; }
+        public string Name { get; set; }
+        public int TotalMarks { get; set; }
+    }
+
+    class Program
+    {
+        public static void Main()
+        {
+            List<Student> listStudents = new List<Student>
+            {
+                new Student { StudentID= 101, Name = "Tom", TotalMarks = 800 },
+                new Student { StudentID= 102, Name = "Mary", TotalMarks = 900 },
+                new Student { StudentID= 103, Name = "Pam", TotalMarks = 800 }
+            };
+
+            // Since we are using ToList() which is a greedy operator
+            // the LINQ Query is executed immediately at this point
+            IEnumerable<Student> result = (from student in listStudents
+                                           where student.TotalMarks == 800
+                                           select student).ToList();
+
+            // Adding a new student object with TotalMarks = 800 to the source
+            // will have no effect on the result as the query is already executed
+            listStudents.Add(new Student { StudentID = 104, Name = "Tim", TotalMarks = 800 });
+
+            // The above query is executed at the point where it is defined.
+            // This is proved as Tim is not included in the result
+            foreach (Student s in result)
+            {
+                Console.WriteLine(s.StudentID + "\t" + s.Name + "\t" + s.TotalMarks);
+            }
+        }
+    }
+}
+
+출력
+101 Tom 800
+103 Pam 800
+<= Tim이 찍히지 않았다!
+
+LINQ Immediate Execution Example 2
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    public class Student
+    {
+        public int StudentID { get; set; }
+        public string Name { get; set; }
+        public int TotalMarks { get; set; }
+    }
+
+    class Program
+    {
+        public static void Main()
+        {
+            List<Student> listStudents = new List<Student>
+            {
+                new Student { StudentID= 101, Name = "Tom", TotalMarks = 800 },
+                new Student { StudentID= 102, Name = "Mary", TotalMarks = 900 },
+                new Student { StudentID= 103, Name = "Pam", TotalMarks = 800 }
+            };
+
+            // Since we are using Count() operator, the LINQ Query is executed at this point
+            int result = (from student in listStudents
+                          where student.TotalMarks == 800
+                          select student).Count();
+
+            // Adding a new student object with TotalMarks = 800 to the source
+            // will have no effect on the result as the query is already executed
+            listStudents.Add(new Student { StudentID = 104, Name = "Tim", TotalMarks = 800 });
+
+            // The above query is executed at the point where it is defined.
+            // This is proved as Tim is not included in the count
+            Console.WriteLine("Students with Total Marks = 800 : " + result);
+        }
+    }
+}
+
+15강 Conversion Operators in LINQ
+아래 query operator는 Conversion Operators category에 속한다.
+ToList
+ToArray
+ToDictionary
+ToLookup
+Cast
+OfType
+AsEnumerable 
+AsQueryable
+
+ToList, ToArray 설명 생략, 모두 Immediate Execution을 사용한다.
+
+ToDictionary() 첫번째 keySelector, 두번째 elementSelector
+Dictionary<int, string> result = listStudents.ToDictionary(x => x.StudentID, x => x.Name);
+foreach (KeyValuePair<int, string> kvp in result)
+{
+  Console.WriteLine(kvp.Key + " " + kvp.Value);
+}
+
+List<Student>를 Dictionary로 변환.
+ Dictionary<int, Student> result = listStudents.ToDictionary(x => x.StudentID);  <= keySelector만 주었다.
+
+foreach (KeyValuePair<int, Student> kvp in result)
+{
+    Console.WriteLine(kvp.Key + "\t" + kvp.Value.Name + "\t" + kvp.Value.TotalMarks);
+}
+
+dictionary의 key는 unique해야한다.
+
+ToLookup은 Loopup을 생성한다. dictionary과의 차이점은 key가 unique하지 않아도 된다.
+
+// Group employees by JobTitle
+var employeesByJobTitle = listEmployees.ToLookup(x => x.JobTitle);
+
+Console.WriteLine("Employees Grouped By JobTitle");
+foreach (var kvp in employeesByJobTitle)
+{
+    Console.WriteLine(kvp.Key);
+    // Lookup employees by JobTitle
+    foreach (var item in employeesByJobTitle[kvp.Key])
+    {
+        Console.WriteLine("\t" + item.Name + "\t" + item.JobTitle + "\t" + item.City);
+    }
+}
+
+// Group employees by City
+var employeesByCity = listEmployees.ToLookup(x => x.City);
+
+Console.WriteLine("Employees Grouped By City");
+foreach (var kvp in employeesByCity)
+{
+    Console.WriteLine(kvp.Key);
+    // Lookup employees by City
+    foreach (var item in employeesByCity[kvp.Key])
+    {
+        Console.WriteLine("\t" + item.Name + "\t" + item.JobTitle + "\t" + item.City);
+    }
+}
+
+16강 Cast and OfType operators in LINQ
+Cast operator는 collection안에 있는 모든 item을 형변환하여 새로운 collection을 만들어 리턴한다.
+만약 item이 형변환에 실패하면 예외가 발생한다. deferred execution을 사용한다.
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Demo
+{
+    class Program
+    {
+        public static void Main()
+        {
+            ArrayList list = new ArrayList();
+            list.Add(1);
+            list.Add(2);
+            list.Add(3);
+
+            // The following item causes an exception
+            // list.Add("ABC");
+
+            IEnumerable<int> result = list.Cast<int>();
+
+            foreach (int i in result)
+            {
+                Console.WriteLine(i);
+            }
+        }
+    }
+}
+
+OfType operator는 명시된 타입의 요소만을 리턴한다. 다른 타입들은 무시되고 결과셋에서 제외된다.
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+"4", "ABC"는 무시되고 결과셋에 들어가지 않는다. 예외발생 안함.
+namespace Demo
+{
+    class Program
+    {
+        public static void Main()
+        {
+            ArrayList list = new ArrayList();
+            list.Add(1);
+            list.Add(2);
+            list.Add(3);
+            list.Add("4");
+            list.Add("ABC");
+
+            IEnumerable<int> result = list.OfType<int>();
+
+            foreach (int i in result)
+            {
+                Console.WriteLine(i);
+            }
+        }
+    }
+}
+
+Cast와 OfType의 차이점
+Cast는 모든 요소를 변환하려 시도한다. 실패시 InvalidCastException예외 발생한다.
+OfType은 명시된 타입만 리턴하며 나머지는 무시한다.
+
+17강 AsEnumerable and AsQueryable in LINQ
+AsQueryable operator : 2개의 오버로드 버전이있다.
+System.Collections.IEnumerable을 System.Linq.IQueryable 변환하는 버전과
+System.Collections.Generic.IEnumerable<T>을 System.Linq.IQueryable<T> 버전이 있다.
+AsQueryable operator의 주용도는 in-memory data source를 사용하여 queryalbe data source를 흉내내기위해 유닛테스트에서 쓰인다.
+나중에 살펴보자.
+
+AsEnumerable operator: 예제를 통해 살펴보자.
+Step 1: Execute the following SQL Script to create and populate Employees Table
+Create Table Employees
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Gender nvarchar(50),
+     Salary int
+)
+GO
+
+Insert into Employees Values('Mark','Male','60000')
+Insert into Employees Values('Steve','Male','45000')
+Insert into Employees Values('Ben','Male','70000')
+Insert into Employees Values('Philip','Male','45000')
+Insert into Employees Values('Mary','Female','30000')
+Insert into Employees Values('Valarie','Female','35000')
+Insert into Employees Values('John','Male','80000')
+Insert into Employees Values('Pam','Female','85000')
+Insert into Employees Values('Stacey','Female','65000')
+Insert into Employees Values('Andy','Male','73000')
+Insert into Employees Values('Edward','Male','65000')
+GO
+
+Step 2: Create a new Console Application. Name it Demo.
+Step 3: Right click on the Demo project in Solution Explorer and Add a new LINQ to SQL Classes. Name it EmployeeDB.dbml.
+Step 4: Click on View menu, and select "Server Explorer".  
+Expand Data Connections and then Drag and Drop Employees table onto EmployeeDB.dbml designer surface.
+Step 5: Copy and paste the following code in Program.cs file. 
+The linq query in this sample, retrieves the TOP 5 Male Employees By Salary.
+using System;
+using System.Linq;
+namespace Demo
+{
+    class Program
+    {
+        public static void Main()
+        {
+            EmployeeDBDataContext dbContext = new EmployeeDBDataContext();
+            // TOP 5 Male Employees By Salary
+            var result = dbContext.Employees.Where(x => x.Gender == "Male")
+                                    .OrderByDescending(x => x.Salary).Take(5);
+
+            Console.WriteLine("Top 5 Salaried Male Employees");
+            foreach (Employee e in result)
+            {
+                Console.WriteLine(e.Name + "\t" + e.Gender + "\t" + e.Salary);
+            }
+        }
+    }
+}
+
+Step 6: Now open SQL Profiler and run a new trace and then run the console application.
+Step 7: Notice that the following SQL Query is executed against the database. 
+exec sp_executesql N'SELECT TOP (5) [t0].[ID], [t0].[Name], [t0].[Gender], [t0].[Salary]
+FROM [dbo].[Employees] AS [t0]
+WHERE [t0].[Gender] = @p0
+ORDER BY [t0].[Salary] DESC',N'@p0 nvarchar(4000)',@p0=N'Male'
+Step 8: Change the LINQ query in the console application 
+FROM
+var result = dbContext.Employees.Where(x => x.Gender == "Male")
+                                .OrderByDescending(x => x.Salary).Take(5);
+TO 
+var result = dbContext.Employees.AsEnumerable()
+                                .Where(x => x.Gender == "Male")
+                                .OrderByDescending(x => x.Salary).Take(5);
+
+Step 9: Run the console application and notice the query generated in SQL Profiler.
+SELECT [t0].[ID], [t0].[Name], [t0].[Gender], [t0].[Salary]
+FROM [dbo].[Employees] AS [t0]
+
+AsEnumerable operator는 query를 2부분으로 나눈다.
+1. AsEnumerable operator전 안쪽 query는 Linq-to-SQL로서 실행되어진다.
+2. AsEnumerable operator후 바깥쪽 query는 Linq-to-Objects로서 실행되어진다.
+
+따라서 다음 SQL Query는 SQL server에서 실행되어지고 모든 데이타가 console application으로 가져와진뒤
+WHERE, ORDERBY, TOP operator가 클라이언트쪽에서 실행된다.
+SELECT [t0].[ID], [t0].[Name], [t0].[Gender], [t0].[Salary]
+FROM [dbo].[Employees] AS [t0]
+
+정리하면 query processing을 client side로 옮기고 싶을때 AsEnumerable을 사용하라!
+
+18강 GroupBy in LINQ
+GroupBy operator는 Grouping Operators category에 속하는 유일한 operator이다.
+GroupBy는 item의 flat sequence를 받아서 그 sequence를 명시된 key에 기반하여 group(IGrouping<K,V>)들로 조직화하고
+sequence들의 group들을 리턴한다.
+정리하면 GroupBy는 IGrouping<K,V>의 시퀀스를 리턴한다.
+
+public class Employee
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    public string Gender { get; set; }
+    public string Department { get; set; }
+    public int Salary { get; set; }
+
+    public static List<Employee> GetAllEmployees()
+    {
+        return new List<Employee>()
+        {
+            new Employee { ID = 1, Name = "Mark", Gender = "Male",
+                                         Department = "IT", Salary = 45000 },
+            new Employee { ID = 2, Name = "Steve", Gender = "Male",
+                                         Department = "HR", Salary = 55000 },
+            new Employee { ID = 3, Name = "Ben", Gender = "Male",
+                                         Department = "IT", Salary = 65000 },
+            new Employee { ID = 4, Name = "Philip", Gender = "Male",
+                                         Department = "IT", Salary = 55000 },
+            new Employee { ID = 5, Name = "Mary", Gender = "Female",
+                                         Department = "HR", Salary = 48000 },
+            new Employee { ID = 6, Name = "Valarie", Gender = "Female",
+                                         Department = "HR", Salary = 70000 },
+            new Employee { ID = 7, Name = "John", Gender = "Male",
+                                         Department = "IT", Salary = 64000 },
+            new Employee { ID = 8, Name = "Pam", Gender = "Female",
+                                         Department = "IT", Salary = 54000 },
+            new Employee { ID = 9, Name = "Stacey", Gender = "Female",
+                                         Department = "HR", Salary = 84000 },
+            new Employee { ID = 10, Name = "Andy", Gender = "Male",
+                                         Department = "IT", Salary = 36000 }
+        };
+    }
+}
+
+예제1: Department별 Employee Count출력
+var employeeGroup = from employee in Employee.GetAllEmployees()
+                    group employee by employee.Department;
+foreach (var group in employeeGroup)
+{
+    Console.WriteLine("{0} - {1}", group.Key, group.Count());
+}
+출력
+IT - 6
+HR - 4
+
+예제2: 
+var employeeGroup = from employee in Employee.GetAllEmployees()
+                                      group employee by employee.Department;
+
+foreach (var group in employeeGroup)
+{
+    Console.WriteLine("{0} - {1}", group.Key, group.Count());
+    Console.WriteLine("----------");
+    foreach (var employee in group)
+    {
+        Console.WriteLine(employee.Name + "\t" + employee.Department);
+    }
+    Console.WriteLine(); Console.WriteLine();
+}
+
+예제3: into ??
+var employeeGroup = from employee in Employee.GetAllEmployees()
+                                      group employee by employee.Department into eGroup
+                                      orderby eGroup.Key
+                                      select new
+                                      {
+                                           Key = eGroup.Key,
+                                           Employees = eGroup.OrderBy(x => x.Name)
+                                      };
+
+foreach (var group in employeeGroup)
+{
+    Console.WriteLine("{0} - {1}", group.Key, group.Employees.Count());
+    Console.WriteLine("----------");
+    foreach (var employee in group.Employees)
+    {
+        Console.WriteLine(employee.Name + "\t" + employee.Department);
+    }
+    Console.WriteLine(); Console.WriteLine();
+}
+
+19강 Group by multiple keys in linq
+LINQ에서 multiple key로 group을 만들고 싶을때 익명타입을 주로 쓴다.
+예제1:Employees를 Department와 Gender로 그룹화하라. employee그룹들은 먼저 Department로 정렬뒤 Gender로 정렬한다.
+또한 각 그룹안의 Employee들은 Name으로 정렬되어야한다.
+
+var employeeGroups = Employee.GetAllEmployees()
+                              .GroupBy(x => new { x.Department, x.Gender })
+                              .OrderBy(g => g.Key.Department).ThenBy(g => g.Key.Gender)
+                              .Select(g => new
+                              {
+                                  Dept = g.Key.Department,
+                                  Gender = g.Key.Gender,
+                                  Employees = g.OrderBy(x => x.Name)
+                              });
+
+foreach(var group in employeeGroups)
+{
+    Console.WriteLine("{0} department {1} employees count = {2}",
+        group.Dept, group.Gender, group.Employees.Count());
+    Console.WriteLine("--------------------------------------------");
+    foreach (var employee in group.Employees)
+    {
+        Console.WriteLine(employee.Name + "\t" + employee.Gender
+            + "\t" + employee.Department);
+    }
+    Console.WriteLine(); Console.WriteLine();
+}
+
+예제2: 예제1을 SQL스타일로
+var employeeGroups = from employee in Employee.GetAllEmployees()
+                                      group employee by new
+                                      {
+                                        employee.Department,
+                                        employee.Gender
+                                      } into eGroup
+                                      orderby eGroup.Key.Department ascending, eGroup.Key.Gender ascending
+                                      select new
+                                      {
+                                        Dept = eGroup.Key.Department,
+                                        Gender = eGroup.Key.Gender,
+                                        Employees = eGroup.OrderBy(x => x.Name)
+                                      };
+
+20강 Element Operators in LINQ
+다음은 Element Operators category에 속한다.
+First / FirstOrDefault
+Last / LastOrDefault
+ElementAt / ElementAtOrDefault
+Single / SingleOrDefault
+DefaultIfEmpty
+
+Element Operators는 요소인덱스, 조건을 사용하여 시퀀스로부터 한개의 요소를 빼온다.
+
+First
+
+Example 1: Returns the first element from the sequence
+int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+int result = numbers.First();
+Console.WriteLine("Result = " + result);
+
+Output:
+Result = 1
+
+Example 2: Throws InvalidOperationException.
+int[] numbers = { };
+int result = numbers.First();
+Console.WriteLine("Result = " + result);
+
+Output:
+Unhandled Exception: System.InvalidOperationException: Sequence contains no elements
+
+Example 3: Returns the first even number from the sequence
+int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+int result = numbers.First(x => x % 2 == 0);
+Console.WriteLine("Result = " + result);
+
+Output:
+Result = 2
+
+Example 4: Throws InvalidOperationException, as no element in the sequence satisfies the condition specified by the predicate.
+int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+int result = numbers.First(x => x % 2 == 100);
+Console.WriteLine("Result = " + result);
+
+Output:
+Unhandled Exception: System.InvalidOperationException: Sequence contains no matching element
+
+FirstOrDefault 
+Fist와 매우 비슷하다. 시퀀스가 비었거나 조건에 맞는 요소가 없다고 예외가 발생하지 않는다. references type의 디폴트는 NULL이며 다른 Value type의
+디폴트(예상한대로)가 리턴된다.
+
+Example 5: Returns ZERO. No element in the sequence satisfies the condition, so the default value (ZERO) for int is returned.
+int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+int result = numbers.FirstOrDefault(x => x % 2 == 100);
+Console.WriteLine("Result = " + result);
+
+Last/LastOrDefault : 마지막 요소를 리턴하는 것을 제외하고 First/FirstOrDefault와 동일
+ElementAt/ElementAtOrDefault : 인덱스로 가져오기
+
+Single : 2가지 오버로드가 있다. 파라메터가 없는 버전은 시퀀스에 단 1개의 값만 있을때 그 값을 리턴한다.
+Example 8: Returns the only element (1) of the sequence.
+int[] numbers = { 1 };
+int result = numbers.Single();
+Console.WriteLine("Result = " + result);
+
+Output:
+Result = 1
+
+만약 1개 이상의 요소가 있거나 비어있으면 예외발생한다.
+Example 9: Throws InvalidOperationException as the sequence contains more than ONE element.
+int[] numbers = { 1, 2 };
+int result = numbers.Single();
+Console.WriteLine("Result = " + result);
+
+Output:
+Unhandled Exception: System.InvalidOperationException: Sequence contains more than one element
+
+주어진 조건을 만족하는 단 1개의 요소를 찾는다. 다음중 하나라도 true가 되면 예외가 발생한다.
+a)시퀀스가 비었거나
+b)조건을 만족하는 요소가 하나도 없거나
+c)조건을 만족하는 요소가 2개 이상일때
+
+Example 10: Throws InvalidOperationException as more than one element in the sequence satisfies the condition
+int[] numbers = { 1, 2, 4 };
+int result = numbers.Single(x => x % 2 == 0);
+Console.WriteLine("Result = " + result);
+
+Output:
+Unhandled Exception: System.InvalidOperationException: Sequence contains more than one matching element
+
+SingleOrDefault : 예외를 발생키지 않는다. 하지만 조건에 일치하는 요소가 여러개 일 경우 예외발생
+Example 11: Throws InvalidOperationException as more than one element in the sequence satisfies the given condition
+int[] numbers = { 1, 2, 4 };
+int result = numbers.SingleOrDefault(x => x % 2 == 0);
+Console.WriteLine("Result = " + result);
+
+Output:
+Unhandled Exception: System.InvalidOperationException: Sequence contains more than one matching element
+
+DefaultIfEmpty :시퀀스가 비어있지 않으면 원래시퀀스의 값이 그대로 리턴된다. 비어있다면 default리턴
+Example 12 : Returns a copy of the original sequence
+int[] numbers = { 1, 2, 3 };
+IEnumerable<int> result = numbers.DefaultIfEmpty();
+foreach (int i in result)
+{
+    Console.WriteLine(i);
+}
+
+Output:
+1
+2
+3
+
+Example 13 : Since the sequence is empty, a sequence containing the default value (ZERO) of int is returned.
+int[] numbers = { };
+IEnumerable<int> result = numbers.DefaultIfEmpty();
+foreach (int i in result)
+{
+    Console.WriteLine(i);
+}
+
+Output:
+0
+
+Example 14 : Since the sequence is empty, a sequence containing the specified default value (10) is returned.
+int[] numbers = { };
+IEnumerable<int> result = numbers.DefaultIfEmpty(10);
+foreach (int i in result)
+{
+    Console.WriteLine(i);
+}
+
+Output:
+10
+
+
+21강 Group Join in LINQ
+다음은 LINQ에서의 Join 타입들이다.
+Group Join
+Inner Join
+Left Outer Join
+Cross Join
+
+GroupJoin은 계층적 data structure를 생성한다.
+첫번째 collection의 각각의 요소는 두번재 collection의 연관된 요소들의 집합과 pair가 된다.
+
+예를 들어보자
+public class Department
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+
+    public static List<Department> GetAllDepartments()
+    {
+        return new List<Department>()
+        {
+            new Department { ID = 1, Name = "IT"},
+            new Department { ID = 2, Name = "HR"},
+            new Department { ID = 3, Name = "Payroll"},
+        };
+    }
+}
+
+public class Employee
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    public int DepartmentID { get; set; }
+
+    public static List<Employee> GetAllEmployees()
+    {
+        return new List<Employee>()
+        {
+            new Employee { ID = 1, Name = "Mark", DepartmentID = 1 },
+            new Employee { ID = 2, Name = "Steve", DepartmentID = 2 },
+            new Employee { ID = 3, Name = "Ben", DepartmentID = 1 },
+            new Employee { ID = 4, Name = "Philip", DepartmentID = 1 },
+            new Employee { ID = 5, Name = "Mary", DepartmentID = 2 },
+            new Employee { ID = 6, Name = "Valarie", DepartmentID = 2 },
+            new Employee { ID = 7, Name = "John", DepartmentID = 1 },
+            new Employee { ID = 8, Name = "Pam", DepartmentID = 1 },
+            new Employee { ID = 9, Name = "Stacey", DepartmentID = 2 },
+            new Employee { ID = 10, Name = "Andy", DepartmentID = 1}
+        };
+    }
+}
+
+Example 1: Group employees by Department.
+var employeesByDepartment = Department.GetAllDepartments()  <= GetAllDepartments() 시퀀스를 outer sequence라고한다.
+                                      .GroupJoin(Employee.GetAllEmployees(), <= GetAllDepartments() 시퀀스를 inner sequence라고한다.
+                                        d => d.ID, <= outerKeySelector (Department class임)
+                                        e => e.DepartmentID, <= outerKeySelector (Employee class)
+                                        (department, employees) => new  <= result selector
+                                         {
+                                            Department = department,
+                                            Employees = employees
+                                        });
+
+foreach (var department in employeesByDepartment)
+{
+    Console.WriteLine(department.Department.Name);
+    foreach (var employee in department.Employees)
+    {
+        Console.WriteLine(" " + employee.Name);
+    }
+    Console.WriteLine();
+}
+
+
+Example 2: Rewrite Example 1 using SQL like syntax.
+var employeesByDepartment = from d in Department.GetAllDepartments()
+                            join e in Employee.GetAllEmployees()
+                            on d.ID equals e.DepartmentID into eGroup
+                            select new
+                            {
+                              Department = d,
+                              Employees = eGroup
+                            };
+
+Group Join은 join operator와 into 키워드를쓰는것에 주의할것.
+
+22강 Inner Join in LINQ
+만약 2개의 collection이 있을때 inner join을 하면 2 collection간의 매칭되는 요소들만 결과집합에 포함된다.
+매칭되지 않은 요소는 결과 집합에서 제외된다.
+
+Example 1 : Join the Employees and Department collections and print all the Employees and their respective department names.
+var result = Employee.GetAllEmployees().Join(Department.GetAllDepartments(),
+                                        e => e.DepartmentID,
+                                        d => d.ID, (employee, department) => new
+                                        {
+                                            EmployeeName = employee.Name,
+                                            DepartmentName = department.Name
+                                        });
+foreach (var employee in result)
+{
+    Console.WriteLine(employee.EmployeeName + "\t" + employee.DepartmentName);
+}
+
+Example 2 : Rewrite Example 1 using SQL like syntax. 
+var result = from e in Employee.GetAllEmployees()
+                    join d in Department.GetAllDepartments()
+                    on e.DepartmentID equals d.ID
+                    select new
+                    {
+                        EmployeeName = e.Name,
+                        DepartmentName = d.Name
+                    };
+
+foreach (var employee in result)
+{
+    Console.WriteLine(employee.EmployeeName + "\t" + employee.DepartmentName);
+}
+
+23강 Difference between group join and inner join in linq
+The following query performs a GroupJoin on the 2 lists
+var result =  from d in Department.GetAllDepartments()
+              join e in Employee.GetAllEmployees()
+              on d.ID equals e.DepartmentID into eGroup
+              select new
+              {
+                  Department = d,
+                  Employees = eGroup
+              };
+join operator와 into 키워드가 같이 쓰였음을 주목~
+extention method를 썼을경우
+var result = Department.GetAllDepartments()
+                      .GroupJoin(Employee.GetAllEmployees(),
+                        d => d.ID,
+                        e => e.DepartmentID,
+                        (department, employees) => new
+                        {
+                            Department = department,
+                            Employees = employees
+                        });
+위의 2개의 query는 department로 employees를 그룹화하며 다음과 같은 그룹들을 생성한다.
+Department      Employee      Employee        Employee
+ID=1            ID=1           ID=1           ID=1
+NAME=IT         Name=Mark      Name=Ben       Name=Philip
+                DepartmentId=1 DepartmentId=1 DepartmentId=1
+
+Department      Employee      Employee        
+ID=2            ID=2           ID=2           
+NAME=HR         Name=Steve      Name=Mary       
+                DepartmentId=2 DepartmentId=2
+                Department
+
+ID=3      <= 매칭이 없는 것도 그룹이 생성되었다!
+NAME=XX
+
+Department와 Employee Name을 출력하기위해 다음과 같은 2중루프를 사용한다.
+foreach (var department in result)
+{
+    Console.WriteLine(department.Department.Name);
+    foreach (var employee in department.Employees)
+    {
+        Console.WriteLine(" " + employee.Name);
+    }
+    Console.WriteLine();
+}
+
+다음 query는 Inner Join을 한다.
+var result = from e in Employee.GetAllEmployees()
+                    join d in Department.GetAllDepartments()
+                    on e.DepartmentID equals d.ID
+                    select new { e, d };
+
+Extention method를 쓰는 방법에서는 Join을 쓴다.
+var result = Employee.GetAllEmployees()
+                      .Join(Department.GetAllDepartments(),
+                      e => e.DepartmentID,
+                      d => d.ID, (employee, department) => new
+                      {
+                            e = employee,
+                            d = department
+                      });
+
+위의 2 query는 아래와 같은 flat result set을 생성한다.
+Department      Employee      
+ID=1            ID=1          
+NAME=IT         Name=Mark
+                DepartmentId=1
+Department      Employee      
+ID=1            ID=3          
+NAME=IT         Name=BEN
+                DepartmentId=1
+Department      Employee      
+ID=1            ID=4          
+NAME=IT         Name=Philip
+                DepartmentId=1
+Department      Employee      
+ID=2            ID=2          
+NAME=HR         Name=Steve
+                DepartmentId=2
+Department      Employee      
+ID=2            ID=5          
+NAME=HR         Name=Mary
+                DepartmentId=2
+
+다음과 같이 루프 한개로 출력이 가능하다.
+foreach (var employee in result)
+{
+    Console.WriteLine(employee.e.Name + "\t" + employee.d.Name);
+}
+
+간단히 이야기하면 Join은 SQL에서의 Inner Join과 비슷하고, GroupJoin은 SQL에서의 Outer Join과 비슷하다.
+(OUTER JOIN은 JOIN 조건에 해당하지 않는 컬럼값도 결과값에 포함시키기 위함임을 잊지 않으셨으면 좋겠습니다!)
+
+
+24강 Left Outer Join in LINQ
+Left Outer Join은 매칭 요소와 왼쪽의 매칭되지 않은 요소의 합이 포함된 집합이다.
+예제1 :Employees와 Department collections 사이의 Left Outer Join을 구현하라. department가 없다면 "No Department"를 출력한다.
+
+var result =  from e in Employee.GetAllEmployees()
+              join d in Department.GetAllDepartments()
+              on e.DepartmentID equals d.ID into eGroup  <= 이건 groupjoin 호출이다!
+              from d in eGroup.DefaultIfEmpty()  <= 23강 GroupJoin의 출력을 생각하라! Employee와 Department가 매칭되지 못했다면 Employee안에 빈시퀀스가 생성될것이다. [null]리턴한다!
+              select new
+              {
+                    EmployeeName = e.Name,
+                    DepartmentName = d == null ? "No Department" : d.Name  <= 매칭실패시 Department가 없을것이며 null이 리턴된다!
+              };
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.EmployeeName + "\t" + v.DepartmentName);
+}
+
+Example 2 : Rewrite Example 1 using extension method syntax. 
+var result = Employee.GetAllEmployees()
+            .GroupJoin(Department.GetAllDepartments(),
+                    e => e.DepartmentID,
+                    d => d.ID,
+                    (emp, depts) => new { emp, depts })
+            .SelectMany(z => z.depts.DefaultIfEmpty(),
+                    (a, b) => new   <= 이 result selector는 평면화된 결과에 적용된다. 
+                    {
+                            EmployeeName = a.emp.Name,
+                            DepartmentName = b == null ? "No Department" : b.Name
+                    });
+
+foreach (var v in result)
+{
+    Console.WriteLine(" " + v.EmployeeName + "\t" + v.DepartmentName);
+}
+
+Left Out Join을 구현하기 위해 GroupJoin(), SelectMany(), DefaultIfEmpty()를 사용한다.
+
+25강 Cross Join in LINQ
+Cross Join은 2개의 시퀀스의 논리곱을 생성한다. 생성되는 요소의 총합은 양 시퀀스 갯수의 곱과 같다.
+Join Key를 명시하는 on키워드는 필요치않다.
+
+Example 1 : Cross Join Employees collection with Departments collections.
+var result = from e in Employee.GetAllEmployees()
+             from d in Department.GetAllDepartments()
+             select new { e, d };
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.e.Name + "\t" + v.d.Name);
+}
+
+Example 2 : Cross Join Departments collections with Employees collection
+var result =  from d in Department.GetAllDepartments()
+              from e in Employee.GetAllEmployees()
+              select new { e, d };
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.e.Name + "\t" + v.d.Name);
+}
+
+1과 2의 조합되는 순서가 달라진다. (from을 그냥 루프로 보면 될듯)
+
+Example 3 : Rewrite Example 1 using extension method syntax
+
+SelectMany()혹은 Join()을 쓸수있다.
+
+Implementing cross join using SelectMany() 
+var result = Employee.GetAllEmployees()
+                      .SelectMany(e => Department.GetAllDepartments(), (e, d) => new { e, d });
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.e.Name + "\t" + v.d.Name);
+}
+
+Implementing cross join using Join()
+var result = Employee.GetAllEmployees()
+                    .Join(Department.GetAllDepartments(),
+                              e => true,
+                              d => true,
+                              (e, d) => new { e, d });
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.e.Name + "\t" + v.d.Name);
+}
+
+26강 Set operators in LINQ
+다음 operator들은 Set operators category에 속한다.
+Distinct
+Union
+Intersect
+Except
+
+Distinct operator에 대해 먼저 알아보자
+Example 1: Return distinct country names. 
+In this example the default comparer is being used and the comparison is case-sensitive, so in the output we see country USA 2 times. 
+
+string[] countries = { "USA", "usa", "INDIA", "UK", "UK" };
+
+var result = countries.Distinct();
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+출력
+USA
+usa
+INDIA
+UK
+
+Example 2: For the comparison to be case-insensitive, 
+use the other overloaded version of Distinct() method to which we can pass a class that implements IEqualityComparer as an argument. 
+In this case we see country USA only once in the output.
+
+string[] countries = { "USA", "usa", "INDIA", "UK", "UK" };
+
+var result = countries.Distinct(StringComparer.OrdinalIgnoreCase);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+출력
+USA
+INDIA
+UK
+
+
+Employee, Customer등 complex type에는 다른 방식으로 동작한다.
+Example 3: Notice that in the output we don't get unique employees. 
+This is because, the default comparer is being used which will just check for object references being equal and not the individual property values.
+
+List<Employee> list = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 102, Name = "Mary"}
+};
+
+var result = list.Distinct();
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.ID + "\t" + v.Name);
+}
+
+출력
+101 Mike
+101 Mike
+102 Mary
+
+예제3의 문제를 해결하는 방법은 3가지가 있다.
+1. IEqualityComparer를 구현하는 custom class를 받을수 있는 Distinct()를 사용한다.
+2. Employee class의 Equals(), GetHashCode()를 오버라이드한다.
+3. 프로퍼티들을 새로운 익명 타입에 프로젝트한다. 익명 타입은 Equals()와 GetHashCode()가 오버라이드 되어있다.
+
+xample 4 : Using the overloaded version of Distinct() method to which we can pass a custom class that implements IEqualityComparer
+
+Step 1 : Create a custom class that implements IEqualityComparer<T> and implement Equals() and GetHashCode() methods
+
+public class EmployeeComparer : IEqualityComparer<Employee>
+{
+    public bool Equals(Employee x, Employee y)
+    {
+        return x.ID == y.ID && x.Name == y.Name;
+    }
+
+    public int GetHashCode(Employee obj)
+    {
+        return obj.ID.GetHashCode() ^ obj.Name.GetHashCode();
+    }
+}
+
+Step 2 : Pass an instance of EmployeeComparer as an argument to Distinct() method
+
+List<Employee> list = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 102, Name = "Mary"}
+};
+
+var result = list.Distinct(new EmployeeComparer());
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.ID + "\t" + v.Name);
+}
+
+Example 5 : Override Equals() and GetHashCode() methods in Employee class
+
+public class Employee
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+
+    public override bool Equals(object obj)
+    {
+        return this.ID == ((Employee)obj).ID && this.Name == ((Employee)obj).Name;
+    }
+
+    public override int GetHashCode()
+    {
+        return this.ID.GetHashCode() ^ this.Name.GetHashCode();
+    }
+}
+
+
+Example 6 : Project the properties into a new anonymous type, which overrides Equals() and GetHashCode() methods
+동일한 익명 형식의 두 인스턴스는 해당 속성이 모두 동일한 경우에만 동일합니다.
+
+List<Employee> list = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 102, Name = "Mary"}
+};
+
+var result = list.Select(x => new { x.ID, x.Name }).Distinct();
+
+foreach (var v in result)
+{
+    Console.WriteLine(" " + v.ID + "\t" + v.Name);
+}
+
+27강 Union, Intersect and Except operators in LINQ
+int[] numbers1 = { 1, 2, 3, 4, 5 };
+int[] numbers2 = { 1, 3, 6, 7, 8 };
+
+var result = numbers1.Union(numbers2);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+complex type을 다룰때 조금 다르게 동작한다.
+List<Employee> list1 = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 102, Name = "Susy"},
+    new Employee { ID = 103, Name = "Mary"}
+};
+
+List<Employee> list2 = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 104, Name = "John"}
+};
+
+var result = list1.Union(list2);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.ID + "\t" + v.Name);
+}
+
+101 Mike
+102 Susy
+103 Mary
+101 Mike
+104 John
+
+위의 문제를 해결하는 방법은 3가지가 있다.
+1. IEqualityComparer를 구현하는 custom class를 받을수 있는 Distinct()를 사용한다.
+2. Employee class의 Equals(), GetHashCode()를 오버라이드한다.
+3. 프로퍼티들을 새로운 익명 타입에 프로젝트한다. 익명 타입은 Equals()와 GetHashCode()가 오버라이드 되어있다.
+
+3번이 가장 간단한 방법이다.
+List<Employee> list1 = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 102, Name = "Susy"},
+    new Employee { ID = 103, Name = "Mary"}
+};
+
+List<Employee> list2 = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Mike"},
+    new Employee { ID = 104, Name = "John"}
+};
+
+var result = list1.Select(x => new { x.ID, x.Name })
+                    .Union(list2.Select(x => new { x.ID, x.Name }));
+
+foreach (var v in result)
+{
+    Console.WriteLine(v.ID + "\t" + v.Name);
+}
+
+Intersect 예제
+int[] numbers1 = { 1, 2, 3, 4, 5 };
+int[] numbers2 = { 1, 3, 6, 7, 8 };
+
+var result = numbers1.Intersect(numbers2);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+
+28강 Generation Operators in LINQ
+다음 operator들은 Generation operators category에 속한다.
+Range
+Repeat
+Empty
+
+var evenNumbers = Enumerable.Range(1, 10).Where(x => x % 2 == 0);
+foreach (int i in evenNumbers)
+{
+    Console.WriteLine(i);
+}
+
+
+var result = Enumerable.Repeat("Hello", 5);
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+
+Enumerable.Empty<int>() - Returns an empty IEnumerable<int>
+Enumerable.Empty<string>() - Returns an empty IEnumerable<string>
+
+class Program
+{
+    public static void Main()
+    {
+        IEnumerable<int> result = GetIntegerSequence() ?? Enumerable.Empty<int>();  <= 이걸로 null체크를 없앨수있다.
+
+        foreach (var v in result)
+        {
+            Console.WriteLine(v);
+        }
+    }
+
+    private static IEnumerable<int> GetIntegerSequence()
+    {
+        return null;
+    }
+}
+
+29강 Concat operator in LINQ
+int[] numbers1 = { 1, 2, 3 };
+int[] numbers2 = { 1, 4, 5 };
+
+var result = numbers1.Concat(numbers2);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+출력
+1
+2
+3
+1
+4
+5
+
+int[] numbers1 = { 1, 2, 3 };
+int[] numbers2 = { 1, 4, 5 };
+
+var result = numbers1.Union(numbers2);
+
+foreach (var v in result)
+{
+    Console.WriteLine(v);
+}
+
+1
+2
+3
+4
+5
+
+Concat()과 Union()의 차이점
+Concat()은 그냥 갖다 붙이는거, Unicon은 중복제거
+
+30강 SequenceEqual Operator in LINQ
+SequenceEqual()은 2개의 시퀀스가 같은지 알아보는데 쓰여진다.
+2개의 시퀀스가 같기위해서는
+1. 시퀀스 요소의 갯수가 같고
+2. 같은 값이 같은 순서대로 있어야 한다.
+
+대소문자 미구분 하는방법중 하나
+string[] countries1 = { "USA", "INDIA", "UK" };
+string[] countries2 = { "usa", "india", "uk" };
+
+var result = countries1.SequenceEqual(countries2, StringComparer.OrdinalIgnoreCase);
+
+Console.WriteLine("Are Equal = " + result);
+
+데이타의 순서가 다를때 SequenceEqual()이 같은지 테스트 할때
+string[] countries1 = { "USA", "INDIA", "UK" };
+string[] countries2 = { "UK", "INDIA", "USA" };
+
+var result = countries1.OrderBy(c => c).SequenceEqual(countries2.OrderBy(c => c));
+
+Console.WriteLine("Are Equal = " + result);
+
+비교시 complex type일때 Distinct()와 마찬가지 문제가 일어나며 해법도 같다.
+
+31강 Quantifiers in LINQ
+다음 operator들은 Quantifiers operators category에 속한다.
+All
+Any
+Contains
+
+All 예
+int[] numbers = { 1, 2, 3, 4, 5 };
+
+var result = numbers.All(x => x < 10);
+
+Console.WriteLine(result); => true
+
+파라메어 없는 Any()
+int[] numbers = { 1, 2, 3, 4, 5 };
+
+var result = numbers.Any(); => 파라메터가 없을때 요소가 존재하는지를 검사한다.
+
+Console.WriteLine(result);
+
+Any()의 오버라이드
+int[] numbers = { 1, 2, 3, 4, 5 };
+
+var result = numbers.Any(x => x > 10);
+
+Console.WriteLine(result);
+
+대소문자 구분
+string[] countries = { "USA", "INDIA", "UK" };
+
+var result = countries.Contains("india", StringComparer.OrdinalIgnoreCase);
+
+Console.WriteLine(result);
+
+레퍼런스타입일때의 주의 사항
+List<Employee> employees = new List<Employee>()
+{
+    new Employee { ID = 101, Name = "Rosy"},
+    new Employee { ID = 102, Name = "Susy"}
+};
+
+var result = employees.Contains(new Employee { ID = 101, Name = "Rosy" }); => false 리턴!
+
+Console.WriteLine(result);
+
+레퍼런스 타입일때 다른곳에서 한 방법으로 해결하자.
+
+
+32강 LinqPad Tutorial
+LinqPad라는 툴이있다. http://www.linqpad.net
+
+int[] numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+var result = from n in numbers
+                where n % 2 == 0
+                orderby n descending
+                select n;
+result.Dump(); <= 이걸 호출해줘야 LinqPad의 Results탭에 테이블이 출력된다.
+
+필요할때 동영상 볼것!
+
+https://www.youtube.com/watch?v=yfPGFapabAY
+IEnumerable -- In-memory collections
+IQueryable -- Collection connected to DB via EF or LINQ

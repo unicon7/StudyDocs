@@ -1,0 +1,103 @@
+https://www.youtube.com/watch?v=YOy1LdTWDBM&list=PLaFzfwmPR7_LbzROMMDFsoo0JA-emIvKc  <= dotnet core tutorial csproj화일들을 command line tool을 사용하여 관리하는 방법
+https://docs.microsoft.com/en-us/ef/core/saving/concurrency
+https://www.youtube.com/watch?v=hW2ONyxAySY  => Understanding CSRF, the video tutorial edition
+https://web.dev/samesite-cookies-explained/ => cookie SameSite 옵션에대해, 브라우저 구현때문에 아직 잘 쓰진 않는듯
+https://www.forevolve.com/en/articles/2017/08/11/design-patterns-web-api-service-and-repository-part-1/
+https://www.udemy.com/course/design-patterns-csharp-dotnet/
+https://codeburst.io/options-pattern-in-net-core-a50285aeb18d option pattern
+https://andrewlock.net/how-to-use-the-ioptions-pattern-for-configuration-in-asp-net-core-rc2/  ioptions
+https://riptutorial.com/asp-net-core/example/14177/the-options-pattern---injecting-options-into-services option pattern
+https://www.tutorialsteacher.com/core/internals-of-builtin-ioc-container-in-aspnet-core interanl of di
+https://riptutorial.com/asp-net-core/example/29057/inner-workings-of-microsoft-extensions-dependencyinjection Inner workings of Microsoft.Extensions.DependencyInjection(!)
+https://weblog.west-wind.com/posts/2016/may/23/strongly-typed-configuration-settings-in-aspnet-core  <= IConfiguration 사용법, 2.0 이상에선 IConfiguration이 디폴트로 DI되어 있다.
+IConfigurationRoot.Refresh()도 나온다.
+
+https://www.strathweb.com/2016/09/strongly-typed-configuration-in-asp-net-core-without-ioptionst/
+
+
+https://exceptionnotfound.net/tag/aspnetcoredemystified/ => 전부 읽어볼것!
+
+https://www.youtube.com/watch?v=33okCuCK3Ik => Globalizing & Localizing your ASP.NET Core 2.1 Web App
+
+https://stackoverflow.com/questions/44260468/what-does-exists-do-on-a-route-template <= area:exists (route template constraint)
+
+https://www.pluralsight.com/courses/aspnet-core-identity-management-playbook <= authentication 유료
+
+UseCookiePolicy
+https://wakeupandcode.com/cookies-and-consent-in-asp-net-core/
+https://docs.microsoft.com/en-us/aspnet/core/security/gdpr?view=aspnetcore-3.1
+
+session
+https://www.youtube.com/watch?v=Jil-tDcV8vE
+https://www.mikesdotnetting.com/article/270/sessions-in-asp-net-core-1-0  <= 여기 읽어야 할 것 엄청 많음
+
+https://www.red-gate.com/simple-talk/dotnet/asp-net/token-replacement-in-asp-net/ <= token replacement
+
+c# builder pattern
+https://jdm.kr/blog/217 => 다른 패턴도 정리 잘되어 있으니 참고할것! GOF에서 보던것과 형태와 목적이 조금 다르다.(asp에서 많이 보이는 형태인듯..)
+https://exceptionnotfound.net/builder-pattern-in-csharp/ => GOF에서 보던 builder 패턴 (별로 쓸모 없다고 나온다. 위의 패턴이 좀더 나은듯..)
+https://johngrib.github.io/wiki/builder-pattern/ => 빌더패턴의 여러가지 형태!
+
+route middleware
+https://rimdev.io/asp-net-core-routes-middleware/
+https://andrewlock.net/adding-default-security-headers-in-asp-net-core/
+
+jwt
+https://mderriey.com/2019/06/23/where-are-my-jwt-claims/ jwt안의 claim들과 
+https://www.blinkingcaret.com/2017/09/13/create-your-own-asp-net-core-middleware/ middleware 만들기 <= 여기 블로그 끝내줌!
+https://www.blinkingcaret.com/2017/05/03/external-login-providers-in-asp-net-core/ authentication middleware 작동원리!  
+https://www.blinkingcaret.com/2017/09/06/secure-web-api-in-asp-net-core/ jwt
+https://www.blinkingcaret.com/2018/05/30/refresh-tokens-in-asp-net-core-web-api/ refresh
+https://blog.hasura.io/best-practices-of-using-jwt-with-graphql/
+
+돈주고 보는 방송
+https://www.pluralsight.com/courses/dotnet-core-aspnet-core-configuration-options?clickid=wB02zSx3exyORRNwUx0Mo3w3UknURSQaj3pm080&irgwc=1&mpid=1394957&utm_source=impactradius&utm_medium=digital_affiliate&utm_campaign=1394957&aid=7010a000001xAKZAA2#
+
+DI 관련 기초이해
+https://andrewlock.net/the-difference-between-getservice-and-getrquiredservice-in-asp-net-core/ GetService()와 GetRequiredService()의 차이점
+https://andrewlock.net/using-dependency-injection-in-a-net-core-console-application/ <= console app에서 DI 쓰는 방법
+https://joonasw.net/view/aspnet-core-di-deep-dive <= HttpContext.RequestServices
+https://www.youtube.com/watch?v=vFzP2SaMyA0
+https://www.dotnettricks.com/learn/dependencyinjection/understanding-inversion-of-control-dependency-injection-and-service-locator
+https://stackify.com/dependency-injection/
+The interface only decouples the usage of the lower level class but not its instantiation. 
+At some place in your code, you need to instantiate the implementation of the interface. 
+That prevents you from replacing the implementation of the interface with a different one.
+The goal of the dependency injection technique is to remove this dependency by separating the usage from the creation of the object. 
+
+asp.net core 3.0에서 바뀐점들
+https://www.codemag.com/Article/1911072/What%E2%80%99s-New-in-ASP.NET-Core-3.0
+http://www.binaryintellect.net/articles/68ab9ac3-e9b8-4655-a7e5-47efaee66708.aspx
+
+
+endpoint routing
+endpoint가 의미하는것은?. An endpoint represents the controller action that the incoming request resolves to, 
+along with other metadata attached to the route that matches the request.
+https://aregcode.com/blog/2019/dotnetcore-understanding-aspnet-endpoint-routing/
+https://wildermuth.com/2019/09/09/Endpoint-Routing-in-ASP-NET-Core-3-0
+https://www.youtube.com/watch?v=Si-mWB-gEY8&list=PLFHLo5Y9d4JYJKdZEzDZIpb2-uOTGvTJ3&index=97
+
+swagger 
+https://www.youtube.com/watch?v=TEdwxI0EGYg    .NET Core with Swagger and C# Client
+https://dotnetdetail.net/how-to-add-swagger-to-asp-net-core-3-0-web-api/
+https://github.com/Microsoft/aspnet-api-versioning/issues/271
+https://www.youtube.com/watch?v=akbdsrOpQ60&list=PLRx0vPvlEmdAezo0wkmUdT6WBCch0_1ie&index=1
+rest api를 만들때 쓰는 문서화 도구! API specification문서 + demonstration tool을 만든다.
+https://www.youtube.com/watch?v=zQRgB6nasUc asp.net 
+
+asp.net core 3.0 versioning apis
+https://www.youtube.com/watch?v=ryPo5hYHSzM  <= appversioning middleware 소개
+https://www.talkingdotnet.com/support-multiple-versions-of-asp-net-core-web-api/
+ 
+
+Enable SSL in Visual Studio Development Server
+https://www.youtube.com/watch?v=4hb6iD3nP6g&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b&index=16
+asp.net의 access_token에 대해 알고 싶다면 볼것! session storage, local storage에 대해서도 계속 나온다.
+https://www.youtube.com/watch?v=B2jDN53taDk&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b&index=23 
+
+
+ASP.NET Core in Action - Filters
+https://andrewlock.net/asp-net-core-in-action-filters/
+
+
+https://www.youtube.com/watch?v=fBpPfPjxOhc&list=PLqq-6Pq4lTTaflXUL0v3TSm86nodn0c_u <= javascript Objects and Prototypes in depth

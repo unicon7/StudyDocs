@@ -1,0 +1,344 @@
+1강
+Authentication종류?
+sa가 무엇의 약자?
+
+2강
+
+3강
+Primary Key Constraint?
+Foreign Key Constraint?
+Foreign Key Constraint 장점? 역할?
+
+4강
+default Constraint?
+명시적으로 NULL을 주었을때 default 작동 여부?
+
+5강
+Cascading referential integrity constraint? 의미와 옵션 4가지?
+
+6강
+check constraint?
+check constraint의 expression에 NULL이 들어오면 어떻게 되는가?
+
+7강
+Identity column이란?
+
+8강
+scope 설명?
+마지막 생성된 Identity값을 가져오는 방법 3가지와 차이점?
+
+9강
+unique constraint?
+unique constraint와 Primary constraint의 차이점?
+
+10강
+Fully qualified name?
+WildCard
+% : ?
+_ : ?
+[] : ?
+[~] : ?
+
+11강
+where절과 having절의 차이점?
+
+12강
+join의 종류
+
+13강
+매칭되지 않는 테이블을 뽑는 방법!
+
+14강
+Self join이란?
+
+15강, 16강
+값이 NULL일경우 NULL대신 다른 것을 출력하는 3가지 방법?
+
+17강
+UNION과 UNION ALL의 차이?
+UNION과 JOIN의 차이?
+Union또는 UNION ALL의 결과 소트는 어떻게?
+
+18강 19강 
+sp 한번 sql로 써볼것! parameter와 OUTPUT이 있을것!
+OUTPUT이 있는 sp 실행하는 방법?
+sp의 정보보기?
+sp의 소스보기?
+sp의 종속성보기?
+
+20강
+sp의 Return 값의 용도?
+sp의 Return 값과 OUTPUT의 차이?
+
+
+21강
+adhoc sql?
+stored procedure의 장점?
+무엇이 SQL Injection을 일으키는가?
+SQL Injection회피방법 2가지는?
+
+22강, 23강, 24강
+ASCII(Character_Expression) => 아스키 코드 리턴
+CHAR(Ineger_Expression) => 아스키 코드의 문자 리턴
+LTRIM(Character_Expression), RTRIM(Character_Expression) => 좌, 우 공백 문자 삭제
+LOWER(Character_Expression), UPPER(Character_Expression) => 대, 소문자 변환
+REVERSE('Any_String_Expression') => 순서 바꾸기
+LEN(String_Expression) => 문자열의 문자수, 마지막에 있는 공백문자들은 제외(앞의 공백문자들은 포함)
+LEFT(Character_Expression, Integer_Expression)
+RIGHT(Character_Expression, Ineger_Expression) => 왼쪽으로부터 int만큼의 문자를 가져온다.
+CHARINDEX('Expression_To_Find', 'Expression_To_Search', 'Start_Location') Start_Location:optional
+SUBSTRING('Expression', 'Start', 'Length')
+REPLICATE(String_To_Be_Replicated, Number_Of_Times_To_Replicate) => 주어진 횟수만큼 스트링 반복
+SPACE(Number_Of_Spaces)
+PATINDEX('%Pattern%', Expression) => Expression에서 Pattern이 처음 있는 시작 인덱스 리턴. CHARINDEX()와 비슷하지만 와일드카드를 쓸수있다.
+패턴이 밸견되지 않으면 0 리턴.
+REPLACE(String_Expression, Pattern, Replacement_Value) => 발견된 모든 Pattern의 문자열을 치환한다.
+STUFF(Orignal_Expression, Start, Length, Replacement_Value) => Start 인덱스 위치에 Replacement_Value를 insert하고 Length만큼 문자를 지운다.
+
+25강, 26강 27강
+GETDATE() 2012-08-31 20:15:04.543                           일반적으로 쓰인다.
+CURRENT_TIMESTAMP 2012-08-31 20:15:04.543                   ANSI SQL equivalent to GETDATE
+SYSDATETIME() 2012-08-31 20:15:04.5380028                   좀더 많은 초의 precision(정밀도)
+SYSDATETIMEOFFSET() 2012-08-31 20:15:04.5380028 + 01:00     좀더 많은 초의 precision + time zone offset
+GEUTCDATE() 2012-08-31 19:15:04.543                         UTC Date and Time (GETDATE()보다 1시간 적다!)
+SYSUTCDATETIME() 2012-08-31 19:15:04.5380028                좀더 많은 초의 해상도를 포함한 UTC Date and Time
+
+ISDATE() 주어진 값이 정확한 date, time, date인지 체크한다. 1:성공, 0:실패. datetime2에대해 ISDATE()는 0리턴.
+DAY() 일부분만
+MONTH() 월부분만
+YEAR() 년부분만
+Select DATENAME(WEEKDAY, '2012-09-30 20:15:04.543') => Sunday
+Select DATENAME(MONTH, '2012-09-30 20:15:04.543') => September
+
+ATEPART(datepart, Date) => DATENAME()과 같지만 문자열대신 int리턴 (이름 그대로 DATE의 부분을 가져온다)
+DATEADD(datepart, NumberToAdd, date) => DateTime을 리턴
+DATEDIFF(datepart, startdate, enddate)
+
+Select DATENAME(WEEKDAY, '2012-08-30 20:15:04.543') => Thursday
+Select DATEPART(WEEKDAY, '2012-08-30 20:15:04.543') => 5
+
+Select DATEADD(DAY, 20, '2012-08-30 20:15:04.543') => 주어진 datetime에 20일을 더해라
+Select DATEADD(DAY, -20, '2012-08-30 20:15:04.543') => 주어진 datetime에 20일을 빼라
+
+Select DATEDIFF(MONTH, '11/30/2005', '01/31/2006') => 2
+Select DATEDIFF(DAY, '11/30/2005', '01/31/2006') => 62
+
+28강
+CAST(expression AS data_type[(length)]) => []안의 내용은 optional
+CONVERT(data_type [(length)], expression [, style])
+CAST-CONVERT 차이점?
+
+29강
+Programmability > system functions > Mathematical Functions안에 모든 함수 정의가 있다.
+ABS()
+CEILING(), FLOOR()
+POWER(), SQUARE(), SQRT()
+RAND([Seed_Value])
+ROUND(numberic-expression, length[,function])
+
+30강
+user defined function 종류 3가지?
+function과 sp의 차이?
+
+31강
+Inline table valued function의 문법?
+Inline table valued function는 어디에 쓰는가?
+
+
+32강 
+Multi statement table valued function의 문법?
+Inline table valued function와 Multi statement table valued function의 차이점?
+
+
+33강
+Deterministic functions
+Nondeterministic function
+함수 WITH ENCRYPTION 옵션, WITH SCHEMABINDING 옵션
+
+34강 
+Local Temporary table과 Global Temporary table의 차이점
+
+35강 36강
+Clustered Index, NonClustered Index 차이점
+
+37강 38강
+unique index보다 unique constraint를 생성해야만 할때는 언제인가?
+index의 장단점?
+DML(Data Manipulation Language)문 이란?
+covering query란?
+
+39강 40강 41강 42강
+View란? 
+View의 장점?
+View에 Insert, Update, Delete 가능한가?
+여러 테이블로부터 생성되는 View의 DML의 문제점은?
+indexed view란? non-indexed view와의 비교?
+view의 한계?
+
+43강 44강 45강 46강 47강
+트리거란?
+3종류 트리거의 종류?
+DML트리거의 2가지 타입?
+update trigger에 있는 2가지 특수테이블은?
+Exists()함수?
+디폴트로 여러 테이블에 기반을 한 view에 insert하는것은 에러이다. =>Update에서도 마찬가지.
+중요한것은 기반하고 있는 여러테이블에 수정이 가해지면 에러이다. 여러 테이블중 1개의 테이블에만 영향을 끼치면 에러는 나지 않지만
+의도하지 않은 결과가 발생가능하다.
+insteadof 트리거의 용도?
+Update()함수?
+join문을 사용한 delete문?
+
+
+48강 49강 50강 51강
+Derived Table?
+CTE 특성과 문법?
+CTE가 1개의 table, 혹은 여러개의 table로 부터 생성되었을때 Update는 어떻게 이루어지는가?
+Recursive CTE의 정의와 용도?
+
+52강 53강
+Database normalization 이란?
+1NF?
+2NF?
+3NF?
+
+54강
+Pivot?
+
+55강 56강
+@@Error?
+Try/catch ?
+Try/catch를 사용할수 없는 곳은?
+
+57강 58강
+Transaction?
+ACID?
+default isolation level은?
+default isolation level에서 lock이 어떤 단위로 걸리게 되는가?
+
+59강 60강
+많은경우 subquery는 join으로 교체 가능하다.
+subquery란?
+inner query, outer query란?
+subquery안에만 있는 테이블의 컬럼을 outer query에서 접근할수 있는가?
+correlated subquery란?
+subquery와 join중 어떤것이 퍼포먼스가 더 좋은가?
+
+61강 62강 63강 64강
+curosr?
+case문의 조건에 걸리지 않으면 무엇이 리턴되는가? 어떻게 해야하나?
+
+65강
+3가지 시스템 view?
+
+66강
+re-runnable script?
+OBJECT_ID()함수?
+col_length()함수?
+
+67강
+Alter table tblEmployee Alter column Salary int
+
+68강 
+optional parameter 문법?
+optional parameter로 null이 들어왔을경우의 where절의 처리?
+
+69강~75강
+common concurrency problem 4가지?
+5가지 isolation level? 각각의 isolation level은 위의 어떤 문제점들을 해결하는가?
+repeatable read 와 serializable의 차이점?
+serializable과 snapshot isolation level의 차이점?
+
+76강 77강
+read commited snapshot isolation level과 snapshot isolation level의 차이?
+
+78강~86강
+sql server는 어떻게 deadlock을 감지하는가?
+deadlock이 감지되면 어떻게 되나?
+DEADLOCK_PRIORITY란?
+deadlock log는 어떻게 설정하고 볼수 있는가?
+deadlock시 어떻게 deadlock된 query를 알아낼수 있는가? open Transaction
+process kill방법?
+
+87강~90강
+Except operator 설명?
+Except operator와 Not in의 차이점?
+Intersect operator 설명?
+Intersect operator와 inner join의 차이점?
+UNION, UNION ALL, INTERSECT, EXCEPT 각각을 설명?
+
+91강
+Cross apply 와 outer apply 설명?
+
+92강~95강
+DDL trigger란?
+DDL trigger 사용용도?
+database scope, server scope?
+trigger enable, disable 시키는 방법?
+DDL trigger 호출순서?
+sp_settriggerorder?
+EVENTDATA()함수?
+
+96강
+Logon trigger에 대해 설명?
+Logon trigger활용 방법?
+ORIGINAL_LOGIN() 함수
+
+97강
+Select into문이 할수 있는 것들?
+Select into와 Insert into를 써야 하는 경우?
+
+98강
+Where와 Having의 차이점
+
+99강
+Table valued parameters?
+
+101강~106강
+GROUPING SETS?
+ROLLUP()
+CUBE()
+ROLLUP()과 CUBE()의 차이점? ROLLUP(Continent, Country, City), CUBE(Continent, Country, City)을 예로 들면?
+Grouping()함수 용도?
+GROUPING_ID()함수
+
+108강~111강
+over절?
+Row_Number(), RANK(), DENSE_RANK()함수 문법?
+Row_Number()함수 usecase => table에 있는 중복된 행을 각각 1개만 남기고 나머진 제거하라
+Rank(),Dense_Rank()함수 usecase => n번째 높은 salary를 알아내라.
+Row_Number(), RANK(), DENSE_RANK()의 차이점?
+
+112강
+running total?
+running total이 제대로 출력되기 위해선 어떤 조건이 필요한가?
+
+113강~115강
+NTile()함수
+Lead() Lag()함수
+First_Value()함수
+
+116강~117강
+window function의 정의와 종류?
+ROWS와 RANGE의 디폴트값은?
+ROWS와 RANGE의 차이점은 무엇인가?
+
+118강
+Last_Value()함수
+
+119강~120강
+pivot, unpivot?
+
+121강~122강
+Choose()함수?
+IFF()함수?
+
+123강
+parse()?
+try_parse()?
+parse()와 try_parse()의 차이점?
+
+convert()?
+try_convert()?
+convert()와 try_convert()의 차이점?
+
+try_parse()와 try_convert() 차이점?

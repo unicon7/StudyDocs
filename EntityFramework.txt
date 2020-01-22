@@ -1,0 +1,2975 @@
+https://www.youtube.com/watch?v=Z7713GBhi4k&list=PL6n9fhu94yhUPBSX-E2aJCnCR3-_6zBZx
+Entity Framework 6
+1강 What is Entity Framework
+Entity Framework는 ORM framework이다. ORM은 Object Relational Mapping을 의미한다.
+
+Model: shape of entities, the relationships between them, and how they map to the database.
+
+Object Relational Mapping framework이란?
+Object Relational Mapping framework은 database table로 부터 자동으로 class를 생성하거나 반대로도 할수있다.
+다시말하면 class들에 기반하여 database table들을 생성하는데 필요한 SQL을 자동으로 생성할수있다.
+
+만약 database table의 내용을 화면에 출력하고 싶다면 다음과 같은 일을 계속 할것이다.
+1. Department와 Employee class를 만든다.
+2. database로부터 data를 뽑아오는 ADO.NET코드를 쓴다.
+3. data를 뽑아오면 Department와 Employee object들을 만들고 data로 채운다.
+
+Entity Framework는 database schema를 제공한다면 위의 과정을 자동으로 할수있다.
+
+Step1,2 : NuGet PackageManager 설치 하는 방법(Entity Framework다운로드), ASP.NET webform 프로젝트 생성.
+
+Step 3: Create "Departments" and "Employees" tables.
+Create table Departments
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Location nvarchar(50)
+)
+
+Create table Employees
+(
+     ID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+     Salary int,
+     DepartmentId int foreign key references Departments(Id)
+)
+
+Step 4: Populate the tables created in Step 3, with data
+Insert into Departments values ('IT', 'New York')
+Insert into Departments values ('HR', 'London')
+Insert into Departments values ('Payroll', 'Sydney')
+
+Insert into Employees values ('Mark', 'Hastings', 'Male', 60000, 1)
+Insert into Employees values ('Steve', 'Pound', 'Male', 45000, 3)
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 70000, 1)
+Insert into Employees values ('Philip', 'Hastings', 'Male', 45000, 2)
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 30000, 2)
+Insert into Employees values ('Valarie', 'Vikings', 'Female', 35000, 3)
+Insert into Employees values ('John', 'Stanmore', 'Male', 80000, 1)
+
+Step 5: Right click on the project in solution explorer and add ADO.NET Entity Data Model. 
+Change the name from Model1.edmx to EmployeeModel.edmx
+
+Step 6: Select "Generate from database" and click "Next"
+
+
+Step 7: Choose Your Data Connection
+a) Click on "New Connection" button
+b) Select "Microsoft SQL Server" as Data source, and ".Net Framework Data Provider for SQL Server" option from "Data provider" dropdownlist. Click Continue.
+c) On "Connection Properties" screen, specify SQL Server Name. If you are using local installation of SQL Server then use (local) or . in the "server name" dropdownlist.
+d) Specify the Authentication you want to use.
+e) Select the database from "Select or enter database name" dropdownlist.
+f) Finally "Test connection" and click "OK"
+g) At this point we should be back on "Choose Your Data Connection" window. 
+Make sure "Save entity connection settings in Web.Config as" checkbox is selected and change the name of the connection string to "EmployeeDBContext" and then Click "Next"
+Step 8: On "Choose Your Database Objects" screen, select "Departments" and "Employees" tables. 
+Change the Model Namespace to "EmployeeModel" and click "Finish". 
+At this point you should have EmployeeModel.edmx created.
+화면에 모델이 ui로 표시된다.
+EmployeeModel.Designer.cs화일이 생성되어진다. 이 화일이 Employee와 Department class를 포함한다.
+Table은 class로, column들은 class property로 매핑된다.
+
+이뒤 웹폼 그리드뷰 설정하는것...몰라도 될듯..
+Step 9: Add a webform. Drag and drop a GridView and an EntityDataSource control on the webform.
+
+ep 10: Build the solution. Flip the WebForm1.aspx to design mode. 
+a) Right click on EntityDataSource control and select "Show smart tag" option from the context menu.
+b) Click on "Configure Data Source" link
+c) Select "Named Connection" radiobutton and select "EmployeeDBContext" from the dropdownlist.
+d) Select "EmployeeDBContext" option from "DefaultContainerName" dropdownlist and click "Next"
+e) On "Configure Data Selection" screen, select "Departments" from "EntitySetName" dropdownlist and click "Finish"
+f) Right click on "GridView1" control and select "Show smart tag" option.
+g) Click on "Auto Format" link and select "Colorful" option from "AutoFormat" window and click "OK".
+h) Select "EntityDataSource1" from "Choose Data Source" dropdownlist.
+I) Click on "Edit Columns" link and add a "Template Field". Set HeaderText=Employees and click OK.
+j) Now click "Edit Templates" link.
+k) Drag and drop a GridView control
+l) Select "Edit DataBindings" link 
+m) Select "Custom binding" radiobutton and type Eval("Employees") in "Code expression" textbox and click OK.
+n) Select "End Template Editing" option from "GridView1" smart tasks pane.
+
+Step 11: Right click on "EntityDataSource1" control and select "Properties". In properties window set Include=Employees
+
+위의 방법이 Entity Framework의 schema first approach이다.
+위의 방법만이 아니라 Model First 또는 Code First approach를 쓸수있다.
+ 
+2강 Entity Framework Model First Approach
+Entity Framework 다음 3가지 방법을 지원한다.
+1. Schema First Approach - 1강
+2. Model First Approach - 2강
+3. Code First Approach - 3강
+
+Model First Approach에서는 먼저 Entity Model을 만든다. 이는
+1. Entities
+2. Entity간의 Relationship
+3. 상속 계층등
+을 만드는 것이다.
+
+이는 EDMX 화일의 Design surface(vs가 제공하는 ui, 클래스 다이어그램등이 뜬다.)에서 직접 다 한다.
+
+실제 만드는 것은 동영상을 보자...글로 하기에는 너무 복잡하다.
+
+3강 Entity Framework Code First Approach
+Code First Approach는 custom class를 먼저 생성할수있게하고 custom class에 기초하여 entity framework는 database를 자동으로
+생성할수있다.
+Step 1: Delete EmployeeModel.edmx && EmployeeModel.edmx.sql files from the solution explorer. (이전에 했던거 지우기)
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+public class Employee
+{
+    // Scalar Properties
+    public int Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+
+    // Navigation Property
+    public Department Department { get; set; }
+}
+
+Step 3: Add a class file to the project. Name it Department.cs. Copy and paste the following code.
+public class Department
+{
+    // Scalar Properties
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Location { get; set; }
+
+    // Navigation Property
+    public List<Employee> Employees { get; set; }
+}
+
+Step 4: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+// EmployeeDBContext class must inherit from DbContext
+// present in System.Data.Entity namespace
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<Employee> Employees { get; set; }
+}
+
+Step 5: Add a class file to the project. Name it EmployeeRepository.cs. Copy and paste the following code.
+public class EmployeeRepository
+{
+    public List<Department> GetDepartments()
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+        return employeeDBContext.Departments.Include("Employees").ToList();  <= database 로드시 Navigation Property를 자동으로 같이로드하지 않는다.
+        그래서 Include("Employees")를 통해 같이 로드하도록 지시한다.
+    }
+}
+
+Step 6: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+       connectionString="server=.; database=Sample; integrated security=true;"
+       providerName="System.Data.SqlClient"/>
+</connectionStrings>
+
+Please Note: If ProviderName is not specified the following runtime error will be thrown.
+The connection string 'EmployeeDBContext' in the application's configuration file does not contain the required providerName attribute."
+
+Step 7: Configure Object Data Source control
+a) Delete EntityDataSource control, that is already there in WebForm1.aspx. 
+b) Drag and Drop ObjectDataSource control.
+c) Right click on ObjectDataSource control and select "Show Smart Tag" option from the context menu
+d) Click on "Configure Data Source..." link
+e) On "Choose a Business Object" screen, select "EmployeeRepository" and click "Next"
+f) On "Define Data Methods" screen, select GetDepartments() method and click "Finish"
+
+Step 8: Configure GridView control
+a) Right click on GridView control and select "Show Smart Tag" option from the context menu
+b) Select "ObjectDataSource1" from "Choose Data Source" dropdownlist
+
+ 
+
+c) Click "No" to "Refresh Fields and Keys for GridView1" when prompted
+
+Step 9: Rebuild the solution.
+
+Step 10: Delete the already existing database from SQL Server Management Studio.
+
+Step 11: Run the application by pressing CTRL + F5. Notice that we don't have any data displayed on WebForm1. 
+This is because we don't have any data in the Departments and Employees tables. At this point we have the following created automatically.
+a) Sample database
+b) Departments table
+c) Employees table 
+
+Step 12: Use the SQL script to populate the tables with data.
+Insert into Departments values ('IT', 'New York')
+Insert into Departments values ('HR', 'London')
+Insert into Departments values ('Payroll', 'Sydney')
+
+Insert into Employees values ('Mark', 'Hastings', 'Male', 60000, 1)
+Insert into Employees values ('Steve', 'Pound', 'Male', 45000, 3)
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 70000, 1)
+Insert into Employees values ('Philip', 'Hastings', 'Male', 45000, 2)
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 30000, 2)
+Insert into Employees values ('Valarie', 'Vikings', 'Female', 35000, 3)
+Insert into Employees values ('John', 'Stanmore', 'Male', 80000, 1)
+
+Step 13: Refresh the Web Form and we should see the data we expect.
+
+4강 Customizing table, column and foreign key column names when using entity framework code first Approach
+table, column, foreign key column이름을 code first에서 어떻게 커스터마이징 하는지 알아본다.
+
+public class Employee
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public Department Department { get; set; }
+}
+
+3강에서 위의 class로 Employee table을 생성했었다.
+실제 database의 테이블을 보면 Department의 컬럼이름이 Department_Id로 '_'가 붙어있다.
+Department_Id가 아닌 DepartmentId로 테이블 컬럼 이름을 생성하고 싶다!
+
+System.ComponentModel.DataAnnotations.Schema;
+public class Employee
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public int DepartmentId { get; set; }
+    [ForeignKey("DepartmentId")] <= 이렇게 한다!
+    public Department Department { get; set; }
+}
+
+일단 그냥 실행시키면 다음과 같은 에러가 발생한다.
+The model backing the 'EmployeeDBContext' context has changed since the database was created. 
+Consider using Code First Migrations to update the database (http://go.microsoft.com/fwlink/?LinkId=238269).
+일단 에러를 회피하기 위해 database의 table을 모두 지우고 재실행하자..
+원하는대로 DepartmemtId 컬럼이 생성된다.
+
+테이블의 이름을 Employees에서 tblEmployees로 바꾸고 FirstName컬럼명을 First_Name으로는 다음과 같이 바꾼다.
+[Table("tblEmployees")]
+public class Employee
+{
+    public int Id { get; set; }
+    [Column("First_Name")]
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public int DepartmentId { get; set; }
+    [ForeignKey("DepartmentId")]
+    public Department Department { get; set; }
+}
+
+
+5강 How to handle model changes in entity framework
+database가 이미 생성된이후 model change를 어떻게 처리하는가?
+
+[Table("tblEmployees")]
+public class Employee
+{
+    public int Id { get; set; }
+    [Column("First_Name")]
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public int DepartmentId { get; set; }
+    [ForeignKey("DepartmentId")]
+    public Department Department { get; set; }
+}
+
+이전 class로 database에 테이블이 생성되어 있는 상태이다.
+JobTitle 프로퍼티를 추가해보자
+[Table("tblEmployees")]
+public class Employee
+{
+    public int Id { get; set; }
+    [Column("First_Name")]
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public int DepartmentId { get; set; }
+    [ForeignKey("DepartmentId")]
+    public Department Department { get; set; }
+    public string JobTitle { get; set; }
+}
+
+어플리케이션을 실행하면 다음과 같은 에러가 난다.
+The model backing the 'EmployeeDBContext' context has changed since the database was created. 
+Consider using Code First Migrations to update the database (http://go.microsoft.com/fwlink/?LinkId=238269).
+
+이는 database가 생성된뒤 model(Employee class)가 바뀌었기때문이다. 이는 Model과 database가 더 이상 sync되지 않게되어 에러가 발생된다.
+database가 생성된이래 model이 바뀌었는지를 체크하기위해 EF는 자동으로 생성된 __MigrationHistory테이블을 사용한다.
+
+이 에러를 고치기 위해서는 EF에게 model이 바뀌었을 경우 무엇을 해야하는지 알려줘야한다.
+
+Global.asax를 추가한다. Global Application Class를 add하면 생기는 화일이다.(asp.net에서 쓰는 화일인듯...자세히 알 필요는 없을듯...)
+Application_Start() 안에 다음 코드 추가!
+{
+  Database.SetInitializer(new DropCreateDatabaseIfModelChanges<EmployeeDBContext>());  <= 클래스명 그대로 모델이 바뀌면 database를 drop하고 다시 생성하라!
+  Database.SetInitializer(new DropCreateDatabaseAlways<EmployeeDBContext>()); <= 위와는 다른 선택 옵션으로 모델이 바뀌면 항상 database를 drop하고 다시 생성하라!
+}
+
+다음은 이 데이타를 사용하는 GridView를 수정한다.(스킵! 알필요 없을듯..)
+
+6강 How to seed database with test data using entity framework
+Step 1: EmployeeDBContextSeeder.cs화일에 class를 만든다.
+
+Step 2: Copy and paste the following code in EmployeeDBContextSeeder.cs file
+using System.Collections.Generic;
+using System.Data.Entity;
+namespace EntityFrameworkDemo
+{
+    public class EmployeeDBContextSeeder :
+        DropCreateDatabaseIfModelChanges<EmployeeDBContext>  <= DropCreateDatabaseIfModelChanges를 상속받았다!
+    {
+        protected override void Seed(EmployeeDBContext context)
+        {
+            Department department1 = new Department()
+            {
+                Name = "IT",
+                Location = "New York",
+                Employees = new List<Employee>()
+                {
+                    new Employee() <= DepartmentId 가 없다! 이는 미리 알수 없으며 EF가 알아서 넣어준다.
+                    {
+                        FirstName = "Mark",
+                        LastName = "Hastings",
+                        Gender = "Male",
+                        Salary = 60000,
+                        JobTitle = "Developer"
+                    },
+                    new Employee()
+                    {
+                        FirstName = "Ben",
+                        LastName = "Hoskins",
+                        Gender = "Male",
+                        Salary = 70000,
+                        JobTitle = "Sr. Developer"
+                    },
+                    new Employee()
+                    {
+                        FirstName = "John",
+                        LastName = "Stanmore",
+                        Gender = "Male",
+                        Salary = 80000,
+                        JobTitle = "Project Manager"
+                    }
+                }
+            };
+
+            Department department2 = new Department()
+            {
+                Name = "HR",
+                Location = "London",
+                Employees = new List<Employee>()
+                {
+                    new Employee()
+                    {
+                        FirstName = "Philip",
+                        LastName = "Hastings",
+                        Gender = "Male",
+                        Salary = 45000,
+                        JobTitle = "Recruiter"
+                    },
+                    new Employee()
+                    {
+                        FirstName = "Mary",
+                        LastName = "Lambeth",
+                        Gender = "Female",
+                        Salary = 30000,
+                        JobTitle = "Sr. Recruiter"
+                    }
+                }
+            };
+            Department department3 = new Department()
+            {
+                Name = "Payroll",
+                Location = "Sydney",
+                Employees = new List<Employee>()
+                {
+                    new Employee()
+                    {
+                        FirstName = "Steve",
+                        LastName = "Pound",
+                        Gender = "Male",
+                        Salary = 45000,
+                        JobTitle = "Sr. Payroll Admin",
+                    },
+                    new Employee()
+                    {
+                        FirstName = "Valarie",
+                        LastName = "Vikings",
+                        Gender = "Female",
+                        Salary = 35000,
+                        JobTitle = "Payroll Admin",
+                    }
+                }
+            };
+
+            context.Departments.Add(department1);
+            context.Departments.Add(department2);
+            context.Departments.Add(department3);
+
+            base.Seed(context);
+        }
+    }
+}
+
+Step 3: Copy and paste the following line in Application_Start() method Global.asax file
+Database.SetInitializer(new EmployeeDBContextSeeder());
+
+Step 4: Remove the following Table and Column attributes from Employee.cs file.
+[Table("tblEmployees")]
+[Column("First_Name")]
+
+제거하면 이런 클래스가 나온다!
+public class Employee
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Gender { get; set; }
+    public int Salary { get; set; }
+    public int DepartmentId { get; set; }
+    [ForeignKey("DepartmentId")]
+    public Department Department { get; set; }
+    public string JobTitle { get; set; }
+}
+
+Step 5: 실행하면 다시 테이블이 생성되어 있을것이다
+
+
+7강 Using stored procedures with entity framework
+schema first로 insert update delete operation을 custom sp를 통해 하는 방법을 설명
+자세한건 동영상으로 대부분 툴 조작이다.
+결국 OnModelCreating()에서 insert update delete가 sp랑 바인딩 될거라는 함수를 호출하고
+GridView에 연결되는 datasource세팅으로 함수를 지정하고 있다...흠..첨부터 끝까지 Code로 하는게 아닌듯..
+
+Step 1: Use the following SQL Script to create and populate Employee table.
+Create table Employees
+(
+     ID int primary key identity,
+     Name nvarchar(50),
+     Gender nvarchar(50),
+     Salary int
+)
+
+Insert into Employees values ('Mark', 'Male', 60000)
+Insert into Employees values ('Steve', 'Male', 45000)
+Insert into Employees values ('Ben', 'Male', 70000)
+Insert into Employees values ('Philip', 'Male', 45000)
+Insert into Employees values ('Mary', 'Female', 30000)
+Insert into Employees values ('Valarie', 'Female', 35000)
+Insert into Employees values ('John', 'Male', 80000)
+
+Step 2: Create Insert, Update and Delete stored procedures
+Create procedure InsertEmployee
+@Name nvarchar(50),
+@Gender nvarchar(50),
+@Salary int
+as
+Begin
+     Insert into Employees values (@Name, @Gender, @Salary)   
+End
+Go
+
+Create procedure UpdateEmployee
+@ID int,
+@Name nvarchar(50),
+@Gender nvarchar(50),
+@Salary int
+as
+Begin
+     Update Employees Set Name = @Name, Gender = @Gender,
+     Salary = @Salary
+     where ID = @ID
+End
+Go
+
+Create procedure DeleteEmployee
+@ID int
+as
+Begin
+     Delete from Employees where ID = @ID
+End
+Go
+
+Step 3: Create a new empty asp.net web application
+
+Step 4: Add a new ADO.NET Entity Data Model.
+a) On Choose Model Contents screen select "Generate from database" option and click Next
+b) On "Choose Your Data Connections" screen give a meaningful name for the connection string that will be stored in the web.config file. 
+I have named it EmployeeDBContext. Click Next.
+c) On "Choose Your Database Objects" screen, select Employees Table and the 3 stored procedures (InsertEmployee, UpdateEmployee, DeleteEmployee). 
+Provide a meaningful name for the Model namespace. I have named it EmployeeModel. CLick Finish.
+
+Employee entity는 화면에 보이지만 sp는 보이지 않을 것이다.
+
+sp를 보기 위해서는
+1. Right click on entity model designer surface and select "Model Broswer" from the context menu.
+2. Expand Stored Procedures folder
+
+Step 5: Add a web form to the project. Drag and drop the following 3 controls and build the solution.
+1. GridView
+2. DetailsView
+3. EntityDataSource
+
+Step 6: Configure EntityDataSource control
+a). Right click on EntityDataSource control and select "Show Smart Tag" option
+b) Click on Configure Data Source link
+c) Select EmployeeDBContext from the Named Connection dropdownlist and click Next
+d) Select the options on "Configure Data Selection" screen as shown in the image below and click Finish
+
+Step 7: Configure GridView control
+a). Right click on GridView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "EntityDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Editing and Enable Deleting checkboxes
+configure gridview
+
+Step 8: Configure DetailsView control
+a) Right click on DetailsView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "EntityDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Inserting checkbox
+e) Set DeafultMode=Insert. Use properties window to set this.
+f) Set InsertVisible="false" for the ID BoundField. You can do this directly in the HTML Source.
+g) Generate ItemInserted event handler method for DetailsView control. Copy and paste the following code.
+protected void DetailsView1_ItemInserted (object sender, DetailsViewInsertedEventArgs e)
+{
+    GridView1.DataBind();
+}
+
+이시점에 application을 실행시키면 insert, update, delete시 디폴트로 EF는 SQL문을 실행한다.
+우리의 custom sp를 실행하도록 설정하자. 이를 위해서 Employee entity에 매핑해야한다.
+1. Right click on "Employee" entity on "EmployeeModel.edmx" and select "Stored Procedure Mapping" option from the context menu.
+2. In the "Mapping Details" windows specify the Insert, Update and Delete stored procedures that you want to use with "Employee" entity
+
+이 작업뒤 sp가 호출된다.
+
+8강 Using stored procedures with entity framework code first approach
+code first로 insert update delete operation을 custom sp를 통해 하는 방법을 설명
+자세한건 동영상으로 툴 조작이 있다.
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class Employee
+    {
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Gender { get; set; }
+        public int Salary { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            // This line will tell entity framework to use stored procedures
+            // when inserting, updating and deleting Employees
+            modelBuilder.Entity<Employee>().MapToStoredProcedures();
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
+
+Step 4: Add a class file to the project. Name it EmployeeRepository.cs. Copy and paste the following code.
+using System.Collections.Generic;
+using System.Linq;
+namespace Demo
+{
+    public class EmployeeRepository
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+        public List<Employee> GetEmployees()
+        {
+            return employeeDBContext.Employees.ToList();
+        }
+
+        public void InsertEmployee(Employee employee)
+        {
+            employeeDBContext.Employees.Add(employee);
+            employeeDBContext.SaveChanges();
+        }
+
+        public void UpdateEmployee(Employee employee)
+        {
+            Employee employeeToUpdate = employeeDBContext
+                .Employees.SingleOrDefault(x => x.ID == employee.ID);
+            employeeToUpdate.Name = employee.Name;
+            employeeToUpdate.Gender = employee.Gender;
+            employeeToUpdate.Salary = employee.Salary;
+            employeeDBContext.SaveChanges();
+        }
+
+        public void DeleteEmployee(Employee employee)
+        {
+            Employee employeeToDelete = employeeDBContext
+                .Employees.SingleOrDefault(x => x.ID == employee.ID);
+            employeeDBContext.Employees.Remove(employeeToDelete);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+Step 5: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+    connectionString="server=.; database=Sample; integrated security=true;"
+    providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 6: Add a webform to the project. Drag and drop the following 3 controls and build the solution.
+1. GridView
+2. DetailsView
+3. ObjectDataSource
+
+Step 7: Configure ObjectDataSource control <= 결국은 ObjectDataSource를 GUI로 연결!
+a) Right click on ObjectDataSource control and select "Show Smart Tag" option
+b) Click on Configure Data Source link
+c) Select Demo.EmployeeRepository on Choose a Business Object screen and click Next
+d) On Define Data Methods screen
+    i) On SELECT tab - Select GetEmployees() method
+    ii) On UPDATE tab - Select UpdateEmployees(Employee employee) method
+    iii) On INSERT tab - Select InsertEmployees(Employee employee) method
+    iv) On DELETE tab - Select DeletEmployees(Employee employee) method
+
+Step 8: Configure GridView control
+a). Right click on GridView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "ObjectDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Editing and Enable Deleting checkboxes
+e) Set DataKeyNames="ID". Do this in the properties window of the GridView control
+
+Step 9: Configure DetailsView control
+a) Right click on DetailsView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "ObjectDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Inserting checkbox
+e) Set DeafultMode=Insert. Use properties window to set this.
+f) Set InsertVisible="false" for the ID BoundField. You can do this directly in the HTML Source.
+
+Step 10: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 11: Run the application by pressing CTRL + F5. Notice that we don't have any data displayed on WebForm1. 
+This is because we don't have any data in the Employees table. 
+
+11이후 database에 stored procedure 폴더에 Employee_Delete, Employee_Insert, Employee_Update sp가 생성되어져 있다.
+
+
+Step 12: Use the below SQL script to populate Employees tables with test data.
+Insert into Employees values ('Mark', 'Male', 60000)
+Insert into Employees values ('Steve', 'Male', 45000)
+Insert into Employees values ('Ben', 'Male', 70000)
+Insert into Employees values ('Philip', 'Male', 45000)
+Insert into Employees values ('Mary', 'Female', 30000)
+Insert into Employees values ('Valarie', 'Female', 35000)
+Insert into Employees values ('John', 'Male', 80000)
+
+이제 insert update delete가 sp가 호출된다.
+
+9강 Overriding stored procedure defaults with entity framework code first approach
+8강에 이어서 계속!
+
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Employee>().MapToStoredProcedures();
+        base.OnModelCreating(modelBuilder);
+    }
+}
+위의 코드는 다음의 이름으로 3가지 sp를 생성한다.
+Employee_Insert
+Employee_Update
+Employee_Delete
+
+위의 생성되는 디폴트 이름을 바꾸도 싶을때는 다음과 같은 코드를 쓴다.
+
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Employee>()
+            .MapToStoredProcedures(p => p.Insert(x => x.HasName("InsertEmployee")));
+        modelBuilder.Entity<Employee>()
+            .MapToStoredProcedures(p => p.Update(x => x.HasName("UpdateEmployee")));
+        modelBuilder.Entity<Employee>()
+            .MapToStoredProcedures(p => p.Delete(x => x.HasName("DeleteEmployee")));
+
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+database를 drop한뒤 재실행 시키면 sp의 이름이 
+InsertEmployee
+UpdateEmployee
+DeleteEmployee
+로 생성됨을 확일할수 있다.
+
+위의 코드는 다음과 같이 다시쓸수있다.
+
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Employee>().MapToStoredProcedures
+            (p => p.Insert(i => i.HasName("InsertEmployee"))
+                    .Update(u => u.HasName("UpdateEmployee"))
+                    .Delete(d => d.HasName("DeleteEmployee"))
+            );
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+생성된 sp의 파라메터이름은 @ID, @Salary등으로 앞에 @만 붙는다.
+이 이름은 다음과 같이 바꿀수 있다.
+
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Employee>().MapToStoredProcedures
+            (p => p.Insert(i => i.HasName("InsertEmployee")
+                                    .Parameter(n => n.Name, "EmployeeName")
+                                    .Parameter(n => n.Gender, "EmployeeGender")
+                                    .Parameter(n => n.Salary, "EmployeeSalary"))
+                    .Update(u => u.HasName("UpdateEmployee")
+                                    .Parameter(n => n.ID, "EmployeeID")
+                                    .Parameter(n => n.Name, "EmployeeName")
+                                    .Parameter(n => n.Gender, "EmployeeGender")
+                                    .Parameter(n => n.Salary, "EmployeeSalary"))
+                    .Delete(d => d.HasName("DeleteEmployee")
+                                    .Parameter(n => n.ID, "EmployeeID"))
+            );
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+다시 database drop뒤에 재실행 시키면 sp의 파라메터 이름들도 바뀌어 있다.
+
+Part 10 - Entity splitting in entity framework
+Entity splitting은 table들이 1개의 공통키를 공유하고 있을때 한 Entity를 2개 이상의 테이블에의 매핑시키는 것을 말한다.
+
+Create table Employees
+(
+     EmployeeID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50)
+)
+GO
+
+Create table EmployeeContactDetails
+(
+     EmployeeID int primary key,
+     Email nvarchar(50),
+     Mobile nvarchar(50),
+     LandLine nvarchar(50)
+)
+GO
+
+Insert into Employees values ('Mark', 'Hastings', 'Male')
+Insert into Employees values ('Steve', 'Pound', 'Male')
+Insert into Employees values ('Ben', 'Hoskins', 'Male')
+Insert into Employees values ('Philip', 'Hastings', 'Male')
+Insert into Employees values ('Mary', 'Lambeth', 'Female')
+
+Insert into EmployeeContactDetails values
+(1, 'Mark@pragimtech.com', '111111111', '111111111')
+Insert into EmployeeContactDetails values
+(2, 'Steve@pragimtech.com', '2222222222', '2222222222')
+Insert into EmployeeContactDetails values
+(3, 'Ben@pragimtech.com', '3333333333', '3333333333')
+Insert into EmployeeContactDetails values
+(4, 'Philip@pragimtech.com', '44444444444', '44444444444')
+Insert into EmployeeContactDetails values
+(5, 'Mary@pragimtech.com', '5555555555', '5555555555')
+
+위 코드에의해 생성된 Employees, EmployeeContactDetails은 EmployeeID를 공유하고 있다.
+
+database first접근으로 Entity를 생성하면  Empoyee와 EmployeeContactDetail 2개의 엔터티가 생긴다.
+테이블과 엔터티는 1대1 매핑관계이다.
+우리는 Employees & EmployeeContactDetails table에 매핑하는 한개의 Employee를 원한다.
+
+To achieve this
+1. Cut Email, Mobile and LandLine properties from EmployeeContactDetail entity and paste them in Employee entity
+2. Delete EmployeeContactDetail entity. On "Delete Unmapped Tables and Views" window click NO.  <= 여기서 yes하면 database의 테이블이 지워지게 되므로 no를 선택!
+3. Right click on Employee entity and select "Table Mapping" option from the context menu. 
+Map EmployeeId, Email, Mobile and LandLine properties to the respective columns of EmployeeContactDetails table.
+
+나머지는 gridview이야기
+
+11강 Entity splitting in entity framework with code first approach
+10강에서 database first로 Entity splitting을 했다.
+이번에 Code first로 Entity splitting을 실습한다.
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class Employee
+    {
+        // These property values should be stored in Employees Table
+        public int EmployeeId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+
+        // These property values should be stored in EmployeeContactDetails Table
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public string Landline { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it EmployeeRepository.cs. Copy and paste the following code.
+using System.Collections.Generic;
+using System.Linq;
+namespace Demo
+{
+    public class EmployeeRepository
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+        public List<Employee> GetEmployees()
+        {
+            return employeeDBContext.Employees.ToList();
+        }
+
+        public void InsertEmployee(Employee employee)
+        {
+            employeeDBContext.Employees.Add(employee);
+            employeeDBContext.SaveChanges();
+        }
+
+        public void UpdateEmployee(Employee employee)
+        {
+            Employee employeeToUpdate = employeeDBContext.Employees
+                .SingleOrDefault(x => x.EmployeeId == employee.EmployeeId);
+            employeeToUpdate.EmployeeId = employee.EmployeeId;
+            employeeToUpdate.FirstName = employee.FirstName;
+            employeeToUpdate.Gender = employee.Gender;
+            employeeToUpdate.Email = employee.Email;
+            employeeToUpdate.Mobile = employee.Mobile;
+            employeeToUpdate.Landline = employee.Landline;
+
+            employeeDBContext.SaveChanges();
+        }
+
+        public void DeleteEmployee(Employee employee)
+        {
+            Employee employeeToDelete = employeeDBContext.Employees
+                .SingleOrDefault(x => x.EmployeeId == employee.EmployeeId);
+            employeeDBContext.Employees.Remove(employeeToDelete);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+Step 5: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+        connectionString="server=.; database=Sample; integrated security=SSPI;"
+        providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 6: Add a webform to the project. Drag and drop the following 3 controls and build the solution.
+1. GridView
+2. DetailsView
+3. ObjectDataSource
+
+Step 7: Configure ObjectDataSource control
+a).Right click on ObjectDataSource control and select "Show Smart Tag" option
+b) Click on Configure Data Source link
+c) Select Demo.EmployeeRepository on Choose a Business Object screen and click Next
+d) On Define Data Methods screen
+    i) On SELECT tab - Select GetEmployees() method
+    ii) On UPDATE tab - Select UpdateEmployee(Employee employee) method
+    iii) On INSERT tab - Select InsertEmployee(Employee employee) method
+    iv) On DELETE tab - Select DeletEmployee(Employee employee) method
+
+Step 8: Configure GridView control
+a). Right click on GridView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "ObjectDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Editing and Enable Deleting checkboxes
+e) Set DataKeyNames="EmployeeId". Do this in the properties window of the GridView control
+f) Set ReadOnly="true" for the EmployeeId BoundField. You can do this directly in the HTML Source.
+
+Step 9: Configure DetailsView control
+a) Right click on DetailsView control and select "Show Smart Tag" option
+b) Click on "Auto Format" link and select "Colourful" scheme
+c) Select "ObjectDataSource1" from "Choose Data Source" dropdownlist
+d) Select Enable Inserting checkbox
+e) Set DeafultMode=Insert. Use properties window to set this.
+f) Set InsertVisible="false" for the EmployeeId BoundField. You can do this directly in the HTML Source.
+g) Generate ItemInserted event handler method for DetailsView control. Copy and paste the following code.
+protected void DetailsView1_ItemInserted(object sender, DetailsViewInsertedEventArgs e)
+{
+    GridView1.DataBind();
+}
+
+Step 10: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 11: Run the application by pressing CTRL + F5. By default entity framework creates one Table i.e Employees table. 
+But we want entity framework to create the following 2 tables.
+a) Employees table with columns EmployeeId, FirstName, LastName and Gender
+b) EmployeeContactDetails table with columns EmployeeId, Email, Mobile and  Landline
+
+Step 12: Override OnModelCreating() method to tell entity framework to generate 2 tables(Employees & EmployeeContactDetails) for the Employee entity. 
+OnModelCreating() method is a virtual method present in DbContext class. So, modify EmployeeDBContext class in EmployeeDBContext.cs file as shown below.
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Employee>()
+        // Specify properties to map to Employees table
+        .Map(map =>
+        {
+            map.Properties(p => new
+            {
+                p.EmployeeId,
+                p.FirstName,
+                p.LastName,
+                p.Gender
+            });
+
+            map.ToTable("Employees");
+        })
+        // Specify properties to map to EmployeeContactDetails table
+        .Map(map =>
+        {
+            map.Properties(p => new
+            {
+                p.EmployeeId,
+                p.Email,
+                p.Mobile,
+                p.Landline
+            });
+
+            map.ToTable("EmployeeContactDetails");
+        });
+
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+Step 13: Delete the Sample database and run the web application.
+
+Step 14: Notice that now we have 2 tables generated by entity framework as expected.
+
+Step 15: Execute the following SQL script to populate the tables with test data.
+Insert into Employees values ('Mark', 'Hastings', 'Male')
+Insert into Employees values ('Steve', 'Pound', 'Male')
+Insert into Employees values ('Ben', 'Hoskins', 'Male')
+Insert into Employees values ('Philip', 'Hastings', 'Male')
+
+Insert into Employees values ('Mary', 'Lambeth', 'Female')
+
+Insert into EmployeeContactDetails values
+(1, 'Mark@pragimtech.com', '111111111', '111111111')
+Insert into EmployeeContactDetails values
+(2, 'Steve@pragimtech.com', '2222222222', '2222222222')
+Insert into EmployeeContactDetails values
+(3, 'Ben@pragimtech.com', '3333333333', '3333333333')
+Insert into EmployeeContactDetails values
+(4, 'Philip@pragimtech.com', '44444444444', '44444444444')
+Insert into EmployeeContactDetails values
+
+(5, 'Mary@pragimtech.com', '5555555555', '5555555555')
+
+Step 16: At this point run the application. 
+Insert, update and delete an Employee, and notice that both the tables (Employees and EmployeeContactDetails) are updated as expected.
+
+12강 Table splitting in entity framework
+Table splitting은  Entity Splitting의 반대이다.
+Entity splitting은 table들이 1개의 공통키를 공유하고 있을때 한 Entity를 2개 이상의 테이블에의 매핑시키는 것을 말한다.
+한개의 table에 여러개의 Entity를 메핑시키는 것을 Table Splitting이라고 한다.
+
+인터뷰질문중 하나, Table Splitting을 쓰는 주된 이유는?
+lazy loading사용시 큰데이타를 가진 어떤 프로퍼티들의 로딩을 딜레이시키고 싶을때 유용하다.
+
+예를 들면 만약 Employee entity가 큰 이진 데이타를 가진 Photo 프로퍼티를 포함하고 있으며 Photo 프로퍼티를 소수의 페이지에서만 사용한다고 가정해보자.
+그렇다면 퍼포먼스 측면에서 Employee entity를 로딩할때마다 Photo를 로딩하는 것은 적합하지 않다.
+Employee Photo를 출력 할 필요가 있는 페이지에서만 Lazy Loading을 사용하여 Photo만 로딩하는 하라.
+
+Create table Employees
+(
+     EmployeeID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+     Email nvarchar(50),
+     Mobile nvarchar(50),
+     LandLine nvarchar(50)
+)
+
+Insert into Employees values ('Mark', 'Hastings', 'Male', 'x@x.com', 'XXX', 'XXX')
+Insert into Employees values ('Steve', 'Pound', 'Male', 'y@y.com', 'YYY', 'YYY')
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 'z@z.com', 'ZZZ', 'ZZZ')
+Insert into Employees values ('Philip', 'Hastings', 'Male', 'a@a.com', 'AAA', 'AAA')
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 'b@b.com', 'BBB', 'BBB')
+
+ADO.NET Entity Framework를 사용해서 database로부터 entity를 생성했을때 모든 컬럼이 전부 Entity로 다들어간다.
+FirstName, LastName, Gender프로퍼티는 아주 자주 사용되고 Email, Mobile, Landline은 자주 사용되지 않는다고 가정하자.
+만약 위의 모든 프로퍼티들이 전부 한 Entity에 있다면 이 entity를 로드할때마다 모든 프로퍼티가 자동적으로 로딩된다.
+이를 피하기 위해 Employee, EmployeeContactDetail 2개의 Entity를 만들자. 이를 통해 EmployeeContactDetails는 우리가 꼭 필요할때만
+로드 할 수 있게 한다.
+
+To achieve this:
+1. Right click on the entity designer and select "Add Entity" option from the context menu. Set 
+    a) Entity Name = EmployeeContactDetail
+    b) Bae type = (None)
+    c) Entity Set = EmployeeContactDetails
+    d) Create Key Property = Checked
+    e) Property Name = EmployeeID
+
+2. Cut Email, Mobile and LandLine properties from Employee entity and paste them in EmployeeContactDetail entity
+
+3. Right click on the entity designer and select "Add - Association" option from the context menu. Fill the details shown below.
+   1:1관계를 만든다.
+
+4. Right click on the association and select "Properties". 
+In the Properties window, click on the ellipsis button next to "Referential Constraint" property and fill in the details as shown below.
+referential constraint
+
+5. Right click on "EmployeeContactDetail" entity and select "Table Mapping" option from the context menu. 
+Select "Employees" table and map EmployeeId, Email, Mobile and Landline properties of the entity to the respective columns of the table.
+
+6. Add a webform. Copy and paste the following HTML in the ASPX page.
+<div style="font-family:Arial">
+    <asp:CheckBox ID="checkBoxIncludeContactDetails"
+    Text="Include Contact Details" runat="server" />
+    <br />
+    <asp:Button ID="Button1" runat="server" Text="Get Employee Data"
+        onclick="Button1_Click" />
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+</div>
+
+7. Copy and paste the following code in the code-behind file.
+public partial class WebForm1 : System.Web.UI.Page
+{
+    private DataTable GetEmployeeData()
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+        List<Employee> employees = employeeDBContext.Employees.ToList();
+
+        DataTable dataTable = new DataTable();
+        DataColumn[] columns = { new DataColumn("EmployeeID"),
+                                 new DataColumn("FirstName"),
+                                 new DataColumn("LastName"),
+                                 new DataColumn("Gender")};
+
+        dataTable.Columns.AddRange(columns);
+
+        foreach (Employee employee in employees)
+        {
+            DataRow dr = dataTable.NewRow();
+            dr["EmployeeID"] = employee.EmployeeID;
+            dr["FirstName"] = employee.FirstName;
+            dr["LastName"] = employee.LastName;
+            dr["Gender"] = employee.Gender;
+
+            dataTable.Rows.Add(dr);
+        }
+
+        return dataTable;
+    }
+
+    private DataTable GetEmployeeDataIncludingContactDetails()
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+        List<Employee> employees = employeeDBContext.Employees
+            .Include("EmployeeContactDetail").ToList();
+
+        DataTable dataTable = new DataTable();
+        DataColumn[] columns = { new DataColumn("EmployeeID"),
+                                 new DataColumn("FirstName"),
+                                 new DataColumn("LastName"),
+                                 new DataColumn("Gender"),
+                                 new DataColumn("Email"),
+                                 new DataColumn("Mobile"),
+                                 new DataColumn("LandLine") };
+        dataTable.Columns.AddRange(columns);
+
+        foreach (Employee employee in employees)
+        {
+            DataRow dr = dataTable.NewRow();
+            dr["EmployeeID"] = employee.EmployeeID;
+            dr["FirstName"] = employee.FirstName;
+            dr["LastName"] = employee.LastName;
+            dr["Gender"] = employee.Gender;
+            dr["Email"] = employee.EmployeeContactDetail.Email;
+            dr["Mobile"] = employee.EmployeeContactDetail.Mobile;
+            dr["LandLine"] = employee.EmployeeContactDetail.LandLine;
+
+            dataTable.Rows.Add(dr);
+        }
+
+        return dataTable;
+    }
+
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        if (checkBoxIncludeContactDetails.Checked)
+        {
+            GridView1.DataSource = GetEmployeeDataIncludingContactDetails();
+        }
+        else
+        {
+            GridView1.DataSource = GetEmployeeData();
+        }
+        GridView1.DataBind();
+    }
+}
+
+"Include Contact Details" checkbox를 체크하지 않고 Employees를 뽑아올때는 EF에 의해 다음과 같은 query가 생성된다.
+Email, Mobile, LandLine은 없다는 것에 주목하자.
+
+SELECT
+[Extent1].[EmployeeID] AS [EmployeeID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender]
+FROM [dbo].[Employees] AS [Extent1]
+
+"Include Contact Details" checkbox를 체크했을경우
+SELECT
+[Extent1].[EmployeeID] AS [EmployeeID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender],
+[Extent1].[Email] AS [Email],
+[Extent1].[Mobile] AS [Mobile],
+[Extent1].[LandLine] AS [LandLine]
+FROM [dbo].[Employees] AS [Extent1]
+
+
+13강 Table splitting in entity framework with code first approach
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class Employee
+    {
+        public int EmployeeID { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+
+        public EmployeeContactDetail EmployeeContactDetail { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it EmployeeContactDetail.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class EmployeeContactDetail
+    {
+        public int EmployeeID { get; set; }
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public string LandLine { get; set; }
+
+        public Employee Employee { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Employee>()
+                .HasKey(pk => pk.EmployeeID)
+                .ToTable("Employees");
+
+            modelBuilder.Entity<EmployeeContactDetail>()
+                .HasKey(pk => pk.EmployeeID)
+                .ToTable("Employees");
+
+            modelBuilder.Entity<Employee>()
+                .HasRequired(p => p.EmployeeContactDetail)
+                .WithRequiredPrincipal(c => c.Employee);
+        }
+    }
+}
+
+Step 5: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+      connectionString="server=.; database=Sample; integrated security=SSPI;"
+      providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 6: Add a web form to the project. Copy and paste the following HTML in the aspx page
+<div style="font-family:Arial">
+    <asp:CheckBox ID="checkBoxIncludeContactDetails"
+    Text="Include Contact Details" runat="server" />
+    <br />
+    <asp:Button ID="Button1" runat="server" Text="Get Employee Data"
+        onclick="Button1_Click" />
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+</div>
+
+Step 7: Copy and paste the following code in the code-behind file.
+public partial class WebForm1 : System.Web.UI.Page
+{
+    private DataTable GetEmployeeData()
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+        List<Employee> employees = employeeDBContext.Employees.ToList();
+
+        DataTable dataTable = new DataTable();
+        DataColumn[] columns = { new DataColumn("EmployeeID"),
+                                 new DataColumn("FirstName"),
+                                 new DataColumn("LastName"),
+                                 new DataColumn("Gender")};
+
+        dataTable.Columns.AddRange(columns);
+
+        foreach (Employee employee in employees)
+        {
+            DataRow dr = dataTable.NewRow();
+            dr["EmployeeID"] = employee.EmployeeID;
+            dr["FirstName"] = employee.FirstName;
+            dr["LastName"] = employee.LastName;
+            dr["Gender"] = employee.Gender;
+
+            dataTable.Rows.Add(dr);
+        }
+
+        return dataTable;
+    }
+
+    private DataTable GetEmployeeDataIncludingContactDetails()
+    {
+        EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+        List<Employee> employees = employeeDBContext.Employees
+            .Include("EmployeeContactDetail").ToList();
+
+        DataTable dataTable = new DataTable();
+        DataColumn[] columns = { new DataColumn("EmployeeID"),
+                                 new DataColumn("FirstName"),
+                                 new DataColumn("LastName"),
+                                 new DataColumn("Gender"),
+                                 new DataColumn("Email"),
+                                 new DataColumn("Mobile"),
+                                 new DataColumn("LandLine") };
+        dataTable.Columns.AddRange(columns);
+
+        foreach (Employee employee in employees)
+        {
+            DataRow dr = dataTable.NewRow();
+            dr["EmployeeID"] = employee.EmployeeID;
+            dr["FirstName"] = employee.FirstName;
+            dr["LastName"] = employee.LastName;
+            dr["Gender"] = employee.Gender;
+            dr["Email"] = employee.EmployeeContactDetail.Email;
+            dr["Mobile"] = employee.EmployeeContactDetail.Mobile;
+            dr["LandLine"] = employee.EmployeeContactDetail.LandLine;
+
+            dataTable.Rows.Add(dr);
+        }
+
+        return dataTable;
+    }
+
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        if (checkBoxIncludeContactDetails.Checked)
+        {
+            GridView1.DataSource = GetEmployeeDataIncludingContactDetails();
+        }
+        else
+        {
+            GridView1.DataSource = GetEmployeeData();
+        }
+        GridView1.DataBind();
+    }
+}
+
+At this point, run the application. Sample database and Employees table should be created by the entity framework.
+
+Step 8: Insert test data using the following SQL script
+Insert into Employees values ('Mark', 'Hastings', 'Male', 'x@x.com', 'XXX', 'XXX')
+Insert into Employees values ('Steve', 'Pound', 'Male', 'y@y.com', 'YYY', 'YYY')
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 'z@z.com', 'ZZZ', 'ZZZ')
+Insert into Employees values ('Philip', 'Hastings', 'Male', 'a@a.com', 'AAA', 'AAA')
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 'b@b.com', 'BBB', 'BBB')
+
+When you retrieve Employees without checking "Include Contact Details" checkbox, the following query is generated by the entity framework. 
+Use SQL Profile to view the generated query. Notice that Email, Mobile and LandLine column values are not loaded.
+SELECT
+[Extent1].[EmployeeID] AS [EmployeeID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender]
+FROM [dbo].[Employees] AS [Extent1]
+
+When you check "Include Contact Details" checkbox, the following query is generated 
+SELECT
+[Extent1].[EmployeeID] AS [EmployeeID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender],
+[Extent1].[Email] AS [Email],
+[Extent1].[Mobile] AS [Mobile],
+[Extent1].[LandLine] AS [LandLine]
+FROM [dbo].[Employees] AS [Extent1]
+
+
+14강 Conditional Mapping in entity framework
+IsTerminated 컬럼은 Employee가 다니는지 안다니는지 알수 있는 컬럼이라고 하자.
+다음으로 생성한다.
+
+Create table Employees
+(
+     EmployeeID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+     IsTerminated bit not null
+)
+GO
+
+Insert into Employees values ('Mark', 'Hastings', 'Male', 0)
+Insert into Employees values ('Steve', 'Pound', 'Male', 0)
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 0)
+Insert into Employees values ('Philip', 'Hastings', 'Male', 1)
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 0)
+Insert into Employees values ('Valarie', 'Vikings', 'Female', 0)
+Insert into Employees values ('John', 'Stanmore', 'Male', 1)
+
+만약 application이 IsTerminated가 false인 Employee를 대상으로 작동한다면 모든 query에 filter를 포함해야한다.
+(.where(IsTerminated == false)를 손으로 써줘야 한다는 말이다.)
+만약 이런 영구적인 filter를 entity에 적용하려면 Conditional Mapping을 사용하여 하상 Where절을 생성하도록 만들면된다.
+
+To use Conditional Mapping, 
+1. Right click on the entity and select "Table Mapping" option from the context menu
+2. Add the condition - When Is Terminated = false
+At this point, if you build the solution or validate the model, you will get the following error
+Problem in mapping fragments starting at line 46:Condition member 'Employees.IsTerminated' with a condition other than 'IsNull=False' is mapped. 
+Either remove the condition on Employees.IsTerminated or remove it from the mapping
+위 에러의 이유는 테이블 컬럼은 한번이상 매핑될수 없기때문이다. IsTerminated컬럼을 이미 Conditional Mapping에 사용했기때문에 property mapping에 다시 사용할수없다.
+이러한 이유로 Employee Entity에서 IsTerminated를 지운다.
+Add a web form to the project. Drag and drop a GridView control. Copy and paste the following code in the code-behind file.
+protected void Page_Load(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+    GridView1.DataSource = employeeDBContext.Employees;
+    GridView1.DataBind();
+}
+
+Open SQL profiler and run the webform. Notice that the select query has a where clause, which will always return employees who are not terminated.
+SELECT
+[Extent1].[EmployeeID] AS [EmployeeID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender]
+FROM [dbo].[Employees] AS [Extent1]
+WHERE [Extent1].[IsTerminated] = 0
+
+Part 15 Conditional Mapping in entity framework with code first
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class Employee
+    {
+        public int EmployeeID { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+        public bool IsTerminated { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Employee>()
+                .Map(m => m.Requires("IsTerminated")
+                .HasValue(false))
+                .Ignore(m => m.IsTerminated); <= Property Mapping을 하지 마라!
+
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
+
+Step 4: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+            connectionString="server=.; database=Sample; integrated security=SSPI;"
+            providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 5: Add a webform to the project. Drag and drop a GridView control. 
+
+Step 6: Copy and paste the following code in the code-behind file.
+protected void Page_Load(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+    GridView1.DataSource = employeeDBContext.Employees.ToList();
+    GridView1.DataBind();
+}
+
+Step 7: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 8: Run the application. Sample database and Employees table must be created at this point.
+
+Step 9: Insert test data using the following SQL script
+Insert into Employees values ('Mark', 'Hastings', 'Male', 0)
+Insert into Employees values ('Steve', 'Pound', 'Male', 0)
+Insert into Employees values ('Ben', 'Hoskins', 'Male', 0)
+Insert into Employees values ('Philip', 'Hastings', 'Male', 1)
+Insert into Employees values ('Mary', 'Lambeth', 'Female', 0)
+Insert into Employees values ('Valarie', 'Vikings', 'Female', 0)
+Insert into Employees values ('John', 'Stanmore', 'Male', 1)
+
+Step 10: Open SQL profiler and run the webform. Notice that the select query has a WHERE clause, which will always return employees who are not terminated.
+SELECT
+    [Extent1].[EmployeeID] AS [EmployeeID],
+    [Extent1].[FirstName] AS [FirstName],
+    [Extent1].[LastName] AS [LastName],
+    [Extent1].[Gender] AS [Gender]
+    FROM [dbo].[Employees] AS [Extent1]
+    WHERE [Extent1].[IsTerminated] = 0
+
+
+16강 Self referencing association in entity framework
+
+EmployeeID EmployeeName ManagerID 컬럼을 갖는 self referencing table을 만들자.
+
+Create table Employees
+(
+     EmployeeID int primary key identity,
+     EmployeeName nvarchar(50),
+     ManagerID int foreign key references Employees(EmployeeID)
+)
+GO
+
+Insert into Employees values ('John', NULL)
+Insert into Employees values ('Mark', NULL)
+Insert into Employees values ('Steve', NULL)
+Insert into Employees values ('Tom', NULL)
+Insert into Employees values ('Lara', NULL)
+Insert into Employees values ('Simon', NULL)
+Insert into Employees values ('David', NULL)
+Insert into Employees values ('Ben', NULL)
+Insert into Employees values ('Stacy', NULL)
+Insert into Employees values ('Sam', NULL)
+GO
+
+Update Employees Set ManagerID = 8 Where EmployeeName IN ('Mark', 'Steve', 'Lara')
+Update Employees Set ManagerID = 2 Where EmployeeName IN ('Stacy', 'Simon')
+Update Employees Set ManagerID = 3 Where EmployeeName IN ('Tom')
+Update Employees Set ManagerID = 5 Where EmployeeName IN ('John', 'Sam')
+Update Employees Set ManagerID = 4 Where EmployeeName IN ('David')
+GO
+
+ADO.NET entity data model을 Employee table에 기초해 생성하면 Employee Entity가 생성된다.
+Navigation 프로퍼티를 보면 Employees1과 Employee1이라는 2가지 Navigation property가 생성되어 있다.
+Employees1을 오른쪽 클릭해서 property창을 보면 Multiplicity가 Many로 지정되어 있으며 이를 보고 부하인 Employees를 리턴함을 알수있다.
+Employee1을 오른쪽 클릭해서 property창을 보면 Multiplicity가 0 or 1으로 지정되어 있으며 이를 보고 이 속성은 Manager를 지칭함을 알수있다.
+개발자 관점에서 봤을때 이러한 이름들은 매우 좋지 않으며 Subordinates, Manager로! UI에서 이름을 고치자. 
+
+
+출력을 다음과 같이 하고 싶다고 하자.
+EmployeeName ManagerName
+John         Lara
+...
+Ben          Super Boss
+
+다음과 같은 코드로 위의 출력을 얻을수 있다.
+protected void Page_Load(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+    GridView1.DataSource = employeeDBContext.Employees.Select(emp => new
+    {
+        EmployeeName = emp.EmployeeName,
+        ManagerName = emp.Manager == null ? "Super Boss"
+                                      : emp.Manager.EmployeeName
+    }).ToList();
+    GridView1.DataBind();
+}
+
+17강 - Self referencing association in entity framework with code first
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+namespace Demo
+{
+    public class Employee
+    {
+        // Scalar properties
+        public int EmployeeID { get; set; }
+        public string EmployeeName { get; set; }
+        public int? ManagerID { get; set; }
+
+        // Navigation property
+        public Employee Manager { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Employee>()
+                .HasOptional(e => e.Manager)  <= 흠..도대체 이것들이 무슨의미인지 모르겠다.
+                .WithMany()
+                .HasForeignKey(m => m.ManagerID);
+
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
+
+Step 4: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+            connectionString="server=.; database=Sample; integrated security=SSPI;"
+            providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 5: Add a webform to the project. Drag and drop a GridView control. 
+
+Step 6: Copy and paste the following code in the code-behind file.
+using System;
+using System.Linq;
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            GridView1.DataSource = employeeDBContext.Employees.Select(emp => new
+            {
+                EmployeeName = emp.EmployeeName,
+                ManagerName = emp.Manager == null ?
+                    "Super Boss" : emp.Manager.EmployeeName
+            }).ToList();
+            GridView1.DataBind();
+        }
+    }
+}
+
+Step 7: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 8: Run the application. Sample database and Employees table must be created at this point. Notice that EmployeeID is marked as primary key and ManagerID is marked as foreign key.
+Self referencing association in entity framework with code first
+
+Step 9: Insert test data using the following SQL script
+Insert into Employees values ('John', NULL)
+Insert into Employees values ('Mark', NULL)
+Insert into Employees values ('Steve', NULL)
+Insert into Employees values ('Tom', NULL)
+Insert into Employees values ('Lara', NULL)
+Insert into Employees values ('Simon', NULL)
+Insert into Employees values ('David', NULL)
+Insert into Employees values ('Ben', NULL)
+Insert into Employees values ('Stacy', NULL)
+Insert into Employees values ('Sam', NULL)
+GO
+
+Update Employees Set ManagerID = 8 Where EmployeeName IN ('Mark', 'Steve', 'Lara')
+Update Employees Set ManagerID = 2 Where EmployeeName IN ('Stacy', 'Simon')
+Update Employees Set ManagerID = 3 Where EmployeeName IN ('Tom')
+Update Employees Set ManagerID = 5 Where EmployeeName IN ('John', 'Sam')
+Update Employees Set ManagerID = 4 Where EmployeeName IN ('David')
+GO
+
+Step 10: Reload web form and notice that the employee name and their respective manager name is is displayed as expected.
+
+
+18강 Table Per Hierarchy TPH inheritance in entity framework
+Table Per Hierarchy(TPH: 계층당 테이블)
+TPH inheritance에서는 상속 계층에있는 모든 entity type들을 위한 데이타를 저장하는데 한개의 테이블이 쓰여진다.
+예를 들어보자.
+
+SQL Script to create Employees Table
+Create Table Employees
+(
+     ID int primary key identity,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+     AnuualSalary int,
+     HourlyPay int,
+     HoursWorked int,
+     Discriminator nvarchar(50)
+)
+
+Insert into Employees values
+('Mark', 'Hastings', 'Male', 60000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Steve', 'Pound', 'Male', NULL, 50, 160, 'ContractEmployee')
+Insert into Employees values
+('Ben', 'Hoskins', 'Male', NULL, 40, 120, 'ContractEmployee')
+Insert into Employees values
+('Philip', 'Hastings', 'Male', 45000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Mary', 'Lambeth', 'Female', 30000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Valarie', 'Vikings', 'Female', NULL, 30, 140, 'ContractEmployee')
+Insert into Employees values
+('John', 'Stanmore', 'Male', 80000, NULL, NULL, 'PermanentEmployee')
+
+
+조직에 2종류의 employee가 있다.
+1. PermanentEmployee - AnuualSalary가 있다.
+2. ContractEmployee - HourlyPay 와 HoursWorked가 있다.
+
+ ADO.NET entity data model을 사용해서 Employee를 만들면 모든 컬럼이 전부 다 들어간다.
+하지만 application관점에서는 3종류의 entity를 원한다.
+Employee: abstract class이며 PermanentEmployee, ContractEmployee의 공통 프로퍼티를 가진다.
+ID, FirstName, LastName & Gender를 포함해야한다.
+
+PermanentEmployee: 이 클래스는 Employee 추상클래스를 상속 받으며 AnnualSalary 프로퍼티를 가져야한다.
+
+ContractEmployee : 이 클래스는 Employee 추상클래스를 상속 받으며 HourlyPay & HoursWorked 프로퍼티를 가져야한다.
+
+To achieve this using the Entity Framework designer
+1. Right click on the designer surface and select Add - Entity option, and provide the details as shown below and click OK.
+
+2. Cut AnnualSalary property from Employee entity and paste it in Permanent Employee entity.
+
+3. Right click on the designer surface and select Add - Entity option, and provide the details as shown below and click OK.
+
+4. Cut HourlyPay & HoursWorked properties from Employee entity and paste then in Contract Employee entity. 
+At this point, we should have the following 3 entities.
+
+5. Right click on PermanentEmployee and select Table Mapping option, and map PermanentEmployee entity to Employees table. 
+Also notice the conditional mapping, in which we are using Discriminator column to determine when an Employee can be PermanentEmployee.
+
+6. Along the same lines, right click on ContractEmployee and select Table Mapping option, and map ContractEmployee entity to Employees table.
+Also notice the conditional mapping, in which we are using Discriminator column to determine when an Employee can be ContractEmployee.
+
+7. Since we are using Discriminator column in conditional mapping we cannot use it again with property mapping in Employee entity. So delete it from there.
+
+8. Finally right click on Employee entity and select properties. In the properties window set Abstract=true. This should make Employee class an abstract class. 
+
+
+Here is the HTML for the web form
+<div style="font-family: Arial">
+    <asp:RadioButtonList ID="RadioButtonList1" runat="server" AutoPostBack="True"
+        OnSelectedIndexChanged="RadioButtonList1_SelectedIndexChanged">
+        <asp:ListItem Text="Load all Employees" Value="All"></asp:ListItem>
+        <asp:ListItem Text="Load Permanent Employees" Value="Permanent"></asp:ListItem>
+        <asp:ListItem Text="Load Contract Employees" Value="Contract"></asp:ListItem>
+    </asp:RadioButtonList>
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+</div>
+
+Here is the code behind code:
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void RadioButtonList1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            switch (RadioButtonList1.SelectedValue)
+            {
+                case "Permanent":
+                    GridView1.DataSource = employeeDBContext.Employees
+                        .OfType<PermanentEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                case "Contract":
+                    GridView1.DataSource = employeeDBContext.Employees
+                        .OfType<ContractEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                default:
+                    GridView1.DataSource = ConvertEmployeesForDisplay(
+                        employeeDBContext.Employees.ToList());
+                    GridView1.DataBind();
+                    break;
+            }
+        }
+
+        //Employee를 자식들에 있는 프로퍼티 전부 다 가진 DataTable로 변환!
+        private DataTable ConvertEmployeesForDisplay(List<Employee> employees)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("ID");
+            dt.Columns.Add("FirstName");
+            dt.Columns.Add("LastName");
+            dt.Columns.Add("Gender");
+            dt.Columns.Add("AnuualSalary");
+            dt.Columns.Add("HourlyPay");
+            dt.Columns.Add("HoursWorked");
+            dt.Columns.Add("Type");
+
+            foreach (Employee employee in employees)
+            {
+                DataRow dr = dt.NewRow();
+                dr["ID"] = employee.ID;
+                dr["FirstName"] = employee.FirstName;
+                dr["LastName"] = employee.LastName;
+                dr["Gender"] = employee.Gender;
+
+                if (employee is PermanentEmployee)
+                {
+                    dr["AnuualSalary"] = ((PermanentEmployee)employee).AnuualSalary;
+                    dr["Type"] = "Permanent";
+                }
+                else
+                {
+                    dr["HourlyPay"] = ((ContractEmployee)employee).HourlyPay;
+                    dr["HoursWorked"] = ((ContractEmployee)employee).HoursWorked;
+                    dr["Type"] = "Contract";
+                }
+                dt.Rows.Add(dr);
+            }
+
+            return dt;
+        }
+    }
+}
+
+위의 코드에의해 생성되는 sql query는 다음과 같다.
+When Load All Employees radio button is selected:
+SELECT
+[Extent1].[Discriminator] AS [Discriminator],
+[Extent1].[ID] AS [ID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender],
+[Extent1].[AnuualSalary] AS [AnuualSalary],
+[Extent1].[HoursWorked] AS [HoursWorked],
+[Extent1].[HourlyPay] AS [HourlyPay]
+FROM [dbo].[Employees] AS [Extent1]
+WHERE [Extent1].[Discriminator] IN (N'PermanentEmployee',N'ContractEmployee')
+
+When Load Permanent Employees radio button is selected:
+SELECT
+'0X0X' AS [C1],
+[Extent1].[ID] AS [ID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender],
+[Extent1].[AnuualSalary] AS [AnuualSalary]
+FROM [dbo].[Employees] AS [Extent1]
+WHERE [Extent1].[Discriminator] = N'PermanentEmployee'
+
+When Load Contract Employees radio button is selected:
+SELECT
+'0X0X' AS [C1],
+[Extent1].[ID] AS [ID],
+[Extent1].[FirstName] AS [FirstName],
+[Extent1].[LastName] AS [LastName],
+[Extent1].[Gender] AS [Gender],
+[Extent1].[HoursWorked] AS [HoursWorked],
+[Extent1].[HourlyPay] AS [HourlyPay]
+FROM [dbo].[Employees] AS [Extent1]
+WHERE [Extent1].[Discriminator] = N'ContractEmployee'
+
+
+19강 Table Per Hierarchy (TPH) inheritance in entity framework with code first
+상속관계를 가진 클래스들을 전부 한테이블에 저장하자!
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    public abstract class Employee
+    {
+        [Column(Order = 1)]  <= column들의 순서까지 맞추고 싶다!
+        public int ID { get; set; }
+        [Column(Order = 2)]
+        public string FirstName { get; set; }
+        [Column(Order = 3)]
+        public string LastName { get; set; }
+        [Column(Order = 4)]
+        public string Gender { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it PermanentEmployee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    public class PermanentEmployee : Employee
+    {
+        [Column(Order = 5)]
+        public int AnnualSalary { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it ContractEmployee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    public class ContractEmployee : Employee
+    {
+        [Column(Order = 6)]
+        public int HoursWorked { get; set; }
+        [Column(Order = 7)]
+        public int HourlyPay { get; set; }
+    }
+}
+
+Step 5: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+    }
+}
+
+Step 6: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+        connectionString="server=.; database=Sample; integrated security=SSPI;"
+        providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 7: Add a webform to the project. Copy and paste the following HTML.
+<div style="font-family: Arial">
+    <asp:RadioButtonList ID="RadioButtonList1" runat="server" AutoPostBack="True"
+        onselectedindexchanged="RadioButtonList1_SelectedIndexChanged">
+        <asp:ListItem Text="Load all Employees" Value="All"></asp:ListItem>
+        <asp:ListItem Text="Load Permanent Employees" Value="Permanent"></asp:ListItem>
+        <asp:ListItem Text="Load Contract Employees" Value="Contract"></asp:ListItem>
+    </asp:RadioButtonList>
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+    <br />
+    <asp:Button ID="btnAddPermanentEmployee" runat="server"
+        Text="Add Permanent Employee" onclick="btnAddPermanentEmployee_Click" />
+    <br />
+    <br />
+    <asp:Button ID="btnAddContractEmployee" runat="server"
+        Text="Add Contract Employee" onclick="btnAddContractEmployee_Click" />
+</div>
+
+Step 8: Copy and paste the following code in the code-behind file.
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void RadioButtonList1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            switch (RadioButtonList1.SelectedValue)
+            {
+                case "Permanent":
+                    GridView1.DataSource = employeeDBContext.Employees.OfType<PermanentEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                case "Contract":
+                    GridView1.DataSource = employeeDBContext.Employees.OfType<ContractEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                default:
+                    GridView1.DataSource = ConvertEmployeesForDisplay(employeeDBContext.Employees.ToList());
+                    GridView1.DataBind();
+                    break;
+            }
+        }
+
+        private DataTable ConvertEmployeesForDisplay(List<Employee> employees)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("ID");
+            dt.Columns.Add("FirstName");
+            dt.Columns.Add("LastName");
+            dt.Columns.Add("Gender");
+            dt.Columns.Add("AnuualSalary");
+            dt.Columns.Add("HourlyPay");
+            dt.Columns.Add("HoursWorked");
+            dt.Columns.Add("Type");
+
+            foreach (Employee employee in employees)
+            {
+                DataRow dr = dt.NewRow();
+                dr["ID"] = employee.ID;
+                dr["FirstName"] = employee.FirstName;
+                dr["LastName"] = employee.LastName;
+                dr["Gender"] = employee.Gender;
+
+                if (employee is PermanentEmployee)
+                {
+                    dr["AnuualSalary"] = ((PermanentEmployee)employee).AnnualSalary;
+                    dr["Type"] = "Permanent";
+                }
+                else
+                {
+                    dr["HourlyPay"] = ((ContractEmployee)employee).HourlyPay;
+                    dr["HoursWorked"] = ((ContractEmployee)employee).HoursWorked;
+                    dr["Type"] = "Contract";
+                }
+                dt.Rows.Add(dr);
+            }
+
+            return dt;
+        }
+
+        protected void btnAddPermanentEmployee_Click(object sender, EventArgs e)
+        {
+            PermanentEmployee permanentEmployee = new PermanentEmployee
+            {
+                FirstName = "Mike",
+                LastName = "Brown",
+                Gender = "Male",
+                AnnualSalary = 70000,
+            };
+
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.Employees.Add(permanentEmployee);
+            employeeDBContext.SaveChanges();
+        }
+
+        protected void btnAddContractEmployee_Click(object sender, EventArgs e)
+        {
+            ContractEmployee contractEmployee = new ContractEmployee
+            {
+                FirstName = "Stacy",
+                LastName = "Josh",
+                Gender = "Female",
+                HourlyPay = 50,
+                HoursWorked = 120
+            };
+
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.Employees.Add(contractEmployee);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+Step 7: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 8: Run the application. Sample database and Employees table must be created at this point. 
+
+Step 9: Insert test data using the following SQL script
+Insert into Employees values
+('Mark', 'Hastings', 'Male', 60000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Steve', 'Pound', 'Male', NULL, 50, 160, 'ContractEmployee')
+Insert into Employees values
+('Ben', 'Hoskins', 'Male', NULL, 40, 120, 'ContractEmployee')
+Insert into Employees values
+('Philip', 'Hastings', 'Male', 45000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Mary', 'Lambeth', 'Female', 30000, NULL, NULL, 'PermanentEmployee')
+Insert into Employees values
+('Valarie', 'Vikings', 'Female', NULL, 30, 140, 'ContractEmployee')
+Insert into Employees values
+('John', 'Stanmore', 'Male', 80000, NULL, NULL, 'PermanentEmployee')
+
+Step 10: Reload the webform. Open SQL Profiler. 
+Select the different radio buttons to load contract, permanent & all employees and notice the queries generated by the entity framework. 
+Also click on the following buttons.
+a) Add Permanent Employee
+b) Add Contract Employee
+
+Discriminator 컬럼이 insert되어지는 Employee type에 따라 자동으로 추가된 것을 주목!
+
+20강 Table Per Type TPT inheritance in entity framework
+Table Per Type(TPT:타입마다 테이블하나)
+TPT inheritance에서는 상속 계층에있는 모든 entity type마다 데이타를 저장하는데 각각의 테이블이 쓰여진다.
+TPH방법의 단점은 denormalized table을 갖게되며 어떤 컬럼들은 NULL을 갖게된다는 것이다.
+TPH의 문제점은 PermanentEmployee을 저장할때 HoursWorked, HourlyPay컬럼은 NULL을 갖게되고 ContractEmployee를 저장할때 AnnualSalary컬럼이 NULL이된다는 것이다.
+Table Per Type은 이러한 문제점이 없다.
+
+일단 데이타베이스에 3개의 테이블을 만들자. 주목할점은 Employees테이블의 EmpolyeeID가 Primary Key이고 PermanentEmployees, ContractEmployees 테이블의 EmployeeID는
+Foreign key이다.
+
+Create Table Employees
+(
+     EmployeeID int primary key,
+     FirstName nvarchar(50),
+     LastName nvarchar(50),
+     Gender nvarchar(50),
+)
+GO
+
+Create Table PermanentEmployees
+(
+     EmployeeID int foreign key references
+     Employees(EmployeeID) not null,
+     AnnualSalary int
+)
+GO
+
+Create Table ContractEmployees
+(
+     EmployeeID int foreign key references
+     Employees(EmployeeID) not null,
+     HourlyPay int,
+     HoursWorked int
+)
+GO
+
+-- Employees Table Insert
+Insert into Employees values (1, 'Mark', 'Hastings', 'Male')
+Insert into Employees values (2, 'Steve', 'Pound', 'Male')
+Insert into Employees values (3, 'Ben', 'Hoskins', 'Male')
+Insert into Employees values (4, 'Philip', 'Hastings', 'Male')
+Insert into Employees values (5, 'Mary', 'Lambeth', 'Female')
+Insert into Employees values (6, 'Valarie', 'Vikings', 'Female')
+Insert into Employees values (7, 'John', 'Stanmore', 'Male')
+
+-- PermanentEmployees Table Insert
+Insert into PermanentEmployees values (1, 60000)
+Insert into PermanentEmployees values (3, 45000)
+Insert into PermanentEmployees values (4, 30000)
+Insert into PermanentEmployees values (7, 80000)
+
+-- ContractEmployees Table Insert
+Insert into ContractEmployees values (2, 50, 160)
+Insert into ContractEmployees values (5, 40, 120)
+Insert into ContractEmployees values (6, 30, 140)
+
+
+ADO.NET entity data model을 사용하여 Entity를 생성했을때 3테이블의 관계는 inheritance relation이 아닌 association relation으로 되어있다.
+(테이타그램의 선의 모양이 다르다.)
+
+Employee와 PermanentEmployee association을 지우자. 이는 Employee entity의 PermanentEmployee Navigation 프로퍼티와 PermanentEmployee entity의 Employee Navigation 프로퍼티도 함께 지운다.
+Employee와 ContractEmployee  association을 지우면 각각의 Navigation 프로퍼티도 같이 지워진다.
+
+이제 Employee와 ContractEmployee간의 inheritance relation을 만들자.
+1. Right click on the designer surface and select Add - Inheritance option
+2. Select Employee as the Base Entity and ContractEmployee as the Derived entity
+adding inheritance relation between employee and contract employee entities
+
+Along the same line, add the inheritance relationship between Employee & PermanentEmployee entities
+1. Right click on the designer surface and select Add - Inheritance option
+2. Select Employee as the Base Entity and PermanentEmployee as the Derived entity
+
+PermanentEmployee, ContractEmployee Entity안에 있는 EmployeeID 프로퍼티를 지우자. 상속관계에 있으므로 Employee에 있는 EmployeeID 프로퍼티를 통해 접근할수있다.
+
+Here is the HTML for the web form
+<div style="font-family:Arial">
+<asp:RadioButtonList ID="RadioButtonList1" runat="server"
+    AutoPostBack="True"
+    onselectedindexchanged="RadioButtonList1_SelectedIndexChanged">
+    <asp:ListItem Text="All Employees" Value="All"></asp:ListItem>
+    <asp:ListItem Text="Load Permanent Employees" Value="Permanent">
+    </asp:ListItem>
+    <asp:ListItem Text="Load Contract Employees" Value="Contract">
+    </asp:ListItem>
+</asp:RadioButtonList>
+<br />
+<asp:GridView ID="GridView1" runat="server">
+</asp:GridView>
+</div>
+
+Copy and paste the following code in the code-behind file
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void RadioButtonList1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            switch (RadioButtonList1.SelectedValue)
+            {
+                case "Permanent":
+                    GridView1.DataSource = employeeDBContext.Employees
+                        .OfType<PermanentEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                case "Contract":
+                    GridView1.DataSource = employeeDBContext.Employees
+                        .OfType<ContractEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                default:
+                    GridView1.DataSource =
+                        ConvertEmployeesForDisplay(employeeDBContext.Employees.ToList());
+                    GridView1.DataBind();
+                    break;
+            }
+        }
+
+        private DataTable ConvertEmployeesForDisplay(List<Employee> employees)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("ID");
+            dt.Columns.Add("FirstName");
+            dt.Columns.Add("LastName");
+            dt.Columns.Add("Gender");
+            dt.Columns.Add("AnuualSalary");
+            dt.Columns.Add("HourlyPay");
+            dt.Columns.Add("HoursWorked");
+            dt.Columns.Add("Type");
+
+            foreach (Employee employee in employees)
+            {
+                DataRow dr = dt.NewRow();
+                dr["ID"] = employee.EmployeeID;
+                dr["FirstName"] = employee.FirstName;
+                dr["LastName"] = employee.LastName;
+                dr["Gender"] = employee.Gender;
+
+                if (employee is PermanentEmployee)
+                {
+                    dr["AnuualSalary"] = ((PermanentEmployee)employee).AnnualSalary;
+                    dr["Type"] = "Permanent";
+                }
+                else
+                {
+                    dr["HourlyPay"] = ((ContractEmployee)employee).HourlyPay;
+                    dr["HoursWorked"] = ((ContractEmployee)employee).HoursWorked;
+                    dr["Type"] = "Contract";
+                }
+                dt.Rows.Add(dr);
+            }
+
+            return dt;
+        }
+    }
+}
+
+21강 Table Per Type TPT inheritance code first
+code first에서는 디폴트로 모든 entity type에대해 1개의 table을 만든다.(TPH)
+디폴트가 아닌 TPT를 만들어보자.
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Employee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    [Table("Employees")]  <= 이부분이 핵심!
+    public class Employee
+    {
+        public int EmployeeID { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Gender { get; set; }
+    }
+
+}
+
+Step 3: Add a class file to the project. Name it PermanentEmployee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    [Table("PermanentEmployees")] <= 이부분이 핵심!
+    public class PermanentEmployee : Employee
+    {
+        public int AnnualSalary { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it ContractEmployee.cs. Copy and paste the following code.
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Demo
+{
+    [Table("ContractEmployees")]
+    public class ContractEmployee : Employee
+    {
+        public int HoursWorked { get; set; }
+        public int HourlyPay { get; set; }
+    }
+}
+
+Step 5: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Employee> Employees { get; set; }
+    }
+}
+
+Step 6: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+            connectionString="server=.; database=Sample; integrated security=SSPI;"
+            providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 7: Add a webform to the project. Copy and paste the following HTML.
+<div style="font-family: Arial">
+    <asp:RadioButtonList ID="RadioButtonList1" runat="server" AutoPostBack="True"
+        OnSelectedIndexChanged="RadioButtonList1_SelectedIndexChanged">
+        <asp:ListItem Text="Load all Employees" Value="All"></asp:ListItem>
+        <asp:ListItem Text="Load Permanent Employees" Value="Permanent"></asp:ListItem>
+        <asp:ListItem Text="Load Contract Employees" Value="Contract"></asp:ListItem>
+    </asp:RadioButtonList>
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+    <br />
+    <asp:Button ID="btnAddPermanentEmployee" runat="server" 
+        Text="Add Permanent Employee"
+        OnClick="btnAddPermanentEmployee_Click" />
+    <br />
+    <br />
+    <asp:Button ID="btnAddContractEmployee" runat="server" Text="Add Contract Employee"
+        OnClick="btnAddContractEmployee_Click" />
+</div>
+
+Step 8: Copy and paste the following code in the code-behind file.
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void RadioButtonList1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            switch (RadioButtonList1.SelectedValue)
+            {
+                case "Permanent":
+                    GridView1.DataSource = employeeDBContext.Employees
+                             .OfType<PermanentEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                case "Contract":
+                    GridView1.DataSource = employeeDBContext.Employees
+                             .OfType<ContractEmployee>().ToList();
+                    GridView1.DataBind();
+                    break;
+
+                default:
+                    GridView1.DataSource = ConvertEmployeesForDisplay(employeeDBContext.Employees.ToList());
+                    GridView1.DataBind();
+                    break;
+            }
+        }
+
+        private DataTable ConvertEmployeesForDisplay(List<Employee> employees)
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("ID");
+            dt.Columns.Add("FirstName");
+            dt.Columns.Add("LastName");
+            dt.Columns.Add("Gender");
+            dt.Columns.Add("AnuualSalary");
+            dt.Columns.Add("HourlyPay");
+            dt.Columns.Add("HoursWorked");
+            dt.Columns.Add("Type");
+
+            foreach (Employee employee in employees)
+            {
+                DataRow dr = dt.NewRow();
+                dr["ID"] = employee.EmployeeID;
+                dr["FirstName"] = employee.FirstName;
+                dr["LastName"] = employee.LastName;
+                dr["Gender"] = employee.Gender;
+
+                if (employee is PermanentEmployee)
+                {
+                    dr["AnuualSalary"] = ((PermanentEmployee)employee).AnnualSalary;
+                    dr["Type"] = "Permanent";
+                }
+                else
+                {
+                    dr["HourlyPay"] = ((ContractEmployee)employee).HourlyPay;
+                    dr["HoursWorked"] = ((ContractEmployee)employee).HoursWorked;
+                    dr["Type"] = "Contract";
+                }
+                dt.Rows.Add(dr);
+            }
+
+            return dt;
+        }
+
+        protected void btnAddPermanentEmployee_Click(object sender, EventArgs e)
+        {
+            PermanentEmployee permanentEmployee = new PermanentEmployee
+            {
+                FirstName = "Mike",
+                LastName = "Brown",
+                Gender = "Male",
+                AnnualSalary = 70000,
+            };
+
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.Employees.Add(permanentEmployee);
+            employeeDBContext.SaveChanges();
+        }
+
+        protected void btnAddContractEmployee_Click(object sender, EventArgs e)
+        {
+            ContractEmployee contractEmployee = new ContractEmployee
+            {
+                FirstName = "Stacy",
+                LastName = "Josh",
+                Gender = "Female",
+                HourlyPay = 50,
+                HoursWorked = 120
+            };
+
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.Employees.Add(contractEmployee);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+Step 7: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 8: Run the application. Sample database and the required tables (Employees, PermanentEmployees & ContractEmployees) must be created at this point. 
+
+Step 9: Insert test data using the following SQL script
+-- Employees Table Insert
+Insert into Employees values ('Mark', 'Hastings', 'Male')
+Insert into Employees values ('Steve', 'Pound', 'Male')
+Insert into Employees values ('Ben', 'Hoskins', 'Male')
+Insert into Employees values ('Philip', 'Hastings', 'Male')
+Insert into Employees values ('Mary', 'Lambeth', 'Female')
+Insert into Employees values ('Valarie', 'Vikings', 'Female')
+Insert into Employees values ('John', 'Stanmore', 'Male')
+GO
+
+-- PermanentEmployees Table Insert
+Insert into PermanentEmployees values (1, 60000)
+Insert into PermanentEmployees values (3, 45000)
+Insert into PermanentEmployees values (4, 30000)
+Insert into PermanentEmployees values (7, 80000)
+GO
+
+-- ContractEmployees Table Insert
+Insert into ContractEmployees values (2, 50, 160)
+Insert into ContractEmployees values (5, 40, 120)
+Insert into ContractEmployees values (6, 30, 140)
+GO
+
+Step 10: Reload the webform. Open SQL Profiler. Select the different radio buttons to load contract, permanent & all employees and notice the queries generated by the entity framework. Also click on the following buttons.
+a) Add Permanent Employee
+b) Add Contract Employee
+
+Notice that entity framework automatically inserts records into the correct underlying tables based on the type of Employee (PermanentEmployee or ContractEmployee) being inserted.
+
+2번재 방법!
+Note: You can also use Fluent API to do the table mapping by overriding OnModelCreating() as shown below.
+public class EmployeeDBContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(DbModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ContractEmployee>().ToTable("ContractEmployees");
+        modelBuilder.Entity<PermanentEmployee>().ToTable("PermanentEmployees");
+
+        base.OnModelCreating(modelBuilder);
+    }
+}
+
+
+22강 Many to many relationship in entity framework
+3개의 테이블을 써서 Many to many relation을 만들자.
+
+Create Table Courses
+(
+     CourseID int identity primary key,
+     CourseName nvarchar(50)
+)
+GO
+
+Create Table Students
+(
+     StudentID int identity primary key,
+     StudentName nvarchar(50)
+)
+GO
+
+Create Table StudentCourses
+(
+     StudentID int not null foreign key references Students(StudentID),
+     CourseID int not null foreign key references Courses(CourseID)
+     primary key (StudentID, CourseID)
+)
+GO
+
+Insert into Courses values ('C#')
+Insert into Courses values ('ASP.NET')
+Insert into Courses values ('SQL Server')
+Insert into Courses values ('WCF')
+GO
+
+Insert into Students values ('Mike')
+Insert into Students values ('John')
+GO
+
+Insert into StudentCourses values (1, 1)
+Insert into StudentCourses values (1, 2)
+Insert into StudentCourses values (2, 1)
+Insert into StudentCourses values (2, 2)
+Insert into StudentCourses values (2, 3)
+GO
+
+위의 3테이블을 기준으로 ADO.NET entity data model을 만들면 Many to many association을 갖고 있는 단지 2개의 entity(Student, Course)만 생성된다.
+bridge table(StudentCourses)을 위한 entity는 생성되지 않는다는 것에 주목!
+또한 Course에 Students Navigation프로퍼티, Students에 Courses Navigation프로퍼티가 생긴것도 주목!
+Many to many association을 오른쪽 클릭, Table Mapping 옵션을 클릭하면 Mapping Details옵션 창에서 StudentCourses Many-to Many association이 StudentCourses 테이블에
+매핑 되었다는것을 알수있다.
+
+protected void Page_Load(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+    GridView1.DataSource = from student in employeeDBContext.Students
+                            from course in student.Courses
+                            select new
+                            {
+                                StudentName = student.StudentName,
+                                CourseName = course.CourseName
+                            };
+    GridView1.DataBind();
+}
+
+위의 코드로 생성되는 sql
+
+SELECT
+[Extent1].[StudentID] AS [StudentID],
+[Extent1].[StudentName] AS [StudentName],
+[Join1].[CourseName] AS [CourseName]
+FROM  [dbo].[Students] AS [Extent1]
+INNER JOIN  (SELECT [Extent2].[StudentID] AS [StudentID],
+[Extent3].[CourseName] AS [CourseName]
+FROM  [dbo].[StudentCourses] AS [Extent2]
+INNER JOIN [dbo].[Courses] AS [Extent3]
+ON [Extent3].[CourseID] = [Extent2].[CourseID] )
+AS [Join1] ON [Extent1].[StudentID] = [Join1].[StudentID]
+
+추가 삭제 코드
+protected void Button1_Click(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+    Course WCFCourse = employeeDBContext.Courses
+        .FirstOrDefault(x => x.CourseID == 4);
+
+    employeeDBContext.Students.FirstOrDefault(x => x.StudentID == 1)
+        .Courses.Add(WCFCourse);
+    employeeDBContext.SaveChanges();
+}
+
+protected void Button2_Click(object sender, EventArgs e)
+{
+    EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+    Course SQLServerCourse = employeeDBContext.Courses
+        .FirstOrDefault(x => x.CourseID == 3);
+
+    employeeDBContext.Students.FirstOrDefault(x => x.StudentID == 2)
+        .Courses.Remove(SQLServerCourse);
+    employeeDBContext.SaveChanges();
+}
+
+Query to assign WCF course to Mike
+exec sp_executesql N'insert [dbo].[StudentCourses]([StudentID], [CourseID])
+values (@0, @1)',N'@0 int,@1 int',@0=1,@1=4
+
+Query to remove John from SQL Server Course
+exec sp_executesql N'delete [dbo].[StudentCourses] where
+(([StudentID] = @0) and ([CourseID] = @1))',N'@0 int,@1 int',@0=2,@1=3
+
+
+23강 Many to many relationship in entity framework code first
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Course.cs. Copy and paste the following code.
+using System.Collections.Generic;
+namespace Demo
+{
+    public class Course
+    {
+        public int CourseID { get; set; }
+        public string CourseName { get; set; }
+        public IList<Student> Students { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it Student.cs. Copy and paste the following code.
+using System.Collections.Generic;
+namespace Demo
+{
+    public class Student
+    {
+        public int StudentID { get; set; }
+        public string StudentName { get; set; }
+        public IList<Course> Courses { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Student> Students { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Student>()
+            .HasMany(t => t.Courses)
+            .WithMany(t => t.Students)
+            .Map(m =>
+            {
+                m.ToTable("StudentCourses");
+                m.MapLeftKey("StudentID"); <= bridge table의 컬럼명을 StudentID로한다.
+                m.MapRightKey("CourseID");
+            });
+
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+}
+
+Step 5: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+            connectionString="server=.; database=Sample; integrated security=SSPI;"
+            providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 6: Add a webform to the project. Copy and paste the following HTML.
+<div style="font-family: Arial">
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+    <br />
+    <asp:Button ID="Button1" runat="server" OnClick="Button1_Click"
+        Text="Assign WCF Course to Mike"/>
+    <br />
+    <br />
+    <asp:Button ID="Button2" runat="server" OnClick="Button2_Click"
+        Text="Remove John from SQL Server Course"/>
+</div>
+
+Step 7: Copy and paste the following code in the code-behind file.
+using System;
+using System.Linq;
+
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            GridView1.DataSource = (from student in employeeDBContext.Students
+                                    from c in student.Courses
+                                    select new
+                                    {
+                                        StudentName = student.StudentName,
+                                        CourseName = c.CourseName
+                                    }).ToList();
+
+            GridView1.DataBind();
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            Course WCFCourse = employeeDBContext.Courses
+                .FirstOrDefault(x => x.CourseID == 4);
+
+            employeeDBContext.Students.Include("Courses")  <= Include()를 쓴것에 주목, EF는 디폴트로 Navigation프로퍼티를 로딩하지 않는다. 로딩하기 위해서는 Include()를 써줘야 한다.
+                .FirstOrDefault(x => x.StudentID == 1).Courses.Add(WCFCourse);
+            employeeDBContext.SaveChanges();
+        }
+
+        protected void Button2_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+ 
+            Course SQLServerCourse = employeeDBContext.Courses
+                .FirstOrDefault(x => x.CourseID == 3);
+
+            employeeDBContext.Students.Include("Courses")
+                .FirstOrDefault(x => x.StudentID == 2).Courses.Remove(SQLServerCourse);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+
+Step 8: If you already have Sample database in SQL Server. Delete it from SQL Server Management Studio.
+
+Step 9: Run the application. Sample database and the required tables (Courses, Students & StudentCourses) must be created at this point. 
+
+Step 10: Insert test data using the following SQL script
+-- Insert into Courses Table
+Insert into Courses values ('C#')
+Insert into Courses values ('ASP.NET')
+Insert into Courses values ('SQL Server')
+Insert into Courses values ('WCF')
+GO
+
+-- Insert into Students Table
+Insert into Students values ('Mike')
+Insert into Students values ('John')
+GO
+
+-- Insert into StudentCourses Table
+Insert into StudentCourses values (1, 1)
+Insert into StudentCourses values (1, 2)
+Insert into StudentCourses values (2, 1)
+Insert into StudentCourses values (2, 2)
+Insert into StudentCourses values (2, 3)
+GO
+
+Step 11: Reload the webform. Notice that the data is displayed as expected. Now, click on the following buttons, and notice that StudentCourses table is updated as expected.
+a) Assign WCF Course to Mike
+b) Remove John from SQL Server Course
+
+24강 Entity for BridgeTable in many to many relationship
+Many-to-Many Relation에서 Entity framework이 bridge table을 생성하는 시나리오를 살펴보자
+22강에서 3테이블을 썼을때 bridge table은(StudentCourses) foreign key(StudentID, CourseID)를 제외하고는 추가적인 컬럼이 없었다.
+이때에는 EF가 bridge table에 대한 Entity를 생성하지 않았다.
+
+만약 bridge table(StudentCourses)에 EnrolledDate컬럼을 추가한다고 해보자
+Create Table Courses
+(
+     CourseID int identity primary key,
+     CourseName nvarchar(50)
+)
+GO
+
+Create Table Students
+(
+     StudentID int identity primary key,
+     StudentName nvarchar(50)
+)
+GO
+
+Create Table StudentCourses
+(
+     StudentID int not null foreign key references Students(StudentID),
+     CourseID int not null foreign key references Courses(CourseID),
+     EnrolledDate DateTime,
+     primary key (StudentID, CourseID)
+)
+GO
+
+Insert into Courses values ('C#')
+Insert into Courses values ('ASP.NET')
+Insert into Courses values ('SQL Server')
+Insert into Courses values ('WCF')
+GO
+
+Insert into Students values ('Mike')
+Insert into Students values ('John')
+GO
+
+Insert into StudentCourses values (1, 1, Getdate())
+Insert into StudentCourses values (1, 2, Getdate())
+Insert into StudentCourses values (2, 1, Getdate())
+Insert into StudentCourses values (2, 2, Getdate())
+Insert into StudentCourses values (2, 3, Getdate())
+GO
+
+3테이블에 기초해서 ADO.NET entity data model을 생성하면 3개의 entity가 생겨져 있다.(Student, Course, StudentCourse)
+bridge table(StudentCourse)에 대한 entity가 생성되어있다.
+a) Student entity는 StudentCourse entity에대해 one-Many relationship 
+b) Course entity는 StudentCourse entity에대해 one-Many relationship 
+
+인터뷰질문 : many-to-many관계에서 언제 bridge table에대한 entity를 생성하고 언제 생성하지 않는가?
+bridge table이 foreign key 컬럼만 가지고 있으면 생성하지 않고, 추가적 컬럼을 가지고 있으면 entity생성.
+
+To achieve this
+1. Drag and drop a GridView & 2 Button controls on the webform
+
+2. Change the Text on Button1 control to "Assign WCF Course to Mike" and double click on the button control to generate the click event handler
+
+3. Change the Text on Button2 control to "Remove John from SQL Server Course" and double click on the button control to generate the click event handler
+
+4. At this point the webform design should look as shown below
+Copy and paste the following code in the code-behind file
+using System;
+using System.Linq;
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            GridView1.DataSource = (from student in employeeDBContext.Students
+                                    from studentCourse in student.StudentCourses
+                                    select new
+                                    {
+                                        StudentName = student.StudentName,
+                                        CourseName = studentCourse.Course.CourseName,
+                                        EnrolledDate = studentCourse.EnrolledDate
+                                    }).ToList();
+
+            // The above query can also be written as shown below
+            //GridView1.DataSource = (from course in employeeDBContext.Courses
+            //                        from studentCourse in course.StudentCourses
+            //                        select new
+            //                        {
+            //                            StudentName = studentCourse.Student.StudentName,
+            //                            CourseName = course.CourseName,
+            //                            EnrolledDate = studentCourse.EnrolledDate
+            //                        }).ToList();
+
+            GridView1.DataBind();
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.StudentCourses.AddObject
+                (new StudentCourse { StudentID = 1, CourseID = 4, 
+                                                       EnrolledDate = DateTime.Now });
+            employeeDBContext.SaveChanges();
+        }
+
+        protected void Button2_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            StudentCourse studentCourseToRemove = employeeDBContext.StudentCourses
+                .FirstOrDefault(x => x.StudentID == 2 && x.CourseID == 3);
+            employeeDBContext.StudentCourses.DeleteObject(studentCourseToRemove);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}
+
+Run the application. Notice that the data is displayed as expected. Now, click on the following buttons, and notice that StudentCourses table is updated as expected.
+a) Assign WCF Course to Mike
+b) Remove John from SQL Server Course
+
+25강 Entity for BridgeTable in many to many relationship code first
+1.Courses - CourseID가 Primary Key이여야 한다.
+2.Students - StudentID가 Primary Key이여야 한다.
+3.StudentCourses - CourseID & StudentID가 composition primary key이여야한다.
+
+
+Step 1: Create a new empty asp.net web application project. Name it Demo. Install entity framework if it's not already installed.
+
+Step 2: Add a class file to the project. Name it Course.cs. Copy and paste the following code.
+using System.Collections.Generic;
+namespace Demo
+{
+    public class Course
+    {
+        public int CourseID { get; set; }
+        public string CourseName { get; set; }
+        public IList<StudentCourse> StudentCourses { get; set; }
+    }
+}
+
+Step 3: Add a class file to the project. Name it Student.cs. Copy and paste the following code.
+using System.Collections.Generic;
+namespace Demo
+{
+    public class Student
+    {
+        public int StudentID { get; set; }
+        public string StudentName { get; set; }
+        public IList<StudentCourse> StudentCourses { get; set; }
+    }
+}
+
+Step 4: Add a class file to the project. Name it StudentCourse.cs. Copy and paste the following code.
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema; 
+namespace Demo
+{
+    public class StudentCourse
+    {
+        public Course Course { get; set; }
+
+        public Student Student { get; set; }
+
+        [Key, Column(Order = 1)]
+        public int StudentID { get; set; }
+
+        [Key, Column(Order = 2)]
+        public int CourseID { get; set; }
+
+        public DateTime EnrolledDate { get; set; }
+    }
+}
+
+Step 5: Add a class file to the project. Name it EmployeeDBContext.cs. Copy and paste the following code.
+using System.Data.Entity;
+namespace Demo
+{
+    public class EmployeeDBContext : DbContext
+    {
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<StudentCourse> StudentCourses { get; set; }
+    }
+}
+
+Step 6: Add the database connection string in web.config file.
+<connectionStrings>
+  <add name="EmployeeDBContext"
+            connectionString="server=.; database=Sample; integrated security=SSPI;"
+            providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+Step 7: Add a webform to the project. Copy and paste the following HTML.
+<body>
+    <form id="form1" runat="server">
+    <div style="font-family: Arial">
+    <asp:GridView ID="GridView1" runat="server">
+    </asp:GridView>
+    <br />
+    <asp:Button ID="Button1" runat="server" OnClick="Button1_Click"
+        Text="Assign WCF Course to Mike"/>
+    <br />
+    <br />
+    <asp:Button ID="Button2" runat="server" OnClick="Button2_Click"
+        Text="Remove John from SQL Server Course"/>
+</div>
+
+Step 8: Copy and paste the following code in the code-behind file.
+using System;
+using System.Linq;
+namespace Demo
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+
+            GridView1.DataSource = (from student in employeeDBContext.Students
+                                    from studentCourse in student.StudentCourses
+                                    select new
+                                    {
+                                        StudentName = student.StudentName,
+                                        CourseName = studentCourse.Course.CourseName,
+                                        EnrolledDate = studentCourse.EnrolledDate
+                                    }).ToList();
+
+            // The above query can also be written as shown below
+            //GridView1.DataSource = (from course in employeeDBContext.Courses
+            //                        from studentCourse in course.StudentCourses
+            //                        select new
+            //                        {
+            //                            StudentName = studentCourse.Student.StudentName,
+            //                            CourseName = course.CourseName,
+            //                            EnrolledDate = studentCourse.EnrolledDate
+            //                        }).ToList();
+
+            GridView1.DataBind();
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            employeeDBContext.StudentCourses.Add(new StudentCourse
+            { StudentID = 1, CourseID = 4, EnrolledDate = DateTime.Now });
+            employeeDBContext.SaveChanges();
+        }
+
+        protected void Button2_Click(object sender, EventArgs e)
+        {
+            EmployeeDBContext employeeDBContext = new EmployeeDBContext();
+            StudentCourse studentCourseToRemove = employeeDBContext.StudentCourses
+                .FirstOrDefault(x => x.StudentID == 2 && x.CourseID == 3);
+            employeeDBContext.StudentCourses.Remove(studentCourseToRemove);
+            employeeDBContext.SaveChanges();
+        }
+    }
+}

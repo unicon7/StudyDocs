@@ -1,0 +1,270 @@
+https://www.youtube.com/watch?v=zul8TtVS-64
+
+same-origin policy란?
+왜 중요한가?
+어떻게 많은 웹기술들에 적용하나?
+어떻게 same-origin policy에 접근해야 확장, 격려하는가?
+
+Origin이란?
+url?
+https://username:password@goodsite.com:443/path?query#fragment
+
+https <= scheme
+goodsite.com <= domain
+443 <= port
+
+Origin = (scheme, domain, port)  <= 이 튜플이 origin을 구성한다.
+
+URL A                                   URL B                                   Same origin?
+http://goodsite.com/a                   http://goodsite.com/b                   yes
+http://goodsite.com                     https://goodsite.com                    no (다른 scheme)
+http://goodsite.com                     http://www.goodsite.com                 no (다른 domain)
+http://goodsite.com                     http://www.goodsite.com:8080            no (다른 port)
+http://goodsite.com/user                http://www.goodsite.com/admin           yes
+
+
+때는 95년도 cookie, form, javascript가 발명되던시기 다음과 같은 것을 결정
+
+Can one javascript domain access another's DOM?
+Can one site access data from another site?
+
+브라우저에 SiteA의 DOM+js SiteB의 DOM+js가 있을때 SiteA는 같은 브라우저에서 돌고 있는 SiteB의 data에 access할수 있는가?가 same-origin policy의 요점이다.
+재미있는점은 브라우저는 same-origin policy를 강제하고 있으며 이러한 same-origin policy의 강제는 사실 웹서버의 일이 아니다.
+유저 머신에서 다른 컨택스트로 각각의 웹사이트가 돌고 있으며 이러한 웹사이트를 서로 격리시키고 서로 보호하는 것은 브라우저의 일이다.
+브라우저의 한탭에서는 인터넷뱅킹 다른탭에서는 페이스북이 돌수있게 하며 페이스북이 인터넷뱅킹 데이타에 접근하지 못하게 하는 것도 브라우저이다.
+중요한것은 same-origin policy가 강제하며 사이트 간의 access를 제한한다. 물론 웹서버는 이러한 policy에 영향을 줄수 있다. 이는 나중에 살펴본다.
+핵심은 서버가 영향을 줄 순 있어도 same-origin policy의 주체는 브라우저이다.
+
+만약 웹서버에 access하는 주체가 브라우저가 아니라면 어떻게 되는가? 만약 mobile client이고 웹서버가 api서버라면 same-origin policy가 적용되는가?
+아니다. access룰은 api가 만드는 것에 따라 달라지며 data도 웹서버가 data를 리턴하기만 한다면 원하는대로 할수있다.
+
+Demo1 - window
+siteA와 siteB를 각각의 윈도우(탭)으로 열자.
+독립적인 DOM과 js를 가지고 있으며 debug consle을 통해 document에 접근할수 있다.
+siteA에서 다음과 같이 쳐보자
+var newwin = window.open('http://sitea.com', 'right');
+siteA가 새창에서 열릴것이다.
+재미있는점은 위의 코드와 같이 직접 open한 window가 아니면 javascript는 실제적으로 다른 윈도우에 접근할수 없다.
+newwin.document.body를 치게 되면 열린 윈도우의 DOM이 보인다. 내용을 바꾸고 싶다면 전부 바꿀수 있다.
+하지만 A에서 
+var newwin = window.open('http://siteb.com', 'right');
+siteB를 연다면? 여전히 newwin이라는 레퍼런스를 siteA가 가지고 있다. 하지만 newwin의 내용은 제한적인 내용밖에 볼수없다.
+이전에는
+newwin.document.body
+를 통해 open한 윈도우의 document를 볼수있었지만 지금은 uncaught DOMException: Blocked a frame with origin "http://sitea.com" from accessing a cross-origin frame.
+과 같은 예외가 발생한다. 이는 same-origin policy가 작동하고 있는 것이며 sitea.com이 같은 origin을 갖고 있는 다른 페이지의 내용만 access할수있다는 것을 보여준다.
+
+탭들에서는 어떻게 작동하나?
+각각의 tab/window는 격리되어 있다.
+분리된 javascript 실행 환경을 갖고있다.
+var newwin = window.open('http://siteb.com', 'right');
+window.opener속성을 통해 서로를 참조할수있다. 
+재미있는것은 same origin이 아닐경우 서로의 DOM에는 javascript를 통해 접근하지 못하지만(window.opener.document.body), window.opener.location등을 통해 주소등은
+바꿀수있다.
+
+Demo2 - frames
+frame과 iframe들도 위와 동일하다.
+
+parentsite.com
+<html>
+<frameset cols="50%, 50%">
+  <frame name="framea" src="http://sitea.com/"/>
+  <frame name="frameb" src="http://siteb.com/"/>
+</frameset>
+</html>
+
+window.frames[0] window.parent로 각각 접근 가능하지만 window.framea.document.body, window.parent.document.body로 DOM접근은 불가능하다.
+location등은 수정이 가능하다. 만약 frame안의 ad가 구글 로그인과 같은 모습을 가진 해킹사이트로 parent의 location을 바꾸어버린다면?(흠..더 공부해봐야 한다. parent의 location을 보호하는 방법)
+frame등은 단지 data를 보는것을 막는것이다.(DOM)
+
+parentsite.com
+<html>
+<frameset cols="50%, 50%">
+  <frame name="framea" src="http://parentsite.com/child.html"/>
+  <frame name="frameb" src="http://siteb.com/"/>
+</frameset>
+</html>
+위와 같이 http://parentsite.com/child.html으로 바꾸면 child, parent는 모두 DOM 접근이 가능하다.
+
+추가로 스크립트 변수도 다음과 같이 공유된다.
+parentsite.com콘솔에서 선언
+var hello = "world" 
+http://parentsite.com/child.html frame에서 접근
+window.parent.hello => "world"출력
+
+하지만 frameb에서 window.parent.hello은 block된다.
+
+
+왜 same-origin policy은 중요한가?
+같은 브라우저에서 어떤페이지를 다른페이지로부터 보호하는 기본적인 룰셋이기때문이다.
+최근에 개발된 html feature에 관련해서는 일관된 룰셋을 적용된다.(비슷하기때문에 예측 가능하다.)
+하지만 역사적이유로 오래된 feature들은 이러한 일관성을 예상해는대로 정확히 적용하지는 않는다.
+
+site들을 서로 격리시킨다.
+다른 사이트로 부터 data read를 방지한다.
+웹을 안전하게 사용하게한다.
+
+
+어떻게 많은 웹기술들에 적용하나?
+다음과 같은 2가지가 있다.
+1.브라우저 안에 있는 site resource들에 접근하기(위의 frame 예제)
+2.서버로 부터 리소스를 요청하는 경우
+
+anchor에는 SOP가 어떻게 적용되나?
+사이트는 하이퍼링크를 가질수있다.
+<a href="http://siteb.com/">
+클릭에 대한 reponse는 새로운 context에 로드된다. 그래서 원래 사이트는 접근되어진 사이트로 교체된다.
+어떠한 사이트도 링크할수있지만 원래 사이트는 response를 읽을수는 없다.
+
+form에는 SOP가 어떻게 적용되나?
+form들은 어떠한 사이트에도 post할수있다.
+<form action="http://siteb.com/" method="post">
+response는 새로운 context에 로드된다. 그래서 원래 사이트는 접근되어진 사이트로 교체된다.
+어떠한 사이트로도 post할수있지만 원래 사이트는 response를 읽을수는 없다.
+
+image에는 SOP가 어떻게 적용되나?
+어떠한 사이트던 다른 사이트로부터 image들을 display할수있다.
+<img src="http://siteb.com/pic.jpg"/>
+하지만 사이트는 다른 사이트들로부터 image data를 읽을수 없다.
+또한 다른 static media(movies, audio)에도 적용된다.
+
+css에는 SOP가 어떻게 적용되나?
+어떠한 사이트던 다른 사이트로부터 css들을 include할수있다.
+<link rel="stylesheet" type="text/css" href="http://siteb.com/site.css"/>
+하지만 다른사이트로부터온 css data를 읽을수 없다.
+
+sitea.com에서 siteb.com의 css를 포함하면 적용은되지만 document.styleSheets[0]으로 rules안의 cssText(css 소스를 저장하는 속성)를 볼수 없다. 대부분의 속성이 null로 표시된다.
+
+javascript에는 SOP가 어떻게 적용되나?
+어떠한 사이트던 다른 사이트로부터 javascript들을 include할수있다.
+<script src="http://siteb.com/ga.js"/>
+javascript는 원래 사이트에서 실행된다.
+이는 잠재적으로 원래 사이트를 공격할수 있다.
+
+JSONP는 cross-origin데이타를 로드하는데 javascript를 abuse하고 있다.
+JSONP작동원리
+<script> function process(data) {...}</script>
+<script src="http://siteb.com/getdata.js" />
+=> process({"This is ServerB Data");  
+
+web storage에는 SOP가 어떻게 적용되나?
+Origin을 체크한다. 다른 origin은 접근할수없다.
+Local storage:
+- same orgin간에 공유된다.
+- window가 닫혀도 유지된다.
+Session storage:
+- 현재 window/tab에서만 유지된다.
+- window의 lifetime과 같다.
+
+cookie에는 SOP가 어떻게 적용되나?
+웹보안계의 못생긴 양아들!
+cookie작동원리
+1. 유저가 브라우저에 sitea요청
+2. 브라우저는 서버에 get요청
+3. 서버는 cookie를 포함해서 response
+4. 브라우저 안의 sitea cookie jar가 쿠키를 저장뒤 cookie없이 브라우저에 html리턴
+5. 화면에 표시
+6. 유저가 같은 사이트의 다른 페이지 요청시 cookie jar를 통해 cookie를 포함하여 get요청이 서버로 전송됨,
+3번으로 이동!
+
+만약 siteb가 sitea로 from post전송시 csrf 발생
+
+cookie security는 same-origin policy와는 조금 다르다.
+Set-Cookie: name=value; Domain=.site.com; Path=/; Secure; HttpOnly;
+cookie는 (name, domain, path)로 구별되어진다.
+cookie는 parent domain으로 확장되어 질수있따.
+cookie는 모든 sub-domain으로 보낼수있다.
+
+
+windows, frames, iframes에는 SOP가 어떻게 적용되나?
+같은 origin에의해서만 access 가능.
+frame은 참조하는 다른 frame들을 navigate할수있다.
+window.frames[0].location
+window.parent, window.top
+window.opener, varx = window.open(...)
+
+tab들을 무한히 늘리거나 사악한 ad가 있을수 있다.
+
+XMLHttpRequest에는 SOP가 어떻게 적용되나?
+어떠한 사이트에도 Get, Post할수있다.
+브라우저는 cookie 또는 auth를 request에 포함시킨다.
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'http://sitea.com', false);
+xhr.send();
+xhr.reponseText; => sitea.com의 html출력
+same-site request들 만이 response를 읽을수있다.
+
+Send는 어디든 할수있지만 response를 읽을수 있게 하지 않는다. 하지만 서버는 응답을 보내고 있다. javascript에서 읽지만 못하게 하는것.
+
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'http://siteb.com', false);
+xhr.send();
+XMLHttpRequest cannot load http://siteb.com/. No 'Access-Control-Allow-Origin' header is present on the requested resource.
+Origin 'http://sitea.com' is threefore not allowed access.
+
+재미있는것은 위의 에러시 실제 response는 siteb.com으로 부터 오고 있다는 것이다. 단지 브라우저가 javascript를 통해 reponse에 접근하지 못하는게하는것이다.
+단지 브라우저가 결과를 보지 못하게 막고있는것.
+
+same-origin policy 우회하기
+frame간의 통신에 PostMessage 사용
+다른 origin으로부터의 frame과 window는 통신이 안된다.
+PostMessage는 smae-origin policy를 제거하는데 사이트들이 참여하는 것을 허용한다.
+-Sender는 어떤 origin에 보낼지 명시한다.
+-Receiver는 받은 message의 origin을 체크한다.
+
+Sender:
+window.framea.postMessage(message, "http://sitea.com"); <= 누구에게 보낼것인가?
+
+Receiver:
+window.addEventListener('message', function(event){ <= receiver가 message를 받는데 참여한다.
+  if(event.origin !== 'http://parentsite.com'){ <= message가 어디로부터 왔니?
+    console.log("Wrong origin! " + event.origin);
+    return;
+  }
+  window.rec.innerText = event.data;
+}, false);
+
+
+Cross-Origin Resource Sharing(CORS)사용
+같은 사이트 request들만이 response를 읽을수있다.
+CORS는 사이트가 SOP를 약하게하는데 참여하도록 하며 다른 사이트들이 data를 읽을수 있게한다.
+SiteA가 SiteB로 request를 보내 response를 읽고 싶을때 이를 허락할수 있는 것은 SiteB의 서버이다.
+
+Sender:
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'http://siteb.com/data.json', false);
+xhr.send();
+
+Receiver:
+Access-Control-Allow-Origin: http://sitea.com   <= sitea.com이 data를 볼수있게 브라우저에게 알려준다.
+
+서버는 data를 주지만 브라우저가 자바스크립트에게 데이타를 주지 않는다. 특별한 서버측의 처리가 없는한 data를 디버거 상에서 온것을 볼수있다.
+
+How to: 다른 사이트로부터 data를 얻을수 있을까?
+서버로부터 직접 data를 얻는경우:
+-CORS
+-JSONP
+Cross-frame communication:
+-PostMessage
+-(RIP:url fragments) <= 추천하지 않음
+
+How to: isolate user content  <= 흠..뭔소리지? 전체적으로 모르겠다.(아..user content라는게 유저들이  만든 컨텐츠인가?)
+user content를 웹사이트에서 저장할경우(user information관련되어) 이 정보를 완전히 격리 시키고 싶을때 asite.com끼리도 정보를 공유하고 싶지 않을때?
+Cross-site scripting은 untrusted code가 사이트에서 실행될때 발생된다.
+sub-domain또는 분리된 domain이름들을 사용하라
+-scontent-syd2-1.xx.fbcdn.net <= facebook
+-drive-thirdparty.googleusercontent.com <= google
+
+Sub-origins : http://w3c.github.io/webappsec-suborigins/ <= 새 스펙 참고만...
+
+How to:Share cookies?
+생략...
+
+
+한계
+same-origin policy는 브라우저에게만 적용된다.
+만약 브라우저안의 코드가 아닌 다른 코드들은 어떠한 제한도 없이 리소스에 직접 접근할수있다.(rest-api를 mobile client가 호출).
+다른 방어법에 의존할 필요가 있다.
+-인증
+-Rate-limiting(?)
+-Captchas

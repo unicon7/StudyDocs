@@ -1,0 +1,2405 @@
+https://www.youtube.com/watch?v=QFaFIcGhPoM&list=PLC3y8-rFHvwgg3vaYJgHGnModB54rxOk3
+
+ReactJS Tutorial - 1 - Introduction
+UI를 만들기 위한 javascript library이다.
+위의 2정의에는 2가지 중요한 점이있다. library이지 framework가 아니다. UI에만 집중한다. routing, http request등을 신경쓰지 않는다.
+풍부한 생태계다 다른부분을 커버한다.
+
+Component Based Architecture
+어플리케이션을 분해하여 캡슐화된 작은 컴포넌트들을 만들고 이를 조합하여 더욱 복잡한 UI를 만들수 있게한다.
+컴포넌트는 재사용 가능한 코드를 만든다.
+예를들어 react에 Article Component를 갖고 있을때 같은 코드를 Angular,Vue가 정확한 데이타를 Article Component에 넘겨 재사용 할수있다.(?)
+react는 declarative하다. react에게 원하는 것을 알리면 react는 실제 UI를 빌드한다. 이것은 declarative paradiagm이며 imperative paradiagm에 반대되는 것이다.
+예를 들면 예술가에게 풍경을 그려달라 요청한뒤 어떻게 그릴지는 전적으로 예술가에게 달려있는것이 declarative paradiagm이다.
+5살짜리 아이에게 산을 그려라, 강을 그려라 등등 명시적으로 각각의 단계를 기술하고 있며 풍경이 그려지는 흐름을 제어한다.imperative paradiagm이다.
+react는 컴포넌트의 업데이트와 랜더링을 효과적으로 다룰것이다.
+DOM 업데이트는 우아하게 다루어진다.
+어플리케이션의 어떠한 곳이다 완벽하게 통합될수있다.
+페이지의 일부혹은 모든 페이지 또는 어플리케이션 전체를..
+리액트 native로 모바일 앱을 만들수도있다.
+
+es6 필수 준비 요소
+this keyword, filter, map, reduce
+let & const, arrow function, template literals, default parameters, object literals, rest and spread operators and destructuring assignment.
+
+Fundamentals => HTTP => Routing => Redux => Utilities순으로 학습
+react 16.5.2 사용
+
+ReactJS Tutorial - 2 - Hello World
+Create-React-App을 사용하여 프로젝트 생성
+npx create-reat-app hello-world
+cd hello-world
+npm start
+
+npx를 사용할수도 있으며 npm을 사용할수도 있다.
+npx는 node를 인스톨할때 같이 인스톨된다.
+
+npm을 사용하는 방법
+npm install create-react-app -g 글로벌 인스톨
+create-react-app <project_name>
+
+npx를 쓰면 글로벌 인스톨을 할 필요가 없다.
+
+ReactJS Tutorial - 3 - Folder Structure
+public 폴더의 manifest.json은 progressive web app과 관련이 있다. 범위를 벗어나니 신경쓰지 말자.
+index.html에 집중할것!
+
+src폴더의 index.js가 시작점
+ReactDOM.render(<App />, document.getElementById('root'));
+App컴포넌트를 root dom node안에 그려라. App컴포넌트는 App.js에 있다.
+src안에 App.css는 스타일링에 App.test.js는 테스팅에 쓰인다.
+serviceWorker.js는 progressive web app과 관련이 있다. 범위를 벗어나니 신경쓰지 말자.
+컴포넌트란?
+
+ReactJS Tutorial - 4 - Components
+Component란 user interface의 부분이다.
+Header, SideNav, MainContent, Footer를 포함하는 Root(App) Component
+Component란 재사용가능하다.
+Component는 다른 Component를 포함하거나 포함될수 있다.
+Component는 js, 혹은 jsx확장자를 가진 화일에 코드로 존재한다. (App.js화일안에 AppComponent가 있는 식..)
+
+실제 코드를보면 2가지 타입의 Component가 있다.
+Stateless Functional Components (말그대로 js function형태, UI를 기술하는 HTML을 리턴한다.)
+function Welcome(props){
+  return <h1>Hello, {props.name}</h1>;
+}
+
+Stateful Class Components (react library의 Component를 상속받은 es6 class형태, HTML을 리턴하는 Render mothod가 반드시 있어야한다.)
+class Welcome extends React.Component {
+  render(){
+    return <h1>Hello, {this.props.name}</h1>;
+  }
+}
+
+ReactJS Tutorial - 5 - Functional Components
+Functional Components는 자바스크립트 함수이다.
+필요에따라 입력으로 Properties(props)를 가지며 UI인 HTML(JSX)를 리턴한다.
+
+App.js 수정, 안쪽으 HTML내용을 지운다.
+render() {
+  return (
+    <div className="App">
+
+    </div>
+  );
+}
+
+components 폴더를 만들고 그안에 Greet.js를 만든다. component naming convention에 따라 pascal case를 쓴다.
+Greet.js
+import React from 'react'
+
+fuinction Greet() {
+  return <h1>Hello World!</h1>
+}
+
+export default Greet;  <=다른 컴포넌트들이 사용할수 있게 export
+
+App.js
+...
+import Greet from './components/Greet'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Greet></Greet>  <= 사용! custom tag로 쓴다!
+    </div>
+  );
+}
+
+위으 Functional component는 완벽하지만 convention으로 arrow function을 사용한다.
+
+Greet.js
+import React from 'react'
+
+//fuinction Greet() {
+//  return <h1>Hello World!</h1>
+//}
+const Greet = () => <h1>Hello World!</h1>   <= 추가적인 장점은 나중에 설명!
+export default Greet;
+
+component의 export, import에대해 좀더 알아보자.
+export default Greet;  <= default로 export하고 있기때문에 
+import MyComponent from './components/Greet' 와같이 어떠한 이름으로도 import할수있다.
+
+named exports
+export const Greet = () => <h1>Hello World!</h1>
+named exports상황에서는 같은 이름으로 import해야한다!
+import { Greet } from './components/Greet'
+
+ReactJS Tutorial - 6 - Class Components
+es6 class이다.
+필요에따라 입력으로 Properties(props)를 가지며 UI인 HTML(JSX)를 리턴한다.
+props와는 별도로 Class Components는 private internal state를 가질수있다.
+
+Welcome.js
+import React, { Component } from 'react' <= 2가지 import가 필요하다.
+
+class Welcome extends Component {  <= Component를 상속한다.
+  render() {   <= null 또는 HTML을 리턴하는 render method가 있어야한다.
+    return <h1>Class Component</h1>
+  }
+}
+
+export default Welcome;
+
+App.js
+...
+import Welcome from './component/Welcome';
+
+render() {
+  return (
+    <div className="App">
+      <Greet></Greet>  
+      <Welcome /> <= 사용! custom tag로 쓴다!
+    </div>
+  );
+}
+
+Functional component와 Class Component의 차이 장단점, 언제 어떤 것을 써야하는가? 현재는 부분적 이해 밖에 할수없다.
+
+Functional component
+간단한 function들이다.
+둘다 사용이 가능하면 Functional component를 써라
+'this' 키워드가 없다!
+state를 사용하지 않는 해결책이다. class처럼 각각의 state를 갖는 component가 많아지면 디버깅이 힘들어진다.
+Functional component는 복잡한 로직없이 UI를 리턴한다.
+Stateless / Dumb / Presentational Component로 불리워진다.
+
+Class component
+feature가 많다.
+자신만의 private data(state라 불리운다.)를 유지한다.
+복잡한 UI로직을 가진다.
+lifecyle hooks를 제공한다.  <= 가장 중요!
+Stateful / Smart / Container Component로 불리워진다.
+
+지금까지 3개의 component를 보았다. 모두 HTML을 리턴하고 있다. 하지만 이 HTML은 보통의 HTML이 아니다.
+이는 JSX라 불리는 것이다. JSX라는게 정확히 무엇인가?
+
+ReactJS Tutorial - 7 - Hooks Update
+React 16.7.0-alpha에 새로운 기능이 생겨 이전 튜토리얼의 정의를 바꾸어야한다.
+새로운 기능은 지금까지 배운 functional vs state component과 모순된다.
+functional과 class Component의 차이에 대해 설명했었다.
+Class component가 state와 lifecyle hooks를 가진다고 설명했었다.
+이 설명은 이제 틀리다. Hooks라는 새로운 기능이 생겼기 때문이다.
+Hooks는 state와 다른 React feature를 class를 쓰지 않고 쓸수있게 하는 기능이다.
+functional component에서도 State와 lifecyle hook을 쓸수있게 되었다.
+Hooks
+No breaking changes.
+완전한 opt-in방식이며 100% 하위호환된다.
+지금까지 배운 것 모두 유효! (state와 lifecyle hook에 관한 설명만 빼고!)
+이제 Component type은 Functional components와 Class component로 나눈다.
+state, lifecycle mothod, this binding을 사용한다.
+class component의 state, event binding, lifecycle hooks를 먼저 이해하자!
+
+ReactJS Tutorial - 8 - JSX
+JSX
+javascript XML - javascript language extension syntax이다.
+elements와 components를 위해 XML-like 코드를 쓴다.
+JSX tag들은 tag name, attribute, children을 갖는다.
+JSX는 React application을 만들기위해 꼭 필요한것은 아니다.
+JSX는 react code를 더 간단하고 우아하게 만들어준다.
+JSX는 최종적으로 브라우저에게 이해될수있는 pure javascript로 transpile된다.
+
+지금까지 해왔던 방법
+Hello.js
+import React from 'react'
+const Hello = () => {
+  return (
+    <div>
+      <h1>Hello World!</h1>
+    </div>
+  );
+  
+  }
+export default Hello;
+
+App.js
+..
+import Hello from './components/Hello'
+..
+render() {
+  return (
+    <div className="App">
+      <Hello />
+    </div>
+  );
+}
+
+JSX없이 해보자
+Hello.js
+import React from 'react'
+const Hello = () => {
+  //return (
+  //  <div>
+  //    <h1>Hello World!</h1>
+  // </div>
+  //);
+
+  //React libray에는 createElement라는 메서드가 있다.
+  //첫번째 인수 : tag명
+  //2번째 : optional property
+  //3 : children Element
+  return React.createElement('div', null, '<h1>Hello world</h1>');
+  
+}
+export default Hello;
+
+html출력은
+<div><h1>Hello world</h1></div>  <= h1이 tag가 아닌 text node로 인식되어버린다. h1이 먹지 않는다.
+
+
+return React.createElement('div', null, 'h1', 'Hello world'); <= 요렇게 해보자!
+<div>"h1" "Hello world"</div> <= 역시 원하는 것이 아니다. 2개의 text node가 생겼다.
+
+return React.createElement('div', null, React.createElement('h1', null, 'Hello world')); <= 요렇게 해보자!
+<div>
+  <h1>Hello world</h1>   <= tag가 먹는다!
+</div> 
+
+이제 2번째 파라메터에 대해 이야기해보자
+기본적으로 element에 적용될 object이다.
+return React.createElement('div', {id: 'hello'}}, React.createElement('h1', null, 'Hello world'));
+
+<div id="hello">
+  <h1>Hello world</h1>
+</div> 
+
+return React.createElement('div', {id: 'hello', class:'dummyClass'}}, React.createElement('h1', null, 'Hello world'));
+
+<div id="hello" class="dummyClass">  <= 출력은된다..하지만 console에 Warning이 찍힌다. Invalid DOM Property 'class'. Did you mean 'className'?
+  <h1>Hello world</h1>
+</div> 
+
+javascript에서 class는 키워드이다. 그래서 react에서는 css class를 className으로 바꾸어야 한다. 이는 JSX에서도 마찬가지 이다.
+
+JSX
+return (
+  <div className='dummyClass'>
+    <h1>Hello World!</h1>
+  </div>
+);
+
+javascript
+return React.createElement('div', {id: 'hello', className:'dummyClass'}}, React.createElement('h1', null, 'Hello world'));
+
+어떤쪽이 더 단순한가? 
+JSX는 React.createElement로 변경되는 syntactic sugar이다.
+이는 import React from 'react'를 처음에 하는 이유이기도 하다. JSX가 React.createElement로 변환되기 때문!
+100개의 elements를 갖고있다면? JSX쪽이 훨씬 단순하다.
+
+JSX와 HTML의 차이
+1. class => className
+2. for => htmlFor
+3. cameCase property naming convention
+onclick => onclick
+tabindex =>tabIndex
+쓰다보면 알아지게 되니 외우려고 노력하지는 말자.
+
+현재 react team은 breaking change를 준비하고 있으며 그중의 하나는 className을 class로 쓰게 하는것이다. 18, 19에서나 될듯...
+
+ReactJS Tutorial - 9 - Props (properties의 준말)
+Greet를 name을 넘겨 사용할수 있게 해보자.
+이때 필요한것이 props이다.
+props는 component가 받을수있는 optional input이다. 또한 component가 dynamic해질수 있게 한다.
+
+App.js
+...
+import Greet from './components/Greet'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Greet name="Bruce" heroName="Batman"></Greet>  <= name, heroName을 넘긴다.!
+      <Greet name="Clark" heroName="Superman"></Greet>
+      <Greet name="Diana" heroName="Wonder Woman"></Greet>
+    </div>
+  );
+}
+
+받는 방법
+Greet.js
+import React from 'react'
+
+const Greet = (props) =>{    <= props라는 이름은 convention이다. 될수 있으면 이름을 바꾸지 마라!
+  console.log(props); <= 모든 props가 object 형태로 들어온다.
+  return (<h1>hello {props.name} a.k.a {props.heroName}</h1>);  <= props.name이 text가 아닌 js expression으로 평가되도록 JSX의 {}를 쓴다.
+}
+
+export default Greet;  <=다른 컴포넌트들이 사용할수 있게 export
+
+props는 어떠한 것이 들어올지 알고 있다.
+가끔은 어떠한 것이 들어올지 전혀 모르는 경우가 있다. 하지만 component가 모르는 content를 render하도록 하고 싶을때가 있다.
+방법은 component의 tag사이에 content를 적고 props의 예약되어있는 children property를 사용하는 것이다.
+
+App.js
+...
+import Greet from './components/Greet'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Greet name="Bruce" heroName="Batman">
+        <p>This is children props</p>    <= children props
+      </Greet>
+      <Greet name="Clark" heroName="Superman"></Greet>
+      <Greet name="Diana" heroName="Wonder Woman"></Greet>
+    </div>
+  );
+}
+
+Greet.js
+import React from 'react'
+
+const Greet = (props) =>{    <= props라는 이름은 convention이다. 될수 있으면 이름을 바꾸지 마라!
+  console.log(props); <= 모든 props가 object 형태로 들어온다.
+  return (
+    <h1>hello {props.name} a.k.a {props.heroName}</h1>
+    {props.children}  <= p tag가 그려진다.
+    );  <= 여러줄의 JSX가 들어갈땐 JSX의 ()를 사용한다.
+}
+
+위의 코드는 에러가 난다. 왜냐하면 JSX는 root Element가 1개이어야한다. div로 감싸자!
+
+const Greet = (props) =>{    <= props라는 이름은 convention이다. 될수 있으면 이름을 바꾸지 마라!
+  console.log(props); <= 모든 props가 object 형태로 들어온다.
+  return (
+    <div>
+      <h1>hello {props.name} a.k.a {props.heroName}</h1>
+      {props.children}  <= p tag가 그려진다.
+    </div>
+    );  <= 여러줄의 JSX가 들어갈땐 JSX의 ()를 사용한다.
+}
+
+만약 button tag를 두번째에 넣으면?
+
+App.js
+...
+import Greet from './components/Greet'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Greet name="Bruce" heroName="Batman">
+        <p>This is children props</p>    
+      </Greet>
+      <Greet name="Clark" heroName="Superman">
+        <button>Action</button> <= children props Superman 밑에 버튼이 생긴다.
+      </Greet>
+      <Greet name="Diana" heroName="Wonder Woman"></Greet>
+    </div>
+  );
+}
+
+component에 전달되는 것이 확실한 것들은 attribute로 props로 무엇이 전달될것인지 전혀 모르거나 전달해야 할 것이 dynamic html일경우 children props를 쓴다.
+children props가 아무것도 없다면 {props.children}은 아무것도 render하지 않는다.
+
+이번에는 class component에서의 사용법을 알아보자.
+component의 type에 상관없이 호출(invocation)시에는 attribute로 언급되어진다.
+App.js
+...
+import Greet from './components/Greet'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Greet name="Bruce" heroName="Batman">
+        <p>This is children props</p>    
+      </Greet>
+      <Greet name="Clark" heroName="Superman">
+        <button>Action</button> <= children props Superman 밑에 버튼이 생긴다.
+      </Greet>
+      <Greet name="Diana" heroName="Wonder Woman"></Greet>
+
+      <Welcome name="Bruce" heroName="Batman">  <= class component인 Welcome component에 props전달!
+        <p>This is children props</p>    
+      </Welcome>
+      <Welcome name="Clark" heroName="Superman">
+        <button>Action</button> <= children props Superman 밑에 버튼이 생긴다.
+      </Welcome>
+      <Welcome name="Diana" heroName="Wonder Woman"></Welcome>
+    </div>
+  );
+}
+
+이렇게 전달되어진 props는 Component class에 reserved된 props로 전달된다.
+
+Welcome.js
+import React, { Component } from 'react' <= 2가지 import가 필요하다.
+
+class Welcome extends Component {  <= Component를 상속한다.
+  render() {   <= null 또는 HTML을 리턴하는 render method가 있어야한다.
+    return <h1>Welcome {this.props.name} a.k.a {this.props.heroName}</h1>
+  }
+}
+
+component를 사용할때 추가적인 attributes를 포함할수있으며 react는 모든 attribute를 모아서 props라는 이름의 object에 넣어 component의 정의로 전달한다.
+component안에서 props를 접근해서 dynamic content를 render할수있다.
+
+단 strict한 규칙 하나가 있는데 props는 immutable하다. object안의 value를 바꾸는 것은 불가능하다.
+react component는 props parameter와 관련하여서는 pure function처럼 동작해야한다.
+만약 props가 immutable하다면 시간에 따라 변하는 component의 data를 어떻게 유지하는가?
+
+ReactJS Tutorial - 10 - State
+지금까지 봐왔던 것처럼 모든 react component는 UI를 기술하는 JSX를 리턴한다.
+props를 사용하여 무엇이 render될지 영향을 끼치는 것이 가능하다는 것을 보았다.
+화면에 무엇이 그려질지 영향을 끼치는 요소가 하나 더 있는데, State이다.
+
+props와 state의 비교
+props
+component에 전달되어진다.
+function parameter와 비슷
+props는 immutable하다. (대부분 일반적으로 parent component에서 child component로 전달되어지기때문에 props는 parent가 소유하며 바뀌어질수 없다.)
+functional components 일때 props 파라메터로 접근, class components일때 this.props로 접근한다.
+
+
+state
+component안에서 관리되어진다.
+function body에 선언되어진 variable과 비슷
+state는 바뀔수있다.
+functional components 일때 useState Hook사용(최신이다! 일단 class components부터!), class components일때 this.state로 접근한다.
+
+궁극적으로 props와 state는 UI에 영향을 줄수있는 information을 갖고있다.
+
+state를 어떻게 사용하는지 알아보자.
+Message.js
+import React, { Component } from 'react' <= 2가지 import가 필요하다.
+
+class Message extends Component {  <= Component를 상속한다.
+  render() {   <= null 또는 HTML을 리턴하는 render method가 있어야한다.
+    return <h1>Welcome visitor</h1>
+  }
+}
+
+export default Message;
+
+App.js
+...
+import Message from './components/Message'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Message />
+    </div>
+  );
+}
+
+이 상황에서 새로운 요구사항이 있다고 가정한다.
+Welcome visitor 밑에 subscribe 버튼이 있고 이 버튼을 click했을때 Welcome visitor가 thank you for subscribing으로 바뀌도록 하는 것이다.
+1. state object를 create하고 초기화
+class constructor에서 대부분한다.
+
+Message.js
+import React, { Component } from 'react'
+
+class Message extends Component {
+  constructor() {
+    super();  <= 반드시 필요하다. React Component가 먼저 초기화 되어야 한다.
+    this.state = {    <= 여기서 state는 react에서는 reserved keyword같이 쓰여지게된다. this.state를 쓰는 순간 react는 의도를 이해할수있게된다.
+      message : 'Welcome visitor'
+    };
+  }
+
+  render() {
+    return <h1>Welcome visitor</h1>
+  }
+}
+
+2. state value를 render()와 bind한다. 
+import React, { Component } from 'react'
+
+class Message extends Component {
+  constructor() {
+    super();
+    this.state = {
+      message : 'Welcome visitor'
+    };
+  }
+
+  render() {
+    return <h1>{this.state.message}</h1>  <= props와 사용법이 아주 비슷한다.
+  }
+}
+
+이제 state를 쓰고 있으므로 message를 바꿀수있는 능력을 갖게되었다.
+
+3. button을 달자!
+import React, { Component } from 'react'
+
+class Message extends Component {
+  constructor() {
+    super();
+    this.state = {
+      message : 'Welcome visitor'
+    };
+  }
+
+  render() {
+    return (  JSX가 여러줄이 되었기때문에 ()를 사용, 하나의 root element때문에 div사용
+      <div>
+        <h1>{this.state.message}</h1>
+        <button>Subscribe</button>
+      </div>
+    )
+  }
+}
+
+4. click 이벤트를 달고 message를 바꾸자. 다음의 코드는 대충보자 하나하나 앞으로 자세히 다 볼것이다.(event handling, setState)
+import React, { Component } from 'react'
+
+class Message extends Component {
+  constructor() {
+    super();
+    this.state = {
+      message : 'Welcome visitor'
+    };
+  }
+  
+  changeMessage() {
+    this.setState({  <= setState 메서드에 주목! class component의 state를 바꾸는데 사용하는 method
+      message : 'Thank you for subscribing'
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>{this.state.message}</h1>
+        <button onClick={ () => this.changeMessage() }>Subscribe</button>  <= onClick이 camelcase인것에 주목, {} 사용!
+      </div>
+    )
+  }
+}
+
+state는 component안에서 privately하게 유지되는 object이다. 무엇이 render될지에 영향을 줄수있다.
+마지막으로 state는 component안에서 바뀔수있다.
+
+ReactJS Tutorial - 11 - setState
+vscode용 plugin es7 react/redux/GraphQL/..snippets를 설치! 도움이된다. 단축키를 쳐서 템플릿 코드를 만드는 플러그인이다.
+stateState()의 규칙(do's and don'ts)을 알기 위해 Counter를 만들것이다. 버튼을 누르면 숫자가 올라가는 component를 만들자.
+
+Counter.js
+react snippets의 단축키 rce를 tab을 쓰게 되면 component의 템플릿이 자동으로 쳐지게 된다.
+class Message extends Component {
+  constructor(props) {  <= rconst 탭이면 constructor 생성된다.
+    super(props);
+    this.state = {
+      count : 0
+    };
+  }
+
+  increment() {
+    this.state.count = this.state.count + 1;    <= state를 직접 조작한다!
+    console.log(this.state.count);
+  }  
+ 
+  render() {
+    return (
+      <div>
+        <div>Count - {this.state.count}</div>
+        <button onClick={() => this.increment()}>Increment</div>
+      </div>
+    )
+  }
+}
+
+App.js
+...
+import Message from './components/Message'  <= import!
+render() {
+  return (
+    <div className="App">
+      <Counter />
+    </div>
+  );
+}
+
+
+state를 직접 조작한다! console.log(this.state.count);에서는 1씩 증가하지만 UI는 0으로 전혀 변하지 않는다.
+이는 state가 변할때 UI가 rerendering되지 않음을 의미한다.
+이는 state를 절대 직접적으로 수정하지 않는 주된 이유이다. this.state를 직접 수정하는곳은 constructor()뿐이다. 다른곳은 없어야 한다.
+state를 다른 곳에서 변경할경우에는 무조건 setState() method를 사용해야한다.
+
+increment() {
+  this.setState({count: this.state.count + 1});  <= 이렇게 고쳐본다!
+  console.log(this.state.count);
+}  
+UI가 같이 업데이트 된다.
+
+첫번째 규칙은 절대 state를 직접 고치지 마라. setState()를 사용하라. 만약 직접 state를 변경하게되면 react는 component를 rerender하지 않는다.
+다른 말로 이야기하면 setState()는 react에 rerender하도록 알려주는 역할을 한다.
+
+위의 수정으로 한가지 더 알아야 할 것이 있다.
+버튼을 누르게되면 console에는 0이 화면에는 1이 찍히게 된다. console에 찍히는 숫자가 화면의 숫자 보다 1이 적다!
+이는 setState()가 asyn이기 때문이다. setState()에의해 실제 state가 set되기전에 console.log()가 실행되기 때문이다.
+만약 state가 변경된 이후에 실행되어야 하는 코드가 있다면 setState()에 callback으로 넘겨야 한다.
+setState()의 첫번째 매개변수는 새로운 state객체이며 두번째 매개변수는 callback function이다.
+
+increment() {
+  this.setState({count: this.state.count + 1}, () => {console.log('callback value', this.state.count)});
+  console.log(this.state.count);
+}
+
+console에 0이 찍힌뒤 callback value 1이 뒤에 찍힌다.
+
+두번째 규칙은 state가 업데이트 되고 난뒤에 코드를 실행시켜야 한다면 setState() 다음 문장이 아닌, setState()의 두번째 파라메터로 callback function을 넘겨야한다.
+
+지금까지는 시나리오가 간단해서 이쯤에서 해결되었다. 좀더 복잡한 시나리오를 추가해보자.
+incrementFive() method를 추가해보자.
+
+incrementFive(){
+  this.increment();
+  this.increment();
+  this.increment();
+  this.increment();
+  this.increment();
+}
+
+<button onClick={() => this.incrementFive()}>Increment</div>
+
+버튼을 클릭하면 5가 증가되도록 수정하였다. 하지만 UI상의 숫자는 1이며 console에는 5번의 0 5번의 callback value 1이 찍힌다.
+0
+0
+0
+0
+0
+callback value 1
+callback value 1
+callback value 1
+callback value 1
+callback value 1
+
+왜 이렇게 되었을까? 이는 react가 더 나은 퍼포먼스를 위해 여러개의 setState()를 group화 하기 때문이다.
+여러개의 setState()가 한번에 같은 state에 적용이되었으며 업데이트된 값이 다른 호출들간에 전달되지 않아서이다.
+
+세번째 마지막 규칙은 이전 state에 기초에서 state를 업데이트 해야만 한다면 setState()에 object대신 함수를 전달해야한다.
+
+increment() {
+  //this.setState({count: this.state.count + 1}, () => {console.log('callback value', this.state.count)}); 
+
+  this.setState((prevState, props) =>{     <= 함수를 넘긴다! prevState, props를 인자로 받는다.
+    count: prevState.count + 1;
+  });
+}
+
+setState
+1. 절대 state를 직접 고치지 마라. setState()를 사용하라.
+2. state가 업데이트 되고 난뒤에 코드를 실행시켜야 한다면 setState() 다음 문장이 아닌, setState()의 두번째 파라메터로 callback function을 넘겨야한다.
+3. 이전 state에 기초에서 state를 업데이트 해야만 한다면 setState()에 object대신 함수를 전달해야한다.
+
+ReactJS Tutorial - 12 - Destructuring props and state
+react에서는 es6 Destructuring을 사용해서 가독성을 높인다.
+Destructuring은 array또는 object의 property를 별개의 다른 변수로 풀어 넣는 것이다.
+
+functional component에서의 사용법
+const Greet = (props) =>{
+  console.log(props);
+  return (
+    <div>
+      <h1>hello {props.name} a.k.a {props.heroName}</h1>
+      {props.children}
+    </div>
+    );
+}
+
+functional component에서 destructuring의 사용법은 2가지 이다.
+1. 함수 파라메터에서 사용
+const Greet = ({name, heroName}) =>{
+  return (
+    <div>
+      <h1>hello {name} a.k.a {heroName}</h1>      
+    </div>
+    );
+}
+
+2. 함수 몸체에서 사용
+const Greet = (props) =>{
+  const {name, heroName} = props;
+  return (
+    <div>
+      <h1>hello {name} a.k.a {heroName}</h1>      
+    </div>
+    );
+}
+
+
+class component에서 destructuring의 사용법
+일반적으로 render method에서 props와 state를 destructuring한다.
+
+Welcome.js
+import React, { Component } from 'react'
+
+class Welcome extends Component {
+  render() {
+    const {name, heroName} = this.props;  <= props에 몇개의 프로퍼티가 있던지 필요한 것만 꺼내서 쓴다.
+    //const {state1, state2} = this.state;  <= state의 예!
+    return <h1>Welcome {name} a.k.a {heroName}</h1>
+  }
+}
+
+ReactJS Tutorial - 13 - Event Handling
+event를 어떻게 handle하는지 알아본다. onclick만을 하지만 나머지도 똑같다.
+
+functional component
+
+FunctionClick.js
+import React from 'react';
+
+function FunctionClick() {
+  function clickHandler() {  <= 함수안에 함수선언!
+    console.log('Button clicked');
+  }
+
+  return(
+    <div>
+      <button onClick={clickHandler}>Click</button>
+    </div>
+  );
+}
+
+1. react에서 event는 lowercase가 아닌 camelcase를 쓴다. (onClick)
+2. ""이 아닌 {}을 쓴다. (onclick="clickHandler"가 아니라 onClick={clickHandler})
+3. onClick에는 함수를 넘기는 것이지 함수호출을 하면 안된다. onClick={clickHandler()}로 쓰게되면 html로드시 그냥 실행되어 로드시 log출력되며
+버튼을 클릭해도 아무런일이 일어나지 않는다. 시나리오는 clickHandler가 state를 바꾸는 class component를 쓸때 더욱 안좋아진다. component는 지속적으로
+rerender될것이고 console에 무한 로그를 보게 될지도 모른다.
+
+
+class component
+ClassClick.js
+import React, { Component } from 'react'
+
+class ClassClick extends Component {
+  clickHandler() {
+    console.log('Clicked the button');
+  }
+
+  render() {
+    return (
+      <div>
+        <button onClick={this.clickHandler}>Click me</buttom>
+      </div>
+    );
+  }
+}
+
+export default ClassClick
+
+기본적으로 functional component와 같다. this가 붙어서 method를 넘기고 있는 것만 다르다.
+
+지금은 event handling이 꽤 쉬운것 같지만 지금은 event handler에서 하는 것이 별로 없어서이다.
+하지만 일반적으로 event handler에서는 this.setState()를 사용하여 component의 state를 바꾸는 경향이 있다.
+만약 이러한 것을 시도하려 할때 혼란의 세계로 빠지게 들어가게 된다. 이 혼란의 원인은 javascript의 this keyword binding과 관련이 있다.
+
+
+ReactJS Tutorial - 14 - Binding Event Handlers
+event handler를 어떻게 bind시키는지 알아보자.
+이 문제는 react의 문제가 아니라 순전히 javascript의 문제이다. react의 작동 문제가 아니다.
+일단 event binding이 필요한 이유를 알아보자.
+더 가기전에 javascript에서 this keyword가 어떻게 동작하는지, this의 값이 어떻게 결정되는지부터 학습하는 것을 추천한다.
+javascript에서 this를 이해해야만 훨씬 편하게 이해할수있다.
+
+버튼을 클릭하게 되면 state의 일부인 message가 변하는 component를 만든다.
+
+첫번째 시도!
+EventBind.js
+import React, { Component } from 'react'
+
+class EventBind extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: 'Hello';
+    }
+  }
+
+  clickHandler() {
+    this.setState({
+      message: 'Goodbye!'
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <div>{this.state.message}</div>
+        <button onClick={this.clickHandler}>Click</buttom>
+      </div>
+    );
+  }
+}
+
+실행뒤 클릭하면 TypeError : Cannot read property 'setState' of undefined 예외발생
+
+clickHandler() {
+  this.setState({   <= 이부분의 this가 undefined
+    message: 'Goodbye!'
+  })
+}
+이것은 전형적인 javascript의 동작방식이다. 왜 undefined인지는 자세하게 설명하지 않겠다. 왜 this가 undefined인지 javascript에서 알아보라.
+궁극적으로 하고 싶은 말은 eventHandler에서 this가 undefined이며 react class component에서 event binding이 필요한 이유이다.
+react에서 event handler binding을 하는 몇가지 방법이 있다. 모두를 살펴보자.
+1. render() method에서 bind(this)를 사용하여 this binding
+import React, { Component } from 'react'
+
+class EventBind extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: 'Hello';
+    }
+  }
+
+  clickHandler() {
+    this.setState({
+      message: 'Goodbye!'
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <div>{this.state.message}</div>
+        <button onClick={this.clickHandler.bind(this)}>Click</buttom>
+      </div>
+    );
+  }
+}
+
+this keyword는 EventBind객체가 되어 호출이 된다.
+지금은 state에 message가 하나밖에 없어서 괜찮아 보이지만 state가 변경될때마다 rerender되게 되며 그때마다 새로운 EventBind객체가 생성되게된다.
+작은 application에서는 performance에 치명적이지 않겠지만 큰 application 혹은 nested children component를 가질때 performance적으로 문제가 될수있다.
+
+2. arrow function in render
+render() {
+  return (
+    <div>
+      <div>{this.state.message}</div>
+      <button onClick={() => this.clickHandler()}>Click</buttom>
+    </div>
+  );
+}
+역시 잘 작동하나 1번과 같은 문제가 있다.
+
+3. binding event handler in class constructor
+import React, { Component } from 'react'
+
+class EventBind extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: 'Hello';
+    }
+    this.clickHandler = this.clickHandler.bind(this);  <= 여기
+  }
+
+  clickHandler() {
+    this.setState({
+      message: 'Goodbye!'
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <div>{this.state.message}</div>
+        <button onClick={this.clickHandler}>Click</buttom> <= 여기
+      </div>
+    );
+  }
+}
+
+이 방법은 react에서 추천하는 방법이며 대부분의 경우 이렇게 쓰고 있다.
+binding객체가 constructor한군데서만 일어나기때문에 render에서 일어나는 것보다 좋다.
+
+4.use arrow function as a class property
+class의 method의 정의를 바꾸는 방법
+
+import React, { Component } from 'react'
+
+class EventBind extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: 'Hello';
+    }    
+  }
+
+  clickHandler = () => {   <= arrow function으로 정의한다!
+    this.setState({
+      message: 'Goodbye!'
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <div>{this.state.message}</div>
+        <button onClick={this.clickHandler}>Click</buttom> <= 여기
+      </div>
+    );
+  }
+}
+
+EventBind객체가 생기지 않는 유일한 방법
+
+2번은 nested component가 없다면 간단히 쓸수있다.
+3번은 react가 공식적으로 추천하는 방법이다.
+4번은 현재 experimental feature이며 곧 공식적 방법이 될지 모른다.
+
+4번이 accepted feature가 되면 써야할 방법이다.
+
+ReactJS Tutorial - 15 - Methods as props
+이전에 parent component가 child component로 props를 전달하는 것을 보았다.
+만약 child component가 parent component와 커뮤니케이션을 하고 싶으면 어떻게 해야할까?
+이상하지만 props를 쓸것이다. 하지만 이번에는 method의 reference를 props으로서 child component로 전달한다.
+
+ParentComponent.js
+import React, { Component } from 'react'
+import ChildComponent from './ChildComponent'  <= child import
+
+class ParentComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      parenName: 'Parent'
+    }    
+
+    this.greetParent = this.greetParent.bind(this);  <= greetParent()에서 this를 썼으므로 bind해준다. child로 method를 넘길것이기때문에!
+  }
+
+  greetParent() {
+    alert(`Hello ${this.state.parentName}`)   <= es6 template literals사용 `` ${} 사용에 주목
+  }
+
+  render() {
+    return (
+      <div>
+        <ChildComponent greetHandler={this.greetParent} />  <= greetHandler 라는 prop으로 method를 넘기고 있다.
+      </div>
+    );
+  }
+}
+
+
+ChildComponent.js
+import React, { Component } from 'react'
+
+class ParentComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      parenName: 'Parent'
+    }    
+
+    this.greetParent = this.greetParent.bind(this);  <= greetParent()에서 this를 썼으므로 bind해준다. child로 method를 넘길것이기때문에!
+  }
+
+  greetParent() {
+    alert(`Hello ${this.state.parentName}`)   <= es6 template literals사용 `` ${} 사용에 주목
+  }
+
+  render() {
+    return (
+      <div>
+        <button onClick={props.greetHandler}>Greet Parent</button>   <= prop으로 받은 greetHandler를 onClick evnet handler로 지정!
+      </div>
+    );
+  }
+}
+
+
+팝업이 정상적으로 뜬다.
+이제 ChildComponent에서 ParentComponent의 method를 호출할때 파라메터를 어떻게 넘기는가?에 관한 문제가 있다.
+이때가 arrow function이 정말 쓸모있어지는 경우이다. arrow function이 child에서 parent로 parameter를 넘기는 가장 간단한 방법이다.
+
+ChildComponent.js
+import React, { Component } from 'react'
+
+class ParentComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      parenName: 'Parent'
+    }    
+
+    this.greetParent = this.greetParent.bind(this);
+  }
+
+  greetParent() {
+    alert(`Hello ${this.state.parentName}`)
+  }
+
+  render() {
+    return (
+      <div>
+        <button onClick={() =>props.greetHandler('child')}>Greet Parent</button>   <= 'child'를 parameter로 호출!
+      </div>
+    );
+  }
+}
+
+
+ParentComponent.js
+{
+  ...
+  greetParent(childName) {
+    alert(`Hello ${this.state.parentName} ${childName}`) <= child로부터온 childName을 사용!
+  }
+  ...
+}
+
+이것이 react component에서 method를 props으로 넘기는 방법이다.
+form에서의 event handling은 나중에 form을 다룰때 알아보자.
+지금까지 이 형태는 event handling의 형태로 알아둘것!
+
+
+ReactJS Tutorial - 16 - Conditional Rendering
+4가지 Conditional Rendering 방법을 알아보자
+1.if/eles
+2.Element variable
+3.Ternary Conditional operator
+4.Short circuit operator
+
+isLoggedIn에따라 다른 text를 출력하는 component
+
+UserGreeting.js
+import React, { Component } from 'react'
+
+class UserGreeting extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoggedIn: true
+    }    
+
+    this.greetParent = this.greetParent.bind(this);
+  }
+
+  render() {
+    1.if/eles:
+    if(this.state.isLoggedIn) {
+      return <div>Welcome Vishwas</div>;
+    } else {
+      return <div>Welcome Guest</div>;
+    }
+    굉장히 번잡하고 반복이 많아지는것처럼 느껴질것이다. return <div>if(this.state.isLoggedIn) Welcome Vishwas else Welcome Guest</div>; 이런식으로 넣을순없는가?
+    못넣는다. JSX안에서 if/else는 동작하지 않는다. JSX는 단순히 function call과 object construction의 syntactic sugar일 뿐이기때문이다.
+    JSX안에 if/else를 넣는 것은 valid하지 않다. 때문에 if/else 블럭안에 모든 JSX가 들어가야 한다!
+
+    2.Element variable
+    let message;
+    if(this.state.isLoggedIn) {
+      message = <div>Welcome Vishwas<div>;
+    } else {
+      message = <div>Welcome Guest<div>;
+    }
+    return <div>{message}</div>;
+    message는 render될 element를 갖는 변수이며 이러한 방법을 Element variable라 부른다.
+
+    3.Ternary Conditional operator
+    return (this.state.isLoggedIn ?  <div>Welcome Vishwas</div> : <div>Welcome Guest</div>);
+    삼항 연산자는 JSX안에서 쓸수 있는 장점이 있다. 대부분의 경우에 쓴다. 가장 읽기 쉽다.
+    
+    4.Short circuit operator
+    return (this.state.isLoggedIn && <div>Welcome Vishwas</div>);
+    Ternary Conditional operator의 특정한 경우에만 사용할수 있는 방법이다.
+    조건에 따라 무언가를 그리거나 아무것도 그리지 않는 경우 사용 가능하다.
+  }
+}
+
+3,4번을 자주쓰는 것이 좋다.
+
+ReactJS Tutorial - 17 - List Rendering
+List item을 rendering하는 것은 일반적인 시나리오이다.
+우리가 원하는 것은 list에 있는 item을 위한 HTML을 반복하는 것이다. 어떻게 하는지 알아보자.
+react의 가장 좋은 점 중 하나는 javascript에 많이 의존한다는 것이다. 새로운 data를 조작하고 render하기위해 새로운 method를 도입하지 않는다는 것이다.
+
+Array.map()에 대해 알아보자.
+var array1 = [1, 4, 9, 16];
+const map1 = array1.map(x=>x*2);  <= Array에 주어진 함수를 각각 적용하여 새로운 배열을 만들어낸다.
+console.log(map1);
+=> [2, 8, 18, 32]
+
+Array.map() : Array에 있는 각각의 element에 transformation function에 적혀있는 transformation을 적용한다.
+
+위의 개념은 react의 list rendering뒤에 있는 개념과 아주 비슷하다.
+단지 다른점 하나는 위의 곱하기 같은 transformation대신 우리는 data를 JSX로 변환 할것이다.
+
+NameList.js
+import React from 'react'
+
+function NameList() {
+  const names = ['Bruce', 'Clark', 'Diana'];
+  return (
+    <div>
+      <h2>{names[0]}</h2>
+      <h2>{names[1]}</h2>
+      <h2>{names[2]}</h2>
+    </div>
+  )
+}
+
+export default NameList;
+
+예상대로 이름을 잘 출력하지만 좋은 해결책은 아니다. 더 좋은 해결책을 알아보자.
+
+NameList.js
+import React from 'react'
+
+function NameList() {
+  const names = ['Bruce', 'Clark', 'Diana'];
+  return (
+    <div>
+      {
+        names.map(name => <h2>{name}</h2>);  <= {name}을 써야 한다.
+      }
+    </div>
+  )
+}
+
+역시 잘 동작한다. 좀더 심플하게 만들기 위해 rendering 로직을 밖으로 빼내자.
+NameList.js
+import React from 'react'
+
+function NameList() {
+  const names = ['Bruce', 'Clark', 'Diana'];
+  const nameList = names.map(name => <h2>{name}</h2>);
+  return (
+    <div>
+      {nameList}
+    </div>
+  )
+}
+
+더 간결해졌다. JSX가 간결해졌다.
+
+전형적으로 render되어야할 property를 가진 object의 lsit를 갖게된다.
+그러한 경우 JSX를 별도의 component로 리팩토링하고 map method에 component를 쓰는 것이 낫다.
+name배열을 person의 배열로 바꾸면 다음과 같은 형태로 쓸수있다.
+NameList.js
+import React from 'react'
+
+function NameList() {
+  const persons = [
+    {id:1, 'Bruce', age: 30, skill: 'React'},
+    {id:2, 'Clark', age: 25, skill: 'Angular'},
+    {id:3, 'Diana', age: 28, skill: 'Vue'}
+  ];
+
+  const personList = persons.map(person => <h2>I am {person.name}. I am {person.age}.  I am {person.skill}.</h2>);
+  return (
+    <div>
+      {personList}
+    </div>
+  )
+}
+
+위의 코드는 이상없지만 JSX를 분리된 component로 리팩터 하는 것을 추천한다.
+Person.js
+import React from 'react'
+
+function Person({person}) {  <= props를 destructuring하자.
+  return (
+    <div>
+      <h2>I am {person.name}. I am {person.age}.  I am {person.skill}.</h2>
+    </div>
+  )
+}
+
+export default Person;
+
+NameList.js  <= props로 Person data를 주자.
+import React from 'react'
+
+function NameList() {
+  const persons = [
+    {id:1, 'Bruce', age: 30, skill: 'React'},
+    {id:2, 'Clark', age: 25, skill: 'Angular'},
+    {id:3, 'Diana', age: 28, skill: 'Vue'}
+  ];
+
+  const personList = persons.map(person => <Person person={person} />);  <= Person component로 person각각을 넘긴다.
+  return (
+    <div>
+      {personList}
+    </div>
+  )
+}
+
+더 나은 코드를 갖게되었다. NameList는 list를 rendering하는 데만 책임이 있으며 Person component는 person HTML rendering에만 책임을 가지고 있다.
+이러한 패턴은 data의 list를 랜더링 하는 어플리케이션을 만들때 일반적으로 볼수있다.
+
+지금까지 아무런 문제가 없다고 생각하고 있었겠지만 사실 그렇지 않다.
+console을 보면 Warning: Each child in an array or iterator should have a unique "key" prop. 붉은색 글씨가 출력되고 있다.
+unique "key" prop이 무엇인고 이 Warning의 의미는 무엇인가?
+
+ReactJS Tutorial - 18 - Lists and Keys
+Warning: Each child in an array or iterator should have a unique "key" prop.
+쉽게 이야기 하면 "map을 사용하여 reder되는 list안의 각각의 item들은 key라 불리우는 prop을 가져야 한다. 그리고 그 값은 list안에서 unique해야해"라고 말하고 있는 것이다.
+list안에 prop을 넣어보자.
+
+NameList.js
+import React from 'react'
+function NameList() {
+  const persons = [
+    {id:1, 'Bruce', age: 30, skill: 'React'},
+    {id:2, 'Clark', age: 25, skill: 'Angular'},
+    {id:3, 'Diana', age: 28, skill: 'Vue'}
+  ];
+
+  const personList = persons.map(person => <Person key={person.id} person={person} />);  <= key prop을 만들었고 unique한 값인 id를 넣었다.
+  return (
+    <div>
+      {personList}
+    </div>
+  )
+}
+
+Warning이 사라졌으며 제대로 rendering되고있다.
+key prop의 값이 항상 id일 필요는 없다. person.name이어도된다. 단 unique하다는 조건만 맞으면 어떠한 값이던 상관이없다.
+
+key prop의 기억해야할 중요한 점은 key prop은 child component에서 접근이 불가능하다는 것이다.
+Person.js
+import React from 'react'
+
+function Person({person, key}) {  <= props를 destructuring하자. key를 갖고오고 싶다!
+  return (
+    <div>
+      <h2>{key} I am {person.name}. I am {person.age}.  I am {person.skill}.</h2>  <= key를 render 하고 싶다.
+    </div>
+  )
+}
+
+실행하면 key는 랜더되지 않는다. 또한 console에
+Warning: Person: 'key' is not a prop. Trying to access it will result in 'undefined' being returned. If you need to access the
+same value within the child component, you should pass it as a different prop.
+이 찍히고 있다.
+이는 react가 "key prop은 내가 효과적으로 render하기 위해 필요한 것이야, child component로 값을 전달하려면 다른 prop으로 해! key prop은 reserved야!"하고 하고 있는것이다.
+어떠한 component도 key prop을 render를 위해 쓸수 없다.
+
+key prop을 이해해보자.
+일단 왜 필요한가?
+이는 react가 어떠한 item들이 추가,삭제,변경 되었는지 확인하고 UI 업데이트를 효과적으로 하는데 아주 중요한 역할을 한다.
+
+어떻게 하는지 알아보자
+key attribute가 없는 list일때 (가상돔 이야기 인듯..)
+이전
+<ul>            
+  <li>Bruce</li>             
+  <li>Clark</li>
+</ul>
+이후
+<ul>
+  <li>Bruce</li>
+  <li>Clark</li>
+  <li>Diana</li>
+</ul>
+
+가 있다고 해보자 <li>Diana</li>를 끝에 추가한다고 해보자.
+react는 동시에 양쪽의 list를 돌며 차이점이 있을때마다 mutation을 생성한다.
+
+첫번째 아이템을 양쪽에서 보고 같으므로 통과, 두번째도 같으므로 통과 3번째는 다르므로 단순히 추가한다. 
+이런식으로 이전 dom tree를 분해하지 않고 처음부터 tree를 building하지 않는다. 단순히 tree의 마지막에 item을 추가할 뿐이다.
+
+하지만 <li>Diana</li>를 앞에 추가한다고 해보자.
+이전
+<ul>            
+  <li>Bruce</li>             
+  <li>Clark</li>
+</ul>
+이후
+<ul>
+  <li>Diana</li>
+  <li>Bruce</li>
+  <li>Clark</li>  
+</ul>
+
+이번에는 react가 양쪽 list를 비교하기 위해 iteration할때 모든 item들이 다르다고 나오게 된다.(이전 dom을 기준으로 loop를 도니깐..?)
+react는 Bruce와 Clark의 subtree가 온전함을 알지 못하고 결국 모든 child를 mutating하게된다.
+이러한 비효율은 문제가 될수 있다.
+이러한 이슈를 해결하기위해 react는 key attribute를 지원한다.
+
+key attribute가 있는 List일때
+이전
+<ul>            
+  <li key="1">Bruce</li>             
+  <li key="2">Clark</li>
+</ul>
+이후
+<ul>
+  <li key="3">Diana</li>
+  <li key="1">Bruce</li>
+  <li key="2">Clark</li>  
+</ul>
+
+react는 이전 tree의 child와 이후 tree의 child를 매칭할수 있으며 이를 위해 key를 사용한다.
+이제 key="3"인 element가 새로운 element이며 key 1,2는 그냥 움직인것이라고 판단 한다.
+이제 react는 이전 subtree를 보존하며 단순히 새로운 item을 list위에 insert하게된다. 훨씬 효율적이다.
+
+정리하자면
+1. "key"는 elements의 list를 생성할때 포함해야하는 특수한 string attribute이다.
+2. key는 elements에게 안정적인 identity를 제공한다.
+3. key는 추가, 삭제, 변경이 어떤 item에서 일어났는지 파악하는 것을 돕는다.
+4. UI의 효율적인 update를 돕는다.
+
+하지만 대부분의 경우 위와 같은 unique하게 쓸수있는 id프로퍼티가 없는 단순한 리스트, 배열일 경우가 많다.
+이럴 경우 어떻게 해야하는가?
+
+ReactJS Tutorial - 19 - Index as Key Anti-pattern
+react tutorial 보면 list rendering시 index를 key로 쓰는 예제를 많이 볼수있다. Warning도 사라지며 간단하고 우아해보인다.
+이번장에서는 list rendering시 index를 key로 사용하는 방법과 잘못된 시나리오에서의 문제점을 알아본다.
+
+index를 key로 사용하는 방법을 살펴보기 위해 이전의 문제가 있던 NameList로 돌아가 보자.
+NameList.js
+function NameList() {
+  const names = ['Bruce', 'Clark', 'Diana'];
+  const nameList = names.map(name => <h2>{name}</h2>);
+  return (
+    <div>
+      {nameList}
+    </div>
+  )
+}
+
+Warning을 볼수있다. 어떻게 고칠것인가? name을 쓸수도 있지만 unique하지 않다. unique하지 않으면 역시 Warning이다.
+function NameList() {
+  const names = ['Bruce', 'Clark', 'Diana', 'Bruce'];
+  const nameList = names.map((name, index) => <h2 key={index}>{index} {name}</h2>);  <= map()의 2번째인수로 index가 들어온다. key로도 주고, 화면에 표시도 해보자.
+  return (
+    <div>
+      {nameList}
+    </div>
+  )
+}
+
+이런식으로 출력된다.
+0 Bruce
+1 Clark
+2 Diana
+3 Bruce
+
+원하는 대로 된것 같지만 어떤 시나리오에서는 매우 심각한 UI이슈의 원인이된다.
+
+이슈를 보여주기 위한 링크
+https://codepen.io/gopinav/pen/gQpepq
+
+3개의 item을 Add New to End로 순서대로 넣으면 다음과 같다. 아직 원하는 대로 동작중...
+index ID item created at
+0 1 1 21:21:58
+1 2 2 21:22:58
+2 3 3 21:23:58
+
+하지만 Add New to Start로 앞에 item을 주지 않고 넣으면?
+index ID item created at
+0 4 1 21:24:58
+1 1 2 21:21:58
+2 2 3 21:22:58
+3 3   21:23:58
+
+index, ID는 원하는대로 들어가 있지만, item부분이 전부 예상과는 다르다.
+index ID item created at  <= 우리가 예상했던 결과!
+0 4   21:24:58
+1 1 1 21:21:58
+2 2 2 21:22:58
+3 3 3 21:23:58
+
+0번에 ID4로 빈아이템이어야 하는데...그렇지 않다! 이것이 index를 key로 썼기때문에 생기는 문제이다.
+
+react가 이 upate를 어떻게 해석하는지 설명(가상돔 관련해서 동작이 이렇게 되는듯...)
+
+최초 index를 key로가진 list가 있다(prev vdom?)
+<ul>
+  <li key="0">1</li>
+  <li key="1">2</li>
+  <li key="2">3</li>
+</ul>
+
+key0은 value 1, key1은 2, key3는 3을 가지고 있다.
+
+앞에 새로운 아이템을 추가하면 (태그 전체에 value를 표시하지 않고있다, (current vdom?))
+<ul>
+  <li key="0"></li>  <= 새로운 아이템 추가
+  <li key="1"></li>
+  <li key="2"></li>
+  <li key="3"></li>
+</ul>
+
+
+이제 위의 정보를 가지고 UI를 실제 update할때 (vdom을 diff)
+<ul>
+  <li key="0">1</li>
+  <li key="1">2</li>
+  <li key="2">3</li>
+  <li key="3"></li>
+</ul>
+
+key 0, 1, 2를 이미 가지고 있다고 판단한뒤 key 0, 1, 2를 재사용한다. 그리고 처음 0, 1, 2 가 값을 갖고 있으므로 다시 값을 넣는다.
+우리는 앞에 아이템을 추가하였지만 뒤에 추가된것 처럼 보이게 된다. 모든것이 엉망이 되었다.
+이것뿐만이 아니라 list를 sort할때도 마찬가지로 문제가 된다. sort를 하더라도 tag의 value순서는 바뀌지 않는다.
+이것 역시 index를 key로 사용하기 때문이다.
+
+이렇게 문제가 많은데 왜 많은 튜토리얼 글들이 index를 키로 사용하는것인가?
+언제 index를 key로 사용하는가?
+1. unique id가 없다.
+2. list가 static list이며 변경되지않는다(추가, 삭제 되지 않는다.)
+3. list가 reorder(재정렬)또는 filtered되지 않는다.
+위의 조건중 하나가 아니라 전부 만족할때만 안전하게 index를 key로 쓸수있다.
+
+대부분의 경우 결국은 unique ID가 필요하게 되며 그렇지 않을때는 위의 3가지 조건을 만족한다.
+만약 그렇지 않다면 list를 위한 unique id generator를 npm으로 사용하거나 존재하는 property들로부터 hashing value를 생성해 사용하라.
+
+핵심 요점은 index를 key로 사용하는 것을 피하라.
+사실 key prop를 제공하지 않으면 react는 index를 key로 사용한다. 그리고 방금 우리는 어떠한 상황이 되면 이것이 재앙이 되는 것을 방금 배웠다.
+
+ReactJS Tutorial - 20 - Styling and CSS Basics
+4가지의 방법이있다.
+1. CSS stylesheets
+2. inline styling
+3. CSS Modules
+4. CSS in JS Libraries (Styled Components)  <= 이 방법을 추천하지만 설명은 하지 않는다.
+
+1. CSS stylesheets
+myStyles.css
+.primary {
+  color: orange;
+}
+
+Stylesheet.js
+import React from 'react'
+import './myStyles.css'   <= import해서 쓴다!
+
+function Stylesheet() 
+  return (
+    <div>
+      <h1 className='primary'>Stylesheets</h1>
+    </div>
+  )
+}
+
+위와 같이 쓴다...또한 props, state사용하여 Conditional class를 쓸수있다.
+App.js
+<Stylesheet primary={false} />
+
+Stylesheet.js
+import React from 'react'
+import './myStyles.css'   <= import해서 쓴다!
+
+function Stylesheet(props) 
+  let className = props.primary ? 'primary': '';
+  return (
+    <div>
+      <h1 className={className}>Stylesheets</h1>
+    </div>
+  )
+}
+
+만약 multiple class를 쓰고 싶다면 가장 간단한 방법은 template literals을 쓰는 것이다.
+myStyles.css
+.primary {
+  color: orange;
+}
+
+.font-xl {
+  font-size: 72px;
+}
+
+Stylesheet.js
+import React from 'react'
+import './myStyles.css'   <= import해서 쓴다!
+
+function Stylesheet(props) 
+  let className = props.primary ? 'primary': '';
+  return (
+    <div>
+      <h1 className={`${className} font-xl`}>Stylesheets</h1>
+    </div>
+  )
+}
+
+template literals의 대안으로 classNames이라는 라이브러리가 있다. 좀더 깔끔해진다.
+
+2. inline styling
+react에서는 inline style들은 string으로 표현되지 않는다.
+key가 camelCase인 object로 표현된다.
+
+Inline.js
+import React from 'react'
+
+const heading = {
+  fontSize: '72px',
+  color : 'blue'
+}
+
+function Inline(props) 
+  
+  return (
+    <div>
+      <h1 style={heading}>Inline</h1>
+    </div>
+  )
+}
+
+export default Inline;
+
+3. CSS Modules
+CSS Modules feature는 react-scripts 2버전 이상이 필요하다. package.json을 보면된다.
+Create-react-app으로 생성된 CSS Module은 naming convention이 있다.  *.module.css로 끝나야 한다.
+
+2개의 stylesheet를 만든다.
+
+appStyles.css  <= 일반 css
+.error {
+  color: red;
+}
+
+appStyles.module.css <= module css
+.success {
+  color: green;
+}
+
+App.js  <=2가지 css 모두 import, import하는 방법이 다르다는 것에 주의!
+import './appStyles.css'
+import style from './appStyles.module.css'
+
+class App extends Component {
+  render() {
+    return (
+      <div className='App'>
+        <h1 className='error'>Error</h1>  <= 일반 CSS는 child module에서도 적용이된다. 이는 css conflict를 일으킬수도 있다.
+        <h1 className={styles.success}>Success</h1>  <= CSS Module은 default로 local scope이다. child component에서 컴파일 에러 나므로 style.success로 접근할수 없다!
+      </div>
+    );
+  }
+}
+
+4. CSS in JS Libraries 
+가장 추천하지만 다루지 않는다.
+
+ReactJS Tutorial - 21 - Basics of Form Handling
+form의 기초를 다루자.
+form submit을 할수 있도록 input, textarea, select tag에서 데이타를 capture하는 방법을 알아보자.
+input, textarea등의 표준 HTML form elements들은 user input과 그에 해당하는 value update를 다루는 것을 스스로 알아서한다.
+하지만 우리가 원하는 것은 react가 form elements들을 컨트롤 하는 것이다. value가 react에 의해 컨트롤되어지는 이러한 form elements들을 controlled component라 부른다.
+
+input element를 살펴보자.
+input element는 value를 가질수 있다(value=). 또한 value는 user interaction에 기반해 바뀔수있다.(onChange)
+<input type='text' value=  onChange= />
+우리는 어떻게 component안에서 일어 날수있는 value의 변화을 다룰수 있을까?
+state를 볼수 있으며 setState를 통해 state를 바꿀수 있다.
+고로 controlled component에서는 input의 value는 state property로 세팅된다.
+onChange event는 input의 value가 바뀌어질때 호출된다. onChange handler에서 setState()를 사용하여 state를 update한다.
+state가 변경되면 render() method가 호출되며 새로운 state는 input value에 할당된다.
+react는 항상 component state에 접근할것이며 form element에 update된 value를 반영할것이다.
+update된 state object는 form data를 submit할때 사용될수 있을것이다.
+
+this.state = {
+  email:''
+}
+
+this.changeEmailHandler = (event) => {
+  this.setState({email: event.target.value});
+}
+
+<input type='text' value={this.state.email} onChange={this.changeEmailHandler} />
+
+실제 코드를 살펴보자.
+Form.js
+import React from 'react'
+
+class Form extends Component {
+  render() {
+    return (
+      <form>
+        <div>
+          <label>Username</label>
+          <input type='text' />
+        </div>
+      </form>
+    );
+  }
+}
+
+export default Form;
+
+위의 form은 표준 HTML이다. 이를 controlled component로 작성하자!
+controlled component로 변환하기 위해서는 2가지 단계가 필요하다.
+1. component state를 생성한다.
+
+class Form extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: ''
+    }
+  }
+
+  render() {
+    return (
+      <form>
+        <div>
+          <label>Username</label>
+          <input type='text' value={this.state.username} />
+        </div>
+      </form>
+    );
+  }
+}
+
+실행시켜 보면 input에 입력해도 UI에 반영되지 않을것이다.(화면에 친게 표시 안댐)
+
+2.onChange event handling
+
+class Form extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: ''
+    }
+  }
+
+  handleUsernameChange = (event) => {
+    this.setState({
+      username: event.target.value  <= event 로부터 value를 얻는다.
+    })
+  }
+
+  render() {
+    return (
+      <form>
+        <div>
+          <label>Username</label>
+          <input type='text' value={this.state.username} onChange={this.handleUsernameChange}/>
+        </div>
+      </form>
+    );
+  }
+}
+
+실행 시켜보면 이제 user input에 반영될것이다.
+일반 HTML과의 차이점은 이제 controlled component가 되었으며 react state는 input을 위한 single source of truth이다.
+
+몇개 더 추가해보자.
+
+class Form extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: '',
+      comments: '',
+      topic: 'react'  <= 초기값
+    }
+  }
+
+  handleUsernameChange = event => {
+    this.setState({
+      username: event.target.value
+    })
+  }
+
+  handleCommentsChange = event => {
+    this.setState({
+      comments: event.target.value
+    })
+  }
+
+  handleTopicChange = event => {
+    this.setState({
+      topic: event.target.value
+    })
+  }
+
+  handleSubmit = event => {
+    alert(`${this.state.username} ${this.state.comments} ${this.state.topic}`);  <= 일단 alert로 대체!
+    event.preventDefault();  <= form 의 default 동작 막기 : 페이지 리프레시
+  }
+
+  render() {
+    const {username, comments, topic} = this.state;
+    return (
+      <form onSubmit={this.handleSubmit}>  <= onSubmit event사용!
+        <div>
+          <label>Username</label>
+          <input type='text' value={username} onChange={this.handleUsernameChange}/>
+        </div>
+        <div>
+          <label>Comments</label>
+          <input type='textarea' value={comments} onChange={this.handleCommentsChange}/>
+        </div>
+        <div>
+          <label>Topic</label>
+          <select value={topic} onChange={this.handleTopicChange}>
+            <option value="react">React</option>
+            <option value="angular">Angular</option>
+            <option value="vue">Vue</option>
+          </select>
+          <button type="submit">Submit</button> <= submit이 아닌 일반 버튼으로 한뒤 onClick을 처리해서 할수도 있다.
+        </div>
+        
+      </form>
+    );
+  }
+}
+
+
+ReactJS Tutorial - 22 - Component Lifecycle Methods
+react component를 생성했을때 component lifecyle에 있는 몇가지 stage들을 거쳐가게된다.
+react는 lifecyle의 특정 stage에서 override할수있는 built in method들을 제공한다.
+class component에서 override할수있는 method들을 살펴본다. 이러한 method들은 functional component에 없다.
+새로운 feature인 hook에서는 부분적으로 lifecyle hooks와 관련된 effect hook의 사용이 있다.
+지금은 class component에 있는 lifecyle method들에 집중하자.
+
+lifecyle method들은 몇년간 꽤 바뀌었다.
+지금 이야기 하는 것은 16.4 이상에서 제공된다.
+
+method들을 4가지 phase로 단순하게 나눌수 있다.
+Mounting: component의 instance가 생성되어지고 DOM에 insert될때
+Updating: props 또는 state의 변화에의한 결과로서 component가 rerender될때
+Unmounting: DOM으로 부터 component가 제거될때
+Error Handling: rendering될때, lifecyle method안, child component의 constructor에서 error가 있을때
+
+다음과 같은 mothod들이 있다.
+Mounting: component의 instance가 생성되어지고 DOM에 insert될때
+constructor
+static getDerivedStateFromProps
+render
+componentDidMount
+
+Updating: props 또는 state의 변화에의한 결과로서 component가 rerender될때
+static getDerivedStateFromProps
+shouldComponentupdate
+render
+getSnapshotBeforeUpdate
+componentDidUpdate
+
+Unmounting: DOM으로 부터 component가 제거될때
+componentWillUnmount
+
+Error Handling: rendering될때, lifecyle method안, child component의 constructor에서 error가 있을때
+static getDerivedStateFromError
+componentDidCatch
+
+하나 하나 살펴보자
+
+
+ReactJS Tutorial - 23 - Component Mounting Lifecycle Methods
+component의 instance가 생성되어지고 DOM에 insert될때 불려지는 method들을 invoke되는 순서대로 살펴본다.
+
+constructor(props)
+=>새로운 component가 생성되어질때 불려지는 특수함수.
+
+state 초기화, event handler들을 binding하기에 최적의 장소
+
+side effect를 발생시키지 말것! ex) HTTP requests
+
+자신만의 constructor를 정의 할때 반드시 2가지를 명심해야한다.
+1. super(props)를 반드시 호출해야한다. 이 호출뒤에야 this.props를 통해 props를 접근할수있다.
+2. this.state를 직접적으로 접근하여 값을 override할수있는 유일한 함수이다. 다른 모든 곳에서는 this.setState()를 사용해야한다.
+
+static getDerivedStateFromProps(props, state)
+=> component의 state가 시간에따라 변화하는 props에 의존할때 사용한다.
+
+거의 쓰이지 않는 lifecyle method로 react doc이 분류하고 있다.
+예를 들어보면 component가 있다고 하자. component의 initial state가 component로 전달되어지는 props에 의존할때 이 method를 써서 state를 set할수있다.
+static method이기때문에 this에는 접근할수없으므로 this.setState()를 사용할수 없다. 대신 단순히 component의 새로운 state를 표현하는 object를 리턴해야한다.
+
+역시 side effects를 발생시키면 안된다. ex)HTTP requests
+
+render()
+=> class component의 필수인 유일한 method이다.
+
+this.props, this.state를 통해 값을 읽고 UI로 표현되는 JSX리턴한다.
+render()는 pure function이다. 주어진 props와 state에 항상 같은 UI를 생성해내야한다.
+
+state를 변경하거나 DOM과 interaction하거나 ajax call을 하면 안된다.
+
+JSX를 render할 뿐만 아니라 다른 children components들을 포함하고 있기때문에 parent render method가 끝난뒤 바로 children components의 lifecyle method들이
+실행되어진다.
+
+componentDidMount()
+=> 단 한번만 불려지는 method이며 component와 모든 children components들이 DOM에 render된이후 바로 호출이된다.
+
+side effects를 발생시키기에 완벽한 곳이다. ex)DOM의 interaction, data load를 하기위해 ajax callback
+
+각 method의 해야되는것과 하지 말아야 할것을 알아보았다.
+
+실행 순서를 알아보자
+
+LifecycleA.js
+import React, { Component } from 'react'
+
+class LifecycleA extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      name: 'Vishwas'
+    }
+    console.log('LifecycleA constructor');
+  }
+
+  static getDerivedStateFromProps(props, state) {  <= static keyword 빼먹지 말것! 없으면 무시된다.
+    console.log('LifecycleA getDerivedStateFromProps');
+    return null;  <= 기존의 state 그냥 사용의 의미
+  }
+
+  componentDidMount() {
+    console.log('LifecycleA componentDidMount');
+  }
+
+  render() {
+    console.log('LifecycleA render');
+    return (
+      <div>Lifecycle A</div>
+    );
+  }
+}
+
+export default LifecycleA;
+
+
+출력 순서!
+LifecycleA constructor
+LifecycleA getDerivedStateFromProps
+LifecycleA render
+LifecycleA componentDidMount
+
+만약 child component가 있다면?
+LifecycleB.js를 LifecycleA.js를 복사해서 만든뒤 이름 바꾸자.
+
+LifecycleA.js에 LifecycleB를 포함시킨다.
+import React, { Component } from 'react'
+import LifecycleB from 'LifecycleB'
+
+class LifecycleA extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      name: 'Vishwas'
+    }
+    console.log('LifecycleA constructor');
+  }
+
+  static getDerivedStateFromProps(props, state) {  <= static keyword 빼먹지 말것! 없으면 무시된다.
+    console.log('LifecycleA getDerivedStateFromProps');
+    return null;
+  }
+
+  componentDidMount() {
+    console.log('LifecycleA componentDidMount');
+  }
+
+  render() {
+    console.log('LifecycleA render');
+    return (
+      <div>
+        <div>Lifecycle A</div>
+        <LifecycleB / >  <= 추가!
+      </div>
+    );
+  }
+}
+
+export default LifecycleA;
+
+출력 순서!
+LifecycleA constructor
+LifecycleA getDerivedStateFromProps
+LifecycleA render
+LifecycleB constructor
+LifecycleB getDerivedStateFromProps
+LifecycleB render
+LifecycleB componentDidMount
+LifecycleA componentDidMount  <= 모든 child가 전부 render된뒤 호출된다.
+
+출력순서를 아는 것은 매우 중요하다!
+
+
+ReactJS Tutorial - 24 - Component Updating Lifecycle Methods
+Updating Lifecycle Methods 살펴본다. props 혹은 state의 변화들때문에 component가 rerender될때 호출되는 method들이다.
+invoke되는 순서대로 살펴본다.
+5개의 method가 있고 3개가 거의 쓰이지 않는 method로 분류되고있다.
+
+static getDerivedStateFromProps(props, state)
+=> component의 state가 시간에따라 변화하는 props에 의존할때 사용한다.
+component가 rerender될때마다 호출된다.
+rerender시 component의 state가 component로 전달되어지는 props에 의존할때 이 method를 써서 state를 set할수있다.
+static method이기때문에 this에는 접근할수없으므로 this.setState()를 사용할수 없다. 대신 단순히 component의 새로운 state를 표현하는 object를 리턴해야한다.
+
+역시 side effects를 발생시키면 안된다. ex)HTTP requests
+
+shouldComponentupdate(nextProps, nextState)
+=> update된 props와 state를 인수로 받으며 component가 rerender해야하는지 아닌지 지시한다.
+모든 component는 props, state가 변하면 rerender하게 되어있다. shouldComponentupdate()는 false를 return함으로서 이러한 default behavior를 막을수있다.
+
+이 method에서 할수 있는 것은 현재의 props,state와 nextProps, nextState를 비교하여 ture, false를 리턴함으로서 react가 update해야할지 아닌지를 알려주는것이다.
+
+기본적으로 performance optimization을 위해 있는 method이다.
+
+side effects를 발생시키면 안된다. ex)HTTP requests, setState() 호출!
+거의 쓰이지 않는 lifecyle method로 react doc이 분류하고 있다.
+
+render()
+=> class component의 필수인 유일한 method이다.
+
+this.props, this.state를 통해 값을 읽고 UI로 표현되는 JSX리턴한다.
+render()는 pure function이다. 주어진 props와 state에 항상 같은 UI를 생성해내야한다.
+
+state를 변경하거나 DOM과 interaction하거나 ajax call을 하면 안된다.
+
+getSnapshotBeforeUpdate(prevProps, prevState)
+=> prevProps, prevState을 받으며 virtual DOM의 변화들이 DOM에 반영되기 바로 직전에 호출된다.
+거의 쓰이지 않는 lifecyle method로 react doc이 분류하고 있다.
+
+DOM으로부터 information을 capture하는데 쓰인다.
+예를 들면 scrollPostion을 읽어 기억했다가 DOM udate후 scrollPostion을 유지하기 위해 쓰일수있다.
+
+Method는 null 또는 value를 리턴해야한다. 리턴된 value는 다음 method의 3번째 파라메터로 전달된다.
+
+componentDidUpdate(prevProps, prevState, snapshot)
+=> rerender cycle에서 render가 끝난뒤 호출된다. 의미하는 것은 update된뒤 component와 모든 sub-component들이 자기자신을 정확히 render했다고 확신할수 있다는 것이다.
+3개의 parameter를 가진다. prevProps, prevState, snapshot(getSnapshotBeforeUpdate()가 리턴한 value)
+각각의 rerender cycle에서 한번만 호출되도록 보장된다.
+
+side effect를 발생시킬수 있다. ajax call을 할수 있다는 뜻이다.
+하지만 ajax call전에 prevProps, prevState등을 활용하여 ajax가 필요한지 판단해서 ajax를 하길 추천한다.
+componentDidUpdate(prevProps, prevState, snapshot)은 rerender된지 한번만 호출되며 prevProps, prevState, snapshot과 현재의 props, state를 사용하여
+ajax를 하기 적당한 곳이다.
+
+
+코드를 통해 실습하자
+
+LifecycleA.js
+import React, { Component } from 'react'
+import LifecycleB from 'LifecycleB'
+
+class LifecycleA extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      name: 'Vishwas'
+    }
+    console.log('LifecycleA constructor');
+  }
+
+  static getDerivedStateFromProps(props, state) {  <= 이미 되어 있다.
+    console.log('LifecycleA getDerivedStateFromProps');
+    return null;
+  }
+
+  componentDidMount() {
+    console.log('LifecycleA componentDidMount');
+  }
+
+  shouldComponentupdate() { <= 추가
+    console.log('LifecycleA shouldComponentupdate');
+    return true;
+  }
+
+  getSnapshotBeforeUpdate(prevProps, prevState) { <= 추가
+    console.log('LifecycleA getSnapshotBeforeUpdate');
+    return null;
+  }
+
+  componentDidUpdate() {
+    console.log('LifecycleA componentDidUpdate');
+  }
+
+  render() {  <= 이미 되어 있다.
+    console.log('LifecycleA render');
+    return (
+      <div>
+        <div>Lifecycle A</div>
+        <LifecycleB / >  <= 추가!
+      </div>
+    );
+  }
+}
+
+export default LifecycleA;
+
+LifecycleB.js 도 추가한다.
+
+LifecycleA의 state를 바꾸기위해 button을 달자
+LifecycleA.js
+import React, { Component } from 'react'
+import LifecycleB from 'LifecycleB'
+
+class LifecycleA extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      name: 'Vishwas'
+    }
+    console.log('LifecycleA constructor');
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    console.log('LifecycleA getDerivedStateFromProps');
+    return null;
+  }
+
+  componentDidMount() {
+    console.log('LifecycleA componentDidMount');
+  }
+
+  shouldComponentupdate() {
+    console.log('LifecycleA shouldComponentupdate');
+    return true;
+  }
+
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    console.log('LifecycleA getSnapshotBeforeUpdate');
+    return null;
+  }
+
+  componentDidUpdate() {
+    console.log('LifecycleA componentDidUpdate');
+  }
+
+  changeState = () => {  <= 추가!
+    this.setState({
+      name: 'Codevolution'
+    });
+  }
+
+  render() {  <= 이미 되어 있다.
+    console.log('LifecycleA render');
+    return (
+      <div>
+        <div>Lifecycle A</div>
+        <button onClick={this.changeState}>Change state</button>  <= 추가!
+        <LifecycleB / >
+      </div>
+    );
+  }
+}
+Mounting phase의 출력은 지운다.
+changeState 누른후 출력을보면
+LifecycleA getDerivedStateFromProps
+LifecycleA shouldComponentupdate
+LifecycleA render
+LifecycleB getDerivedStateFromProps
+LifecycleB shouldComponentupdate
+LifecycleB render
+LifecycleB componentDidUpdate
+LifecycleA componentDidUpdate
+
+나머지 2가지 Phase의 method들도 살펴보자.
+Unmounting phase method : 1개밖에 없다.
+componentWillUnmount()
+=> comment가 unmounted, destroyed되기 전에 즉지 호출되는 method
+
+cleanup process를 할수 있든 곳이다. network request cancel, event handler 제거, subscription 취소, invalidating timers등
+
+setState()를 호출하지 말것! 다시는 rerender되지 않기 때문에 아무 의미 없다.
+
+마지막 Phase
+Error Handling Phase Methods
+stateic getDerivedStateFromError(error)
+componentDidCatch(error, info)
+=> 2개의 method는 redering, lifecycle method, child component의 constructor에서 에러가 발생했을때 호출이된다.
+react error boundary 개념을 익힌후 알아본다.
+
+
+ReactJS Tutorial - 25 - Fragments
+react의 기초는 충분하다. 이제 doc에 있는 advanced section에 있는 것을 살펴보자.
+가장 쉬운 react.Fragments를 살펴보자
+
+Fragments는 DOM에 추가 node를 더하지 않고 children element의 list를 추가할수 있게 해준다.
+
+FragmentDemo.js
+import React from 'react'
+
+fuinction FragmentDemo() {
+  return (
+    <div>     <= 1개의 root element를 리턴해야 해서 지금까지는 div로 감쌌다.
+      <h1>FragmentDemo</h1>
+      <p>FragmentDemo component</p>
+    </div>
+  );
+}
+
+export default FragmentDemo;
+위의 문제는 div tag가 DOM으로 출력된다는 것이다.
+HTML
+<body>
+  <div> <= 이 div를 없애고 싶다! Fragment 사용!
+    <h1>FragmentDemo</h1>
+    <p>FragmentDemo component</p>
+  </div>
+</body>
+
+
+FragmentDemo.js
+import React from 'react'
+
+fuinction FragmentDemo() {
+  return (
+    <React.Fragment> <= 이런식으로 바꾼다.
+      <h1>FragmentDemo</h1>
+      <p>FragmentDemo component</p>
+    </React.Fragment>
+  );
+}
+
+export default FragmentDemo;
+
+HTML
+<body>
+  <h1>FragmentDemo</h1>
+  <p>FragmentDemo component</p>
+</body>
+
+
+React.Fragment의 사용이 아주 적당한 예를 더 보자.
+Table.js, Columns.js
+
+Table.js
+import React from 'react'
+
+fuinction Table() {
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <Columns />
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+extport default Table
+
+Columns.js
+import React from 'react'
+
+fuinction Columns() {
+  return (
+    <div>
+      <td>Name</td>
+      <td>Vishwas</td>
+    </div>    
+  );
+}
+
+extport default Columns
+
+출력하면 화면에는 보일것이지만 Console에 Warning이 찍힌다.
+<div> cannot appear as a child of <tr>.
+
+HTML
+<body>
+<table>
+      <tbody>
+        <tr>
+          <div>  <= 이거!
+            <td>Name</td>
+            <td>Vishwas</td>
+         </div>    
+        </tr>
+      </tbody>
+    </table>
+</body>
+
+Columns.js
+import React from 'react'
+
+fuinction Columns() {
+  return (
+    <React.Fragment>  <= 문제 해결된다!
+      <td>Name</td>
+      <td>Vishwas</td>
+    </React.Fragment>    
+  );
+}
+
+HTML
+<body>
+<table>
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Vishwas</td>
+        </tr>
+      </tbody>
+    </table>
+</body>
+
+마지막 Fragment의 point하나는 item들의 list를 rendering할때 key attribute를 받을수 있다는 것이다.
+Columns.js
+import React from 'react'
+
+fuinction Columns() {
+  const items = [] <= 있다고 할Ep
+  return (
+    //여기부터 그냥 예제로 쓴거
+    <React.Fragment>
+      {
+        items.map( item => (
+          <React.Fragment key={item.id}>  <= item list를 JSX로 리턴하고 있으며 key를 주고 있다. 현재 key만이 React.Fragment가 받아들일수 있는 attribute이다.
+            <h1>Title</h1>
+            <p>{item.title}</p>
+          </React.Fragment>
+        ));
+      }
+      <td>Name</td>
+      <td>Vishwas</td>
+    </React.Fragment>    
+  );
+}
+
+
+fuinction Columns() {
+  const items = [] <= 있다고 할Ep
+  return (    
+    <> <= 이런식으로 줄여 쓸수있다. 단 이런식으로 쓰면 key attribute를 전달할수 없다.
+      <td>Name</td>
+      <td>Vishwas</td>
+    </>    
+  );
+}
+
+
+ReactJS Tutorial - 26 - Pure Components
+지금까지 Component class를 상속하여 component를 만들었다.
+component를 만드는 두번째 방법이 있다. PureComponent class를 상속 받는 것이다.
+Component, PureComponent 차이점은? 그리고 언제 어떤것을 써야하나?
+
+차이점을 알기위해
+상태를 바꿀수 있는 parent component를 만들고 PureComponent, Regular component를 child component로 만들자
+
+
+ParentComp.js
+import React, { Component } from 'react'
+
+class ParentComp extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: 'Vishwas'
+    }
+  }
+
+  componentDidMount() {
+    setInterval(() =>{
+      this.setState({
+        name: 'Vishwas'  <= setState를 같은 data(name이 같지 setState에 들어간 object가 같은게 아니다.)로 2초마다 다시 setting!
+      })
+    }
+    , 2000);
+  }
+
+  render() {
+    console.log('***Parent Comp render***');
+    return (
+      <div>
+        Parent Component
+        <RegComp name={this.state.name}></RegComp>  <= prop으로 state에 있는 name을 component, purecomponent에 넘긴다.
+        <PrueComp name={this.state.name}></PrueComp>
+      </div>
+    )
+  }
+}
+
+export default RegComp;
+
+PrueComp.js
+import React, { PureComponent } from 'react'  <= PureComponent
+
+class PrueComp extends PureComponent {  <= PureComponent
+  render() {
+    console.log('Pure Comp render');
+    return (
+      <div>
+        PureComponent {this.props.name}
+      </div>
+    )
+  }
+}
+
+일반 component
+RegComp.js
+import React, { Component } from 'react'
+
+class RegComp extends Component {
+  render() {
+    console.log('Reg Comp render');
+    return (
+      <div>
+        Regular Component {this.props.name}
+      </div>
+    )
+  }
+}
+
+export default RegComp;
+
+화면에 출력이 될것이다.
+Parent Component
+Regular Component Vishwas
+PureComponent Vishwas
+
+이 예제에서 우리가 관심이 있는것은 render()가 언제 호출되는지이다.
+console을 보면
+***Parent Comp render***
+Reg Comp render
+Pure Comp render  <= 여기 까지 initial render
+***Parent Comp render*** <= 2초에 한번씩 찍힌다.
+Reg Comp render   
+***Parent Comp render*** <= 2초에 한번씩 찍힌다.
+Reg Comp render   
+***Parent Comp render*** <= 2초에 한번씩 찍힌다.
+Reg Comp render
+
+2초에 한번씩 parent component의 state가 바뀌며 parent가 render될때 child도 render된다.
+물론 child가 shouldComponentupdate에서 false를 리턴하지 않아야 한다.
+위의 로그를 보면 2초마다 parent와 Reg는 rerender되지만 Pure는 되지 않고 있다.
+이것이 Regular component class와 Pure component class의 차이점이다.
+
+Regular component
+shouldComponentupdate()를 구현하지 않은 Regular component는 항상 디폴트로 true를 리턴한다.
+
+Pure Component
+반면 pure component는 shouldComponentupdate()이 props, state를 shallow comparison(===)한다.
+
+shallow comparison(SC, ===)
+Primitiv Types
+type과 value가 같아야 한다.
+Complex Types
+reference가 같아야 한다.
+
+pure component는
+SC of prevState with currentState
+SC of prevProps with currentProps 를 shouldComponentupdate()이 한다. SC가 다를 경우만 rerender를 하게된다.
+
+pure component는 this.props.name이 같은지 항상 비교하며 다를때만 rerender한다.
+
+
+만약 ParentComp가 PureComponent를 상속받게되면 
+***Parent Comp render***
+Reg Comp render
+Pure Comp render  <= 여기 까지 initial render
+이후 더이상 로그가 찍히지 않게된다.
+
+ParentComp는 prevState와 currentState가 같은지 비교하게 되며 같으므로 rerender하지 않게된다.
+주의할것은 parent가 rerender되지 않으면 children도 rerender되지 않는다.
+이로인해 RegComp의 render가 호출되지 않게 된다.
+
+왜 PureComponent를 사용하는가?
+특정 시나리오에서 필요없는 render()를 호출하지 않게 하며 performance boost를 얻기위해서이다.
+예로 50개의 list item을 rendering한다고 하자. 만약 rerender될 필요가 없다면 performance boost를 얻게된다(50번 child의 render()를 호출하지 않게 되니깐..)
+
+중요하게 기억하고 있어야 할점은 props, state안에 있는 object나 array를 mutate해서는 안된다!
+예를 들면 list에 item을 add할때 기존 item에 add하면 안된다. array는 바뀌지 않았으며 ===가 성공하게되고 rerender되지 않는다.
+새로운 object, array를 생성하여 교체해야 한다.
+
+정리
+1. PureComponent class를 상속받아 생성할수있다.
+2. PureComponent는 shouldComponentupdate를 component의 props와 state에 shallow comparison(===을)사용하여 구현한다.
+3. 만약 차이점이 없다면 rerender되지 않는다.
+4. 예상치못한 동작을 피하기위해 PureComponent의 모든 child component 또한 pure한것은 아주 좋은 생각이다.(위의 예에서 regular component도 호출이 안되었다)
+5. state를 절대 mutate하지 마라. 항상 새로운 state를 반영하는 새로운 object를 리턴하라.
+
+특정 component에서 퍼포먼스 저하를 보기전까지는 대부분 regular component를 사용하는 것이 안전하다. 
+
+ReactJS Tutorial - 27 - memo
+
+

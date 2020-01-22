@@ -1,0 +1,11 @@
+Principal에 관한 문장, oracle에서 검색되었음
+A Principal representing an identity used to determine access rights to objects in a file system.
+https://www.youtube.com/watch?v=VcQrqqyUA2A  <= Principal and identity object 그림을 사용하여 개념을 설명하는 것만 들을것! 코드예제는 너무 옛날거임..
+https://andrewlock.net/resource-specific-authorisation-in-asp-net-core/ <= authentication, authorisation 이것이 최강이다! 링크 전부 읽어볼것! 역시 옛날거지만 도움됌.
+https://www.youtube.com/watch?v=Fhfvbl_KbWo&t=1158s  
+
+
+
+
+
+ 

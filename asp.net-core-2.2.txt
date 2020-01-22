@@ -1,0 +1,6082 @@
+https://www.youtube.com/watch?v=4IgC2Q5-yDE&list=PL6n9fhu94yhVkdrusLaQsfERmL_Jh4XmU
+강의 정리
+4강
+.csproj 는 전부 바뀌어 화일참조(프로젝트안에 화일들의 리스트 등이 없다.)들을 하지 않는다. 
+프로젝트 안의 화일들은 디폴트로 화일시스템에 의존한다.(외부에서 추가 삭제하면 솔루션에 바로 적용된다.)
+
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <!--<AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.9" />
+  </ItemGroup>
+
+</Project>
+
+.csproj 화일안의 <TargetFramework>netcoreapp2.2</TargetFramework>은 어플리케이션의 targetframework를 세팅한다.
+Target Framework Moniker(TFM) 형식으로 targetframework를 지정한다.
+Name : Abbreviation : TFM
+.NET Framework : net : net451
+.NET Core : netcoreapp : netcoreapp2.2
+
+<AspNetCoreHostingModel>InProcess or OutOfProcess(default)</AspNetCoreHostingModel>
+InPorcess 호스트모델은 IIS worker process안에서 동작한다.(w3wp.exe or IISExpress.exe)
+
+OutOfProcess 호스트모델은 web requests들을 ASP.NET Core app의 backend에서 동작하는 Kestrel server로 포워드한다.
+(Kestrel server는 node의 express같은 단독 동작 가능한 웹서버이다.)
+
+<PackageReference> 어플리케이션을 위해 인스톨되어진 NuGet package같은 레퍼런스를 포함한다.
+Metapackage - ex) Microsoft.AspNetCore.App
+Metapackage는 그 자체로 content가 없다.(dll등이 없다.) 단지 디펜던시 리스트를 포함하고 있다.(vs에서 화살표가 붙어있어 열수 있음.) Version 속성을 대부분 포함하지 않는다.
+version속성이 없으면 SDK에 의해 implicit version이 결정되며 ms는 이를 사용하길 추천한다.
+
+5강 Main method in asp net Core
+Program.cs
+Console application은 보통 Main() 메서드를 갖는다.
+ASP.NET Core application은 최초 Console application으로 시작한다.
+WebHost.CreateDefaulotBuilder(args).UseStartup<Startup>(); UseStartup은 extention method이며 startup.cs화일에 정의된 클래스를 사용한다.
+Startup.cs
+Startup 클래스가 정의되며 아주 중요한 2가지 메서드가 정의된다.
+ConfigureServices();
+DI에 쓰일 service들을 등록하는 함수
+Configure();
+HTTP request pipeline을 설정하는 함수(미들웨어 사용)
+
+6강 NET Core in process hosting
+CreateDefaulotBuilder();
+1)웹서버 세팅
+2)host를 로딩하고 configuration source들로 부터 configuration을 한다.
+3)logging을 configuring
+
+InPorcess hosting
+.csproj 화일
+<AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+쓰루풋이 OutOfProcess보다 높다.
+System.Diagnostics.Process.GetCurrentProcess().ProcessName을 출력해보면 어떤 hosting인지 파악 가능하다.
+<AspNetCoreHostingModel>OutOfProcess(default)</AspNetCoreHostingModel>
+2개의 웹서버가 동작(internal and external)
+Internal web server는 Kestrel, Exteranl은 IIS, Nginx, Apache등이 될수 있다.
+Kestrel은 그 자체로 edge서버가 될수 있다.
+dotnet cli
+- dotnet --help
+- dotnet run
+
+7강 ASP NET Core out of process hosting
+dotnet cli로 프로젝트 실행했을경우 kestrel 서버가 단독 웹서버가 되며 OutOfProcess임.
+Kestrel은 Reverse proxy server와 조합으로 쓰여질수도 있다.(IIS, Nginx, Apache)
+
+8강 ASP NET Core launchsettings json file
+{
+  "iisSettings": {
+    "windowsAuthentication": false, 
+    "anonymousAuthentication": true, 
+    "iisExpress": {
+      "applicationUrl": "http://localhost:64152",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Asp2": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+launchsettings.json화일은 solution explorer의 properties안에 있다.
+vs또는 dotnet cli에서 실행할때 쓰이는 화일이며 중요한점은 local에서 실행시에만 쓰인다. publishing등에서는 쓰이지 않는다.(디버그 세팅등의 profiles를 세팅)
+publishing등에서 쓰이는 화일은 appsettings.json화일이다. 보통 application setting은 appsettings.json에서 하게 된다.
+launchsettings.json 중요 속성
+iisSettings -> local iis setting
+ASPNETCORE_ENVIRONMENT: "Development" "Staging"등 프로그램에서 env.IsDevelopment()등의 함수등으로 접근가능.
+
+"IIS Express" 프로필은 vs에서 디버깅시 Asp2(프로젝트명)은 dotnet cli에서 쓰인다. vs에서는 이 2개를 왔다갔다할수 있다. 만약 Asp2를 쓰면 cmd화면이뜨며 실행된다.
+
+"commandName"과 <AspNetCoreHostingModel>의 조합으로 어떻게 서버가 구성될지 결정된다.
+
+"commandName":<AspNetCoreHostingModel>:internal web server:external web server
+Project: Hosting setting ignored: Only one webserver - Kestrel
+IISExpress: InProcess : Only one webserver - IIS Express
+IISExpress: OutOfProcess : Kestrel : IISExpress
+IIS : InProcess : Only one webserver - IIS
+IIS: OutOfProcess : Kestrel : IIS
+
+9강 ASP NET Core appsettings json file
+configuration sources
+-files(appsettings.json, appsettings.{Environment}.json)
+-User secrets
+-Environment Variables
+-command-line arguments
+
+appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+
+  "AllowedHosts": "*",
+  "MyKey":  "Value of MyKey from appsettings.json" <= custom key value, 어떻게 접근할까?
+}
+
+configuration infomation을 접근하기 위해서 IConfiguration Service를 사용한다.
+
+Startup클래스애 IConfiguration을 DI한다.(using Microsoft.Extention.Configuration)
+
+_config로 IConfiguration을 저장했다면 _config["MyKey]로 접근!
+appsettings.json이 먼저 세팅되며 appsettings.{Environment}.json이 나중에 세팅되어 값을 overriding한다.
+
+Environment Variables은 local 머신일경우 launchsettings.json에 정의 되어 있다. ASPNETCORE_ENVIRONMENT가 예다.
+또한 os의 환경 변수로 추가할수 있다. Environment Variables은 앞의 세팅을 overriding한다.
+
+command-line arguments는 dotnet run MyKey="Value from Command Line"과 같이 줄수 있으며 앞의 세팅을 overriding한다.
+
+CreateDefaulotBuilder()안에 위의 순서대로 로딩하고 있다.
+
+위의 순서대로 로딩이 되어 한개의 config가 생성된다.
+
+10강 Middleware in ASP NET Core
+Middleware: HTTP Request, Response를 다루는 프로그램 조각.
+Startup::Configure()함수에서 HTTP Request pipeline 을 설정하는데 쓰인다.
+미들웨어는 Incomming request와 Outgoing response모두에 쓰인다.
+처리할거 있으면 처리하고 다음 미들웨어로 패스! 만약 자신이 처리가능하면 다음으로 안넘길수도 있다.(처리를 하거나 처리하지 않고 다음으로 넘길수도 있으며 안넘길수도 있다.)
+Loggin->StaticFiles->MVC
+Loggin<-StaticFiles<-MVC
+request가 어떻게 처리될지는 이들 미들웨어에 달려 있으며 추가된 순서대로 실행이 된다.
+미들웨어를 정확한 순서대로 추가하는 것이 매우 중요하며 잘못된 순서대로 추가되면 오동작 할수 있다.
+NuGet패키지로 미들웨어 추가가 가능하며 완벽하게 request processing pipeline구성이 가능하다.
+
+11강 Configure ASP NET Core request processing pipeline
+app.Run() 설명
+
+app.Run(async (context) =>
+{
+  await context.Response.WriteAsync("1st Middleware");
+});
+
+app.Run(async (context) =>
+{
+  await context.Response.WriteAsync("2st Middleware");
+});
+
+Run으로 들어가는 Middleware는 Terminal Middleware(Next()를 호출하지 않는 Middleware)이다. 2st Middleware는 처리되지 않는다.
+
+app.Use(async (context, next) =>
+{
+  await context.Response.WriteAsync("2st Middleware");
+  await next();
+});
+
+Terminal Middleware가 아닐경우 위와 같이 app.Use()를 사용한다.
+Configure()함수에 ILogger<Startup>을 DI하는 것을 보여준다.
+
+middleware componensts 각각안에서 next() 메서드가 호출되기 이전에 일어나는 모든것은 Request travel에서 실행되는 코드이다.
+Middleware가 request를 처리하여 response를 생성하면 request processing pipeline이 거꾸로 시작하게 된다.
+middleware componensts 각각안에서 next() 메서드가 호출된뒤 일어나는 모든것은 Response travel에서 실행되는 코드이다.
+
+
+12강 Static files in asp net core
+static 화일들을 serve하기 위한 조건
+1.wwwroot폴더(content root folder)안에 화일이 있어야 한다. wwwroot폴더는 프로젝트 root폴더 바로 밑에 있어야 한다.
+2.app.UseStaticFiles(); middleware use!
+
+default document를 static하게 서비스 하려면
+1.default 화일의 이름은 default.html, default.html, index.htm, index.html중 하나의 이름을 wwwroot폴더에 넣는다.
+2.app.UseDefaultFiles(); middleware use!
+
+app.UseStaticFiles();
+app.UseDefaultFiles();
+
+이순서로 써주면 app.UseDefaultFiles();가 동작하지 않는다. 이 2개의 Middleware는 순서가 아주 중요하다.
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+순서를 바꾸어 주어야 동작한다.
+app.UseStaticFiles();를 먼저 썼을때 app.UseDefaultFiles();가 동작하지 않는 이유는 실제로 app.UseDefaultFiles()는 화일을 제공하는 기능이 없기때문이다.
+app.UseDefaultFiles();는 단지 request path를 default document로 바꾸는 일만 하기때문이다. 다음 app.UseStaticFiles();미들웨어가 화일을 제공한다.
+
+default file 이름을 바꾸기 위해서는 다음과 같은 코드가 필요하다.
+DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
+defaultFilesOptions.DefaultFileNames.Clear();
+defaultFilesOptions.DefaultFileNames.Add("foo.html");
+app.UseDefaultFiles(defaultFilesOptions);
+app.UseStaticFiles();
+
+app.UseFileServer(); middleware는 UseDefaultFiles(); UseStaticFiles(); UseDirectoryBrowser()(유저가 디렉토리와 화일 구조를 볼수 있도록 하는 미들웨어);
+ middleware 3개를 합친것과 같다.
+FileServerOptions fileServerOptions = new FileServerOptions();
+fileServerOptions.DefaultFilesOptions.DefaultFileNames.Clear();
+fileServerOptions.DefaultFilesOptions.DefaultFileNames.Add("foo.html");
+app.UseFileServer(fileServerOptions);
+
+middleware를 추가하거나 커스터마이징 하기위해 Use*()로 시작하는 extention method가 사용된다는 패턴을 기억하자. 이 Use*()함수들에는 *Options라는 파라메터를 대부분 가지고 있다.
+
+
+13강 ASP NET Core developer exception page
+if(env.IsDevelopment())
+{
+  app.UseDeveloperExceptionPage();
+}
+
+app.UseDeveloperExceptionPage();은 최대한 앞에 있어야 함! response travel 마지막에 최대한 받기위해! 순서가 중요하다는 야그!
+
+app.UseDeveloperExceptionPage();역시 Options를 가지고 있다. 이를 통해 customizing 가능하다.
+if(env.IsDevelopment())
+{
+  DeveloperExceptionPageOptions developerExceptionPageOptions = new DeveloperExceptionPageOptions
+  {
+    SourceCodeLineCount = 10; //주변 소스코드를 몇개 보여줄것인가? before 10줄 after 10줄
+  };
+  app.UseDeveloperExceptionPage(developerExceptionPageOptions);
+}
+
+14강 ASP NET Core environment variables
+대부분의 조직은 다음과 같은 3가지 Development Environments를 가지고 있다.
+Development -> Staging -> Production
+Development : UseDeveloperExceptionPage, non minified css js
+Staging : 최대한 Production과 같게 만든다. 이 단계의 존재 이유는 deploy에 관련된 이슈를 식별하기 위해서이다. 
+          B2B환경에서 Complete테스트를 하기위해 필요하기도하다.
+Production: 실제 환경!
+
+
+ASPNETCORE_ENVIRONMENT에 실행시간 환경을 set. 8강에 있다. 대부분의 경우
+Development: launchsettings.json에 세팅
+Staging, Production : OS에 환경변수 세팅
+
+IHostingEnvironment를 통해 runtime environment에 억세스 할수 있다.
+
+Startup::Configuration(IApplicationBuilder app, IHostingEnvironment env)에 IHostingEnvironment env로 DI되어 있다.
+env.EnvironmentName = ASPNETCORE_ENVIRONMENT
+
+env.EnvironmentName default는 Production임
+
+OS 환경 변수에 ASPNETCORE_ENVIRONMENT 값을 넣어주면 ASPNETCORE_ENVIRONMENT값이 os의 환경 변수값으로 세팅된다. 안되면 restart하고 해볼것
+만약 launchsettings.json에 ASPNETCORE_ENVIRONMENT가 있다면 launchsettings.json에 있는 값으로 overriding한다(appsettings.json과는 다름, 디버그용!)
+
+env.IsDevelopment();
+env.IsStaging();
+env.IsProduction(); 기본제공한다.
+
+Custom env일경우!
+ASPNETCORE_ENVIRONMENT: "Custom"
+다음과 같이 체크한다.
+if(evn.IsEnvironment("Custom"))
+{
+}
+
+
+15강 ASP NET Core MVC tutorial
+Application Layers는 UserInterface Layer, Business Logic(Domain) Layer, Data Access Layer로 대부분 구성되어 있다.
+MVC는 UserInterface Layer에서 쓰인다.
+
+Model : Set of classes that represent data + the logic to manage that data.
+View : Contains the display logic to present the Model data provided to it by the Controller.
+Controller: Handles the http request, work with the model, and selects a view to render that model.
+
+Model = Employee + EmployeeRepository(manage Employee data)
+Routing Rules map URLs to Controller Action Methods~(라우팅 룰이 URL을 Controller Action 메서드로 매핑한다. ).
+
+
+16강 Setup mvc in asp net core
+step1: DI Container(IServiceCollection)에 MVC Services를 추가한다.
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddMvc();
+}
+
+step2: MVC Middleware를 Request Pipeline에 추가한다.
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+
+  app.UseStaticFiles();
+  app.UseMvcWithDefaultRoute(); <= 이거!
+}
+
+17강 ASP NET Core AddMvc vs AddMvcCore
+Json data return 방법
+public class HomeController : Controller
+{
+  public JsonResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+}
+
+만약 HomeController에서 위와 같이 리턴할때 AddMvc()대신 AddMvcCore()를 하면 exception 발생!
+AddMvcCore() : core MVC services만 추가
+AddMvc() : 모든 필요한 MVC services를 전부 추가
+
+AddMvc()는 내부에서 AddMvcCore()함수를 호출한다.
+
+github에서 AddMvc()함수를 찾아 안쪽 소스 살펴보기 => 엄청 많은 서비스들이 AddMvcCore()이후 추가되며 AddJsonFormatters()도 그 중에 하나이다!
+(RazorViewEngine, RazorPages, TagHelper.....등 많은 것이이 추가 설치된다.)
+
+18강 Model in ASP NET Core MVC
+Model = Set of Classes that represent Data(Employee) + Manage Data(IEmployeeRepository)
+
+public class Employee //table을 의미!
+{
+  public int Id { get; set; } //prop으로 만든다!
+  public string Name { get; set; }
+  public string Email { get; set; }
+  public string Department { get; set; }
+}
+
+public interface IEmployeeRepository{
+  Employee GetEmployee(int Id);
+}
+
+public interface MockEmployeeRepository : IEmployeeRepository{
+  private List<Employee> _employeeList;
+  public MockEmployeeRepository()
+  {
+    _employeeList = new List<Employee>();
+    {
+      new Employee(){Id = 1, Name = "Mary", Department ="HR", Email = "mary@pragim.com"},
+      new Employee(){Id = 2, Name = "Mary", Department ="HR", Email = "mary@pragim.com"}
+      new Employee(){Id = 3, Name = "Mary", Department ="HR", Email = "mary@pragim.com"}
+
+    }
+  }
+
+  Employee GetEmployee(int Id)
+  {
+    return _employeeList.FirstOrDefault(e => e.Id == Id);
+  }
+}
+
+IEmployeeRepository가 없어도 DI를 동작시킬수 있지만 없으면 유지보수, 유닛테스트가 상당히 어렵게된다!
+
+HomeController(IEmployeeRepository employeeRepository)에 DI. 이러한 패턴을 constructor DI라 부른다.
+
+public class HomeController : Controller
+{
+  private IEmployeeRepository _employeeRepository;
+  public HomeController(IEmployeeRepository employeeRepository) <= constructor DI
+  {
+    _employeeRepository = employeeRepository;
+  }
+
+  public string Index()
+  {
+    return _employeeRepository.GetEmployee(1).Name;
+  }
+}
+위의 코드를 실행하면 Unable to resolve service for type 'IEmployeeRepository' exception발생!
+
+
+19강 ASP NET Core dependency injection tutorial
+public HomeController(IEmployeeRepository employeeRepository) 
+우리가 원하는 것은 누군가 IEmployeeRepository를 파라메터로 요청하면 IEmployeeRepository의 구현체(MockEmployeeRepository)를 ASP NET Core가 new해서 넣어달라!
+IEmployeeRepository service를 ConfigureServices()함수에서 DI Container에 넣어주자! 그럼 ASP NET Core가 알아서 넣어준다!
+
+Startup::ConfigureServices(IServiceCollection services)
+{
+  //3가지 종류의 Add함수가 있다! 일단 addSingleton()만 쓰는것으로 하자!
+  services.addScoped<>();
+  services.addTransient<>();
+  services.addSingleton<IEmployeeRepository, MockEmployeeRepository>();
+}
+
+new MockEmployeeRepository()를 우리코드에 써버린다면 그 즉시 dependency가 타이트하게 생겨버린다.
+그니깐..ASP NET Core가 new해서 넣어달라! 우린 services.add*()들을 통해 add해 놓겠다!
+
+DI Container에 register하는 함수 3개!
+AddSingleton()
+AddTransient()
+AddScoped()
+차이점은 나중에 설명~
+
+DI의 장점
+Loose Coupling
+유닛테스트가 쉽다
+
+20강 Controller in ASP NET Core MVC
+url 요청을 받으면 처리하는 놈이 Controller임. public method를 action이라 부른다.
+
+public class HomeController : Controller
+{
+  public JsonResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    return Json(model);
+  }
+}
+위 코드의 문제는 content-negotiation을 고려하지 않고 있으며 들어온 request의 accept-header를 무시하고 있다. JsonResult대신 ObjectResult를 리턴하도록 교체!
+public class HomeController : Controller
+{
+  public ObjectResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    return new ObjectResult(model);
+  }
+}
+
+Fiddler사용하는 예제
+Composer 탭에서 
+Get Request 에
+User-Agent: Fiddler
+Accept: application/xml
+헤더를 추가해서 보내면.. 결과로 Raw탭을 보면 아직도 json으로 온다! 원인은 필요한 service를 configure하지 않았기 때문이다.
+
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddMvc().AddXmlSerializerFormatters(); <= chainning
+}
+
+Controller는 request를 받으면 Model을 생성하고 View를 선택한뒤 View에 Model을 넘겨 HTML을 생성하고 이 HTML을 Controller가 유저에게 보낸다.
+public class HomeController : Controller
+{
+  public ViewResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    return View(model); => View():Controller로 부터 상속되는 helper method
+  }
+}
+
+
+Controller
+-> http request를 처리한다.
+-> model을 build하고 만약 API를 만든다면 호출자에게 Model data를 리턴한다.
+-> API가 아니라면 view를 선택하고 view에 model을 넘긴다.
+-> view는 model로부터 필요한 HTML을 생성한다.
+
+
+21강 Views in ASP NET Core MVC
+view file은 .cshtml 화일임..
+view는 Razor markup을 가진 HTML template이다.
+view는 model data를 표시하기 위한 로직만을 가진다.
+
+기본적이 view화일 찾는 방법은 /Views/controller/action.cshtml (/Views/Home/Details.cshtml)
+
+22강 Customize view discovery in asp net core mvc
+->View() 또는 View(object model) : action method와 같은 이름의 view file을 찾는다.
+->View(string viewName) : custom name인 view file을 찾는다.
+: view name 또는 view file path를 적을수 있다.
+: view file path는 absolute 또는 relative이다.
+: absolute path에는 반드시 .cshtml 확장자가 있어야 한다.
+: relative path일때 .cshtml 확장자를 쓰지 마라. 
+->View(string viewName, object model) : view의 이름과 model을 넘기는 View()함수
+
+
+
+public class HomeController : Controller
+{
+  public ViewResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    return View("Test"); => Detail.cshtml이 아닌 Test.cshtml을 디스플레이!(Home 폴더 안에서 찾는다.)
+    return View("MyViews/Test.cshtml"); => MyViews폴더 안의 Test.cshtml을 디스플레이!(absolute path인경우 .cshtml 확장자를 써준다. 
+    MyViews는 프로젝트 루트밑의 폴더를 의미하는 absolute path이다.)
+    return View("~/MyViews/Test.cshtml"); => 위와 같다!
+
+    return View("../Test/Update"); =? Views폴더 위의 Test폴더 안의 Update.cshtml, 이건 상대경로다. 상대경로인경우 .cshtml 확장자를 쓰지 않는다.
+  }
+}
+
+
+23강 Passing data to view in ASP NET Core MVC
+Controller로 부터 view에 data를 넘기는 방법들
+->ViewData (loosely typed view)
+->ViewBag (loosely typed view)
+->Strongly Typed View
+
+ViewData
+->Dictionary of weakly typed objects
+->Use string keys to store and retrieve data
+
+public class HomeController : Controller
+{
+  public ViewResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    ViewData["Employee"] = model; <= 이렇게 쓴다!
+    ViewData["PageTitle"]  = "Employee Details";
+    return View();
+  }
+}
+
+.cshtml
+<h3>@ViewData["PageTitle"]</h3> //view에서 ViewData가 string을 리턴할경우 어떠한 타입캐스팅도 할 필요 없다.
+
+@{
+  var employee = ViewData["Employee"] as EmployeeManagement.Models.Employee; //string이 아니므로 type casting
+}
+
+<div>
+  Name: @employee.Name
+</div>
+
+ViewData의 단점
+=> view를 느슨한 타입의 뷰로 만든다. 느슨한 타입의 뷰란 컴파일 시간에 저장한 키의 값의 타입을 알수가 없다는것! 실행시간에만 알수가 있다.(as 타입캐스팅 실패등)
+또한 인텔리센스가 무력화되어 도움을 받기 힘들다. ViewData["Employee-asdf"]처럼 오타가 있을 경우 컴파일 시간에 에러를 알수가 없다.
+=> Dynamically resolved at runtime, No compile-time type checking and Intellisens
+=> 이러한 이유때문에 ViewData는 거의 쓰지 않는다.
+
+24강 ViewBag in ASP NET Core MVC
+ViewBag은 ViewData의 wrapper이다.
+
+public class HomeController : Controller
+{
+  public ViewResult Details()
+  {
+    Employee model = _employeeRepository.GetEmployee(1);
+    ViewBag.Employee = model; <= 이렇게 쓴다!  //dynamic property를 사용한다!
+    ViewBag.PageTitle = "Employee Details";
+    return View();
+  }
+}
+
+.cshtml
+<h3>@ViewBag.PageTitle</h3>
+
+//@{
+//  var employee = ViewData["Employee"] as EmployeeManagement.Models.Employee; //ViewBag은 이런 코드 자체가 필요 없다!
+//}
+
+<div>
+  Name: @ViewBag.Employee.Name
+</div>
+
+
+ViewData와 ViewBag의 차이점은 ViewData는 string을 키로 쓴다 ViewBag은 dynamic property를 사용한다.
+ViewData와 마찬가지로 ViewBag도 느슨한 타입의 뷰로 만든다. type이 dynamic이므로!
+인텔리 센스도 여전히 미지원임...
+
+ViewBag vs ViewData
+=>ViewBag은 ViewData의 wrapper
+=>느슨한 타입의 뷰를 생성
+=>ViewData는 string 키를 쓴다.
+=>ViewBag은 dynamic property를 쓴다.
+=>Dynamically resolved at runtime, No compile-time type checking and Intellisens
+=>같은 이유로 ViewBag도 그다지 선호되지 않는 방법이다. Strongly Typed View 추천!
+
+25강 Strongly Typed View in ASP NET Core MVC
+public class HomeController : Controller
+{
+  public ViewResult Details()
+  {
+    Employee mode = _employeeRepository.GetEmployee(1);
+    ViewBag.PageTitle = "Employee Details";
+    return View(model); <= 요기!
+  }
+}
+
+.cshtml
+<div>
+  Name: @Model.Name  <= 이것만 있어도 돌아간다! 하지만 아직 Strongly Typed View가 아니다. dynamic type으로 나온다!
+</div>
+
+Strongly Typed View로 만드려면 맨위에 
+@model EmployeeManagement.Models.Employee
+<div>
+  Name: @Model.Name  <= 위의 @model 덕분에 타입과 컴파일 타임 체크가 가능해진다!
+</div>
+
+Strongly Typed View 생성방법
+@model directive를 사용하여 model type을 적어준다.
+=>@model EmployeeManagement.Models.Employee
+model object property를 접근하기 위해여 @Model을 사용한다.
+<div>
+  Name: @Model.Name
+</div>
+
+컴파일 타임 타입체크와 인텔리 센스가 사용 가능해진다.
+
+
+26강 ViewModel in ASP NET Core MVC
+view가 필요로 하는 모델(입출력을 위한)을 ViewModel이라한다. DTO(Data Transfer Object)라 부르기도 한다.
+Model Object가 View가 필요로 하는 모든 data를 포함하고 있지 않을때 ViewModel을 생성한다.
+
+27강 List view in asp net core mvc
+.cshtml에서 루프 도는 법!
+@model IEnumberable<EmployeeManagement.Models.Employee>;
+@foreach(var employee in Model)
+{
+  <tr>
+    <td>@Employee.Id</td>
+    <td>@Employee.Name</td>
+  </tr>
+}
+
+28강 Layout view in asp net core mvc
+어떤 특정 controller에 속한 view가 아니기때문에 Shared 폴더 밑에 view를 생성한다. _로 화일명이 시작한다. (_Rayzor Layout선택하여 생성가능하다.)
+_로 시작하는 의미는 이 화일은 바로 브라우저에의해 쓰여지지 않는 화일이다라는 표시이다.
+<head> <body>등 중복되는 태그 제거 가능하다.
+
+_Layout.cshtml
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@ViewBag.Title</title>
+    ....
+  </head>
+  <body>
+    @RenderBody() => layout을 쓰는 뷰를 이 부분에 그린다.
+  </body>
+</html>
+
+각각의View.cshtml =>head body등 공통부분 제거
+@model IEnumberable<EmployeeManagement.Models.Employee>;
+
+@{
+  //이부분을 Layout을 사용하는 뷰에 넣어준다!
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Employee List";
+}
+
+@foreach(var employee in Model)
+{
+  <tr>
+    <td>@Employee.Id</td>
+    <td>@Employee.Name</td>
+  </tr>
+}
+
+29강 Sections in layout page in ASP NET Core MVC
+LayoutView의 section은 어떠한 페이지 엘리먼트가 어디에 위치되어야 하는지를 구성할수 있는 방법을 제공한다.
+RenderSection()이 호출되는 곳에 렌더링 된다.
+
+_Layout.cshtml
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@ViewBag.Title</title>
+    ....
+  </head>
+  <body>
+    @RenderBody()
+  </body>
+  @RenderSection("Scripts") 예제1
+
+  @RenderSection("Scripts", required: false) 예제2
+  
+  @if(IsSectionDefined("Scripts")) 예제 3
+  {
+    @RenderSection("Scripts", required: true)
+  }
+</html>
+
+
+.cshtml
+@model IEnumberable<EmployeeManagement.Models.Employee>;
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Employee List";
+}
+
+@foreach(var employee in Model)
+{
+  <tr>
+    <td>@Employee.Id</td>
+    <td>@Employee.Name</td>
+  </tr>
+}
+
+//section directive사용!
+@section Scripts{
+  <script src="~/js/CustomScript.js"></script>
+}
+
+
+30강 ViewStart cshtml in ASP NET Core MVC
+ViewStart화일의 코드는 각각의View안의 코드가 실행되기 이전에 실행된다.
+공통 코드를 ViewStart로 옮기는 것이 좋다.
+ViewStart화일은 폴더 구조에 계층적이다.
+
+각각의View.cshtml
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Employee List";
+}
+위와 같은 코드를 모든 뷰에 다 넣어야 한다면? view가 수백개가 넘는다면? 중복으로 유지보수가 힘들다.
+_ViewStart.cshtml을 Views폴더에 만든뒤 공통부분을 넣고 각각의View.cshtml의 중복을 지운다.
+_ViewStart.cshtml
+@{
+  Layout = "_Layout"; 
+}
+
+_ViewStart화일은 View폴더 View/controller폴더등 각각에 존재할수 있으며 상위 폴더의 세팅을 override한다.
+
+
+31강 ViewImports cshtml in ASP NET Core MVC
+_ViewImports화일은 Views폴더에 위치한다.
+공통 namespace들을 include하기 위해 쓴다.
+다음의 directive를 사용할수 있다.
+@addTagHelper
+@removeTagHelper
+@tagHelperPrefix
+@model
+@inherits
+@inject
+ViewImports도 역시 폴더 구조에 계층적이다.
+
+
+.cshtml
+@model EmployeeManagement.Models.Employee => namespace를 없애고 싶다.
+
+다음과 같이 구성한다.
+_ViewImports.cshtml
+@using EmployeeManagement.ViewModels;
+@using EmployeeManagement.Models;
+
+.cshtml
+@model Employee;
+
+
+32강 Routing in ASP NET Core MVC
+라우팅 기법
+->Conventional Routing
+->Attribute Routing
+Conventional Routing
+유저로 부터 들어온 url은 controller의 action으로 매핑된다. 이 매핑은 routing rule에 의해 결정된다.
+
+routing rule 세팅방법
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{  
+  app.UseMvcWithDefaultRoute(); <= 이거! default route = "{controller=Home}/{action=Index}/{id?}"
+  app.UseMvc(); //어떠한 Routing룰 없이 순수 Mvc만 추가!
+
+  app.UseMvc(routes =>{
+    routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+  });
+}
+
+33강 Attribute Routing in ASP NET Core MVC
+=>[Route] Attribute사용하여 Route를 정의한다.
+=>[Route] Attribute는 Controller 또는 Action에 적용 할수 있다.
+=>conventional routes보다 유연하다.
+=>Attribute Routes는 계층적이다. (controller와 action에 있는 Route는 조합된다.)
+단 action Route가 /, ~/ 로 시작할때 controller의 route와 조합되지 않는다!
+=>"[controller]/[action]"과 같은 token을 쓸수 있다. controller나 action의 이름을 바꾸었을때 route template을 수정할 필요가 없는 장점이 있다.
+
+public class HomeController : Controller
+{
+
+  [Route("")]
+  [Route("Home")]
+  [Route("Home/Index")]
+  public IActionResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+
+  [Route("Home/Details/{id?}")] <= 여기
+  public IActionResult Details(int? id) <= 여기
+  {
+    ...
+    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    ...
+  }
+}
+
+Attribute routing을 쓰면 Controller/action의 이름은 별로 중요하지 않다. 다음과 같이 바꿔도 된다.
+public class WelcomeController : Controller <= 컨트롤러의 이름 의미 없다.
+{
+
+  [Route("")]
+  [Route("Home")]
+  [Route("Home/Index")]
+  public IActionResult List() <= 위의 라우팅에 호출된다.
+  {
+    
+  } 
+}
+
+Controller class에 Route Attribute를 주자!
+/ 또는 ~/로 시작하는 절대경로는 Controller의 라우팅과 조합되지 않는다!
+[Route("Home")]
+public class HomeController : Controller
+{
+
+  [Route("")]  <= Home
+  [Route("Index")]  <= Home/Index
+  [Route("~/")] <= / 또는 ~/로 시작하는 절대경로는 Controller의 라우팅과 조합되지 않는다!
+  public IActionResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+
+  [Route("Details/{id?}")]
+  public IActionResult Details(int? id)
+  {
+    ...
+    Employee = _employeeRepository.GetEmployee(id??1)
+    ...
+  }
+}
+
+
+Token replacement [controller] [action]
+[Route("[controller]")]
+public class HomeController : Controller
+{
+
+  [Route("")]  <= Home
+  [Route("[action]")]  <= Home/Index
+  [Route("~/")] <= / 또는 ~/로 시작하는 절대경로는 Controller의 라우팅과 조합되지 않는다!
+  public IActionResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+
+  [Route("[action]/{id?}")] <= 여기
+  public IActionResult Details(int? id) <= 여기
+  {
+    ...
+    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    ...
+  }
+}
+
+중복되고 있는 [action] token을 controller로 올리면 다음과 같은 형태가 된다.
+[Route("[controller]/[action]")] 
+public class HomeController : Controller
+{
+
+  [Route("")]
+  [Route("~/")]
+  public IActionResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+
+  [Route("{id?}")]
+  public IActionResult Details(int? id) <= 여기
+  {
+    ...
+    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    ...
+  }
+}
+
+위의 routing은 localhost/home 에서 404 에러 발생한다. action이 없기때문이다.
+[Route("[controller]/[action=index]")] 같은 형식으로 쓰는것을 허용하지 않는다.
+
+[Route("[controller]/[action]")] 
+public class HomeController : Controller
+{
+
+  [Route("~/Home")] <= 절대경로로 추가
+  [Route("~/")]
+  public IActionResult Index()
+  {
+    return Json(new{ id=1, name="Pragim"});
+  }
+
+  [Route("{id?}")]
+  public IActionResult Details(int? id) <= 여기
+  {
+    ...
+    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    ...
+  }
+}
+
+
+34강 Install and use Bootstrap in ASP NET Core
+Client-Side Packages관리를 위해 LibMan을 쓴다. 프로젝트에서 add/Client side libray를 통해 관리가능하다.
+메뉴를 추가하면 libman.json이 생성된다.(libray manager manifest file)
+
+35강 Tag helpers in asp net core
+Tag helper란
+=>server side componensts
+=>HTML element를 생성하기 위하여 서버에서 처리되어진다.
+=>HTML helpers와 비슷하다.
+=>Built-in tag helpers -> 링크 생성, form 생성, asset 로딩 등
+=>Importing tag helpers
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers //*:모든 taghelper 추가, Microsoft.AspNetCore.Mvc.TagHelpers 어셈블리 이름
+_ViewImports에 대부분 넣는다.
+
+a링크를 만드는 방법들
+<a href="/home/details/@employee.Id">View</a> //그냥 string연결을 쓰는 방법
+@Html.ActionLink("View", "details", "home", new { id = employee.Id}) //ActionLink HTML helper 쓰는방법
+<a href="@Url.Action("details", "home", new { id = employee.Id})" class="...">View</a> //@Url.Action 을써서 url string만을 만드는 방법
+<a asp-controller="home" asp-action="details" asp-route-id="@employee.Id">View</a> //anchor tag helper 쓰는 방법 asp-route-{param name}
+
+
+36강 Why use tag helpers
+
+app.UseMvc(routes =>{
+  routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+});
+가 아래와 같이 route template이 바뀌었을경우!(pragim/ 이 앞에 더 붙었다)
+app.UseMvc(routes =>{
+  routes.MapRoute("default", "pragim/{controller=Home}/{action=Index}/{id?}");
+});
+
+
+<a href="/home/details/@employee.Id">View</a> //그냥 string연결을 쓰는 방법
+string에 의해 생성되는 링크는 pragim/이 앞에 붙지 않는다! 
+
+<a asp-controller="home" asp-action="details" asp-route-id="@employee.Id">View</a> //anchor tag helper 쓰는 방법 asp-route-{param name}
+위의 tag helper 코드는 "pragim/{controller=Home}/{action=Index}/{id?}"를 항상 참조하며 링크주소를 생성한다.
+pragim/Home/Index 로 제대로 나올수 있다.
+
+
+37강 ASP NET Core Image tag helper
+웹브라우저 캐쉬와 관련.
+브라우저 캐쉬를 끄려면 debugger에서 network/disable cache 체크.
+
+asp-append-version (cache busting behavior가 가능하도록 해시밸류를 붙인다.)
+<img src="img.png" asp-append-version="true"> => <img src="img.png?v=asdfuhasidjfhlaksjdflakjsdnfla54yert">
+서버에서 이미지가 바뀔때마다 이미지 해시가 바뀐다.
+
+38강 ASP NET Core Environment Tag Helper
+Environment Tag Helper는 application environment에따라 다른 컨텐츠를 랜더링하는 것을 가능하게 해준다.
+evn에 따라 min js 혹은 non-min js 포함하도록 설정 가능
+
+ASPNETCORE_ENVIRONMENT : "Development" 변수 관련
+<environment include="Staging,Production">
+  <link rel ... />
+</environment>
+
+<environment exclude="Development">
+  <link rel ... />
+</environment>
+
+Subresouce Integrity (SRI)
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+
+integrity Attribute는 Subresouce Integrity check를 위해 쓰인다. 만약 누군가가 위 cdn화일을 악의적으로 고쳤다면? SRI은 src가 수정이 되었는지를 브라우저가 알수있게한다.
+수정이 되었다면 resouce가 block이 되며 사용 하지 않는다.
+
+CDN이 다운되거나 SRI에 의해 다운로드 할수 없을때 fallback을 설정할수 있다.
+<link rel="stylesheet"
+href="https://CDN"
+integrity-"sha384-dsfvjna..."
+asp-fallback-href="~/lib/..."  //우리 서버 다운로드 링크
+asp-fallback-test-class="sr-only"
+asp-fallback-test-property="position"
+asp-fallback-test-value="absolute"
+asp-supress-fallback-integrity="true">
+
+
+39강 Bootstrap navigation menu in asp net core application
+걍 부트스트랩 강의 스킵!
+
+40강 Form tag helpers in asp net core
+form tag helper (form 자체에 쓰임)
+input, label, select, textarea tag helper
+validation tag helper (validation과 model binding에 쓰인다.)
+
+form tag helper
+<form asp-controller="Home" asp-action="Create" method="post"></form>
+=> 
+<form action="/Home/Create" method="post">
+  <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
+</form>
+이런식으로 변환! (prevent CSRF(Cross Site Request Forgery) attack)
+
+input tag helper
+@model Employee
+<form asp-controller="Home" asp-action="Create" method="post">
+  <input asp-for="Name"> <= 이 element를 Employee.Name과 연결 시킨다.
+</form>
+=>
+<form action="/Home/Create" method="post">
+  <input type="text" id="Name" name="Name" value="" /> <= 이렇게 변환된다! asp-for의 값때문! name Attribute는 model binding에 쓰인다.
+  <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
+</form>
+
+label tag helper
+@model Employee
+<form asp-controller="Home" asp-action="Create" method="post">
+  <label asp-for="Name"></label>
+  <input asp-for="Name">
+</form>
+=>
+<form action="/Home/Create" method="post">
+  <label for="Name">Name</label>
+  <input type="text" id="Name" name="Name" value="" />
+  <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
+</form>
+
+msdn 예제 찾아보는게 다 나을듯...
+asp-for는 Model의 property들을 기준으로 뭔가 기능을 하게된다!
+
+
+Dept enum type;
+<select asp-for="Department" asp-items="Html.GetEnumSelectList<Dept>()"></select>
+
+
+41강 ASP NET Core Model Binding
+=> 모델 바인딩은 HTTP request에 있는 data를 controller action method parameter들로 매핑한다.
+=> action parameter들은 int, string같은 simple type일수도 있고 Customer, Employee처럼 complex type일수도 있다.
+모델 바인딩이 없다면 data들을 action parameter로 매핑하는 많은 코드들을 만들어야하며 귀찮고 에러를 일으키기 쉽다.
+
+http://localhost/home/details/2 => Home::Details(int? id); model binding이 url의 2를 id로 매핑 시켜준다. 이는 mvc에의해 자동으로 이루어 진다.
+model binding은 parameter를 이름을 통해서 binding 시켜준다.
+routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}"); //Route template을 통해 id란 이름과 Deatails(int? id)를 통해 같은 이름을 알수 있다.
+
+HomeController::Details(int? id, string name); name이 추가 되었다고 하면
+http://localhost/home/details/2 => id = 2, name = null;
+http://localhost/home/details/2?name=pragim => id = 2, name = pragim;
+http://localhost/home/details/2?name1=pragim => id = 2, name = null; => name1으로 이름이 달라 매핑이 불가능! 이름 중요하다.
+
+id의 값이 route data와 querystring에 동시에 있을경우
+모델바인딩은 다음과 같은 순서로 data를 찾아서 paramemter value를 넣어준다.
+Form Values(없으면 다음) => RouteValues(없으면 다음) => QueryString
+http://localhost/home/details/2?name1=pragim&id=5 => id = 2 (RouteValues에서 id값을 가져왔다)
+http://localhost/home/details?name1=pragim&id=5 => id = 5 (querystring에서 id값을 가져왔다)
+
+
+Complex type일 경우
+[HttpPost]
+public RedirectToActionResult Create(Employee employee)
+{
+  Employee newEmployee = _employeeRepository.Add(employee);
+  return RedirectToActionResult("details", new { id = newEmployee.Id });
+}
+
+<form>안의 <input> 의 name="Name" name="Email" 등의 이름을 보고 Employee.Name Employee.Email등에 값을 바인딩해준다.
+값을 매핑시켜주는데 이름이 사용되기때문에 html control안의 name Attribute의 값은 모델바인딩에 있어 매우 중요하다.
+
+
+42강 ASP NET Core model validation
+model validation
+step1 : Validation Attributes 를 Model의 Property에 적용한다.
+step2 : ModelState.IsValid를 사용해서 validation이 성공했는지 실패했는지 체크한다.
+step3 : asp-validation-for, asp-validation-summary tag helper를 사용해 에러를 출력한다.
+
+form의 값들을 validation하기위해 model에 Attribute를 추가해준다.
+public class Employee
+{
+  public int Id { get; set; }
+  [Required]
+  public string Name { get; set; }
+  [Required]
+  public string Email { get; set; }
+  public Dept Department { get; set; }
+}
+
+<form>을 post하면 mvc가 public RedirectToActionResult Create(Employee employee)의 employee에 값을 매핑해준다.(위의 모델에 입력값을 넣어준다.)
+매핑시 validation attribute에 맞는지 체크, ModelState.IsValid를 세팅해준다.
+
+[HttpPost]
+public IActionResult Create(Employee employee)
+{
+  if(ModelState.IsValid) //validation 통과?
+  {
+    Employee newEmployee = _employeeRepository.Add(employee);
+    return RedirectToActionResult("details", new { id = newEmployee.Id });
+  }
+  //통과 하지 못했으면 Create form이 들어 있는 View를 넘긴다. 이때 validation message를 View에 표시한다!
+  return View();
+}
+
+Create.cshtml
+<form ..>
+  <input asp-for="Name">
+  <span asp-validation-for="Name"></span> <= Name property와 관련된 validation error가 있을때 asp-validation-for가 있는 곳에 error msg 출력
+</form>
+
+빌트인 Validation Attributes
+=>RegularExpression
+=>Required
+=>Range
+=>MinLength
+=>MaxLength
+=>Compare (모델의 2개의 property들이 같은지 비교한다.)
+
+public class Employee
+{
+  public int Id { get; set; }
+  [Required]
+  [MaxLength(50, ErrorMessage="디폴트 메세지가 맘에 안들면 여기에 에러메세지를 넣는다.")] //50글자 제한
+  public string Name { get; set; }
+  [Required]
+  [ReqularExpression(@"^[a-zA-Z0-9+.+-]", ErrorMessage="디폴트 메세지가 맘에 안들면 여기에 에러메세지를 넣는다.")] //reg exp
+  [Display(Name="관련된 label의 텍스트 내용")]
+  public string Email { get; set; }
+  public Dept Department { get; set; }
+}
+
+asp-validation-summary tag helper : 모든 validation을 모아서 출력 하는 tag helper
+<div asp-validation-summary="All"></div>
+
+
+43강 Select list validation in asp net core
+public enum Dept{
+  None,
+  IT,
+  ...
+}
+
+public class Employee
+{ 
+  [Required]
+  public Dept Department { get; set; }
+}
+
+<select asp-for="Department" asp-items="Html.GetEnumSelectList<Dept>()">
+  <option value="">선택해주세요</option> <= 추가
+</select>
+<span asp-validation-for="Department"></span>
+
+만약 위의 세팅으로 Select를 선택하지 않고 submit했을경우 "The value '' is invalid."라는 에러메세지가 나온다.
+이 에러는 [Required]에 의해 나오는 것이 아니다. [Required]를 제거하고 Submit했을때 같은 에러가 나오므로 [Required]에 의한 것이 아니다.
+Dept는 enum형이며 enum 뒤에 숨은 타입은 int이다. 선택없이 submit했을경우 <option value="">선택해주세요</option>에의해 빈문자열이 전송되고 이는 int가 아니다.
+빈문자열은 당연히 int로서 valid하지 않으며 위의 에러메세지를 출력한다.
+
+public class Employee
+{ 
+  public Dept Department { get; set; }
+}
+
+[Required] 제거했을때 Department는 optional property가 된것인가? 아니다.
+enum의 숨은 타입은 int이며, int, float, decimal등 value type들은 본질적으로 Required이다.([Required]를 써줄 필요도 없다.)
+Dept를 optional으로 만드려면 숨은 타입을 nullable로 만들어야 한다.
+public class Employee
+{  
+  public Dept? Department { get; set; } <= nullable
+}
+select에서 빈문자열을 전송했을때 optional 이므로 validation에 걸리지 않는다. 
+
+public class Employee
+{
+  [Required]  
+  public Dept? Department { get; set; } <= nullable
+}
+이제 select에서 아무것도 선택하지 않았을때 required validation에 체크된다.
+
+
+
+44강 AddSingleton vs AddScoped vs AddTransient
+=>AddSingleton : singleton service는 1개의 instance밖에 없다. Application이 살아 있는 동안 모든 HTTP request에 같은 instance가 사용된다.
+=>AddScoped : 같은 HTTP Request 스코프 안에 있으면 같은 instance를 얻게되며 다른 HTTP request들에서는 다른 새로운 instance를 생성해서 사용한다.
+=>AddTransient: HTTP Request와 상관없이 DI요청 될때 마다 새로운 instance 생성한다. 
+
+
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.addSingleton<IEmployeeRepository, MockEmployeeRepository>();
+}
+
+IEmployeeRepository에서 모든 Employee Count를 가져오기 위해 view에 inject!
+view에 service를 inject하기 위해서 @inject directive 사용한다. 
+
+.cshtml
+@model Employee
+@inject IEmployeeRepository _empRepository <= ConfigureServices에 AddSingleton()으로 등록되어 있다.
+
+<div>
+  Total Employees Count = @_empRepository.getAllEmployee().Count()
+</div>
+
+무슨일이 일어나고 있는가?
+최초 IEmployeeRepository가 생성되는 곳은 HomeController의 생성자이다!
+이때 MockEmployeeRepository를 최초 생성해서 DI시켜준다.
+
+public Class HomeController : Controller
+{
+  pirvate readonly IEmployeeRepository _employeeRepository;
+  public HomeController(IEmployeeRepository employeeRepository)
+  {
+    _employeeRepository = employeeRepository;
+  }
+}
+
+request가 들어와서 view가 생성되며 이때 @inject IEmployeeRepository _empRepository에의해 다시 DI된다.
+이때 HomeController와 view에 inject된 객체는 같은 객체이다. AddSingleton()이므로.
+
+Create해서 Employee를 생성해 넣을때 마다 Total Employees Count는 1씩 계속 올라간다.
+
+AddScoped() 사용시
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddScoped<IEmployeeRepository, MockEmployeeRepository>();
+}
+
+MockEmployeeRepository 생성자에서 Employee 3개를 만들어 넣는다. MockEmployeeRepository.Count가 최초 3인 상태에서 Create view를 통해 Create하면 4가 되고, 계속 Create를 눌러도 4이다.
+HTTP request마다 새로운 MockEmployeeRepository가 DI 되기때문이다.
+
+AddTransient() 사용시
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddTransient<IEmployeeRepository, MockEmployeeRepository>();
+}
+
+DI 요청이 있을때 마다 새로 생성해서 넣어주기때문에 무조건 3출력된다. view에서 @inject 요청이 있을때 새로운 MockEmployeeRepository가 생성된다.
+HomeController, view는 각각 자신만의 IEmployeeRepository instance를 가지게 된다.
+
+
+45강 Introduction to entity framework core
+=>ORM (Object-Relational Mapper)
+=>Microsoft's Official Data Access Platform
+=>Database와 application사이에서 Custom Data access code들을 제거해 준다(SQL문 같은거 안써도 되게...)
+=>Code First Approach와 Database First Approach가 있다. 현재 DB First는 기능이 제한적이다.
+
+Code First
+=> Domain Class(table을 표현하는 model class, viewModel이 아닌 model) 와 DBContext Classes 정의 => EF Core가 DB생성 및 처리를 담당
+DB First
+
+EF Core Database Providers
+=>EF Core가 사용
+=> 여러 종류 DB들의 driver같은 기능을 가진 플러그인. Nuget으로 받아서 처리..
+Microsoft.EntiyFrameworkCore.Mysql같은 이름 으로 검색!
+
+
+46강 Install entity framework core in visual studio
+프로젝트의 복잡도에 따라 Single layer Web Application, Multi layer Web Application으로 구성될수 있다.
+layer들은 Presentation Layer -> Business Layer -> Data Access Layer 등으로 나뉘어 진다.
+single layer -> 위의 모든 레이어 들이 하나의 프로젝트로 다 들어 있다.
+Multi layer -> layer별로 다른 프로젝트로 생성이된다.
+EF는 대부분 Data Access Layer에 위치하며 Class Libray로 구성된다.
+Microsoft.EntityFrameworkCore.Sqlerver->Microsoft.EntityFrameworkCore.Relational->Microsoft.EntityFrameworkCore 로 dependency를 가지고 있다.
+새 프로젝트 만들때 Nuget으로 EntiyFrameworkCore잘 깔아라!
+
+
+47강 DbContext in entity framework core
+밑에 있는 DB를 관리하는데 가장 중요한 EF의 가장 중요한 class가 DbContext이다.
+EF에서 제공하는 DbContext 를 상속 받고 configuration 을 하기위해 DbContextOptions를 사용한다.
+public class AppDbContext : DbContext
+{
+  public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+  {
+
+  }
+}
+
+DbContext class는 model에 있는 각각의 eneity를 위한 DbSet<TEntity> property를 포함한다.
+우리는 DbSet propety Employees를 Employee class의 instance를 query하고 save하기 위해 사용한다.
+DbSet<TEntity>에대한 LINQ query는 실제 DB 에대한 query로 번역되어진다.
+public class AppDbContext : DbContext
+{
+  public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+  {
+  }
+
+  public DbSet<Employee> Employees { get; set; }
+}
+
+
+48강 Using sql server with entity framework core
+
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer()); <= DI Container에 넣자 .UseSqlServer()에 connectionString을 넣자.
+  services.AddMvc().AddXmlSerializerFormatters();
+}
+
+appsettings.json에 UseSqlServer()에서 쓸 connectionString을 넣자.
+appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+
+  "AllowedHosts": "*",
+  "MyKey":  "Value of MyKey from appsettings.json", <= custom key value
+  "ConnectionStrings":{
+    "EmployeeDBConnection": "server=(localdb)\\MSSQLLocalDB;database=EmployeeDB;Trusted_Connection=true" <= 여기 넣었다!
+    (Trusted_Connection=true : use integrated Windows Authentication instead SQL Server authentication)
+  }
+}
+
+Startup::ConfigureServices(IServiceCollection services)
+{
+  services.AddDbContextPool<AppDbContext>(options => options.UseSqlServer(_config.GetConnectionString("EmployeeDBCOnnection"))); <=UseSqlServer()에 connectionString을 넣자.
+  services.AddMvc().AddXmlSerializerFormatters();
+}
+
+49강 Repository pattern in asp net core
+Repository pattern : abstraction of data access layer (Repository interface and Repository impl)
+IEmployeeRepository 지금 현재 구조가 이 패턴...IEmployeeRepository는 어떤 operation을 제공하는가를 표현, 어떻게 하는가는 Impl이함..
+SQLEmployeeRepository 구현중 특이한것...Update()
+Employee SQLEmployeeRepository::Update(Employee employeeChanges)
+{
+  //나중에 알아보자...
+  var employee = context.Employee.Attach(employeeChanges);
+  employee.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+  context.SaveChanges();
+  return employeeChanges;
+}
+
+이제 IEmployeeRepository를 구현한 MockEmployeeRepository, SQLEmployeeRepository 2개가 있다.
+Controller 코드를 보면 우리는 IEmployeeRepository의 기능을 사용할뿐 어떤 impl을 사용할지 명시하지 않고있다.
+Controller는 어떤 구현을 사용할지 어떻게 아는가? Startup::ConfigureServices()에서 설정!
+
+ConfigureServices(IServiceCollection services)
+{
+  services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();  //AddScoped 사용한점 주목
+}
+
+이제 접속할 DB를 만들어보자!
+
+50강 Entity framework core migrations
+마이그레이션은 데이타베이스스키마와 어플리케이션 모델을 계속적으로 동기화 한다.
+
+현재 DB가 없으므로 DB를 create해야하며 마이그레이션은 DB를 만들수 있는 한 방법이다.
+일단 마이그레이션을 만들고 마이그레이션을 실행함으로서 DB를 만들수 있다.
+
+ConnectionString에 어떤 DB서버의 어떤 database를 접속해야 할지 써있다.
+localdb를 보고 싶으면 view/SQL Server Object Explorer 선택하면 UI가 뜬다.
+
+마이그레이션을 만드려면 package manager console 또는 dotnet cli를 쓴다. (view/other windows/package manager console)
+
+명령어들
+get-help about_entityframeworkcore (전체적인 help)
+get-help add-migration(명령어) (add-migration의 help)
+
+add-migration(엔터)
+Name: InitialMigration(엔터)을 치면!
+프로젝트에 Migrations라는 폴더가 생겼으며 InitialMigration.cs이라는 화일이 생성되어 있다.
+이 안의 소스를 보면 table을 Create하는 코드들이 생성되어 있다.
+Table의 이름(Employees)과 colume들은 AppDbContext화일안의 DbSet<Employee> Employees를 참조해서 생성된다.
+model에 적용되어 있는 model validation들도 전부 table에 적용된다.
+
+update-database(엔터)
+마이그레이션 이름을 주지 않으면 가장 최근의 마이그레이션 실제 DB에 적용.
+이름주면 그 마이그레이션 적용..
+
+빈테이블이 DB에 만들어져 있다.
+
+
+51강 Entity framework core seed data
+DbContext에 Seeding을 할수 있는 메서드가 있다.
+public class AppDbContext : DbContext
+{
+  ...
+  override void OnModelCreateing(Modelbuilder modelBuilder)
+  {
+    modelBuilder.Entity<Employee>().HasData(
+      new Employee
+      {
+        Id = 1,
+        Name = "Mark",
+        ...
+      }
+    );
+  }
+}
+
+수정뒤..
+
+add-Mirgration SeedEmployeesTable(엔터)
+udpate-Database(엔터)
+
+만약 seed data가 잘못되었다면?
+override void OnModelCreateing(Modelbuilder modelBuilder)
+{
+  modelBuilder.Entity<Employee>().HasData(
+    new Employee
+    {
+      Id = 1,
+      Name = "mary",
+      ...
+    },
+    new Employee
+    {
+      Id = 2,
+      Name = "john",
+      ...
+    }
+  );
+}
+
+add-Migration AlterEmployeesSeedData
+update-database
+
+seed data때문에 dbContext 코드가 지저분해졌다. seed data 분리 하자.
+OnModelCreateing() Modelbuilder를 parameter로 받는다.
+ModelBuilderExtensions.cs에 extention method를 만든다.
+
+public static class ModelBuilderExtensions
+{
+  public static void Seed(this Modelbuilder modelBuilder)
+  {
+    modelBuilder.Entity<Employee>().HasData(
+      new Employee
+      {
+        Id = 1,
+        Name = "mary",
+        ...
+      },
+      new Employee
+      {
+        Id = 2,
+        Name = "john",
+        ...
+      }
+    );
+  }
+}
+
+override void OnModelCreateing(Modelbuilder modelBuilder)
+{
+  modelBuilder.Seed();
+}
+
+52강 Keeping domain models and database schema in sync in asp net core
+개발 하면서 model은 계속 변경되며 해당되는 database schema도 같이 변경되어야 한다.
+database schema와 model을 동기화하기위해 마이그레이션 사용.
+=>새로운 마이그레이션을 add할때 Add-Migration 명령어.
+=>최신의 마이그레이션을 db에 update할때 Update-Database 명령어.
+=>db에 적용되지 않은 마이그레이션을 삭제할때 Remove-Migration 명령어.
+=>_EFMigrationsHistory table은 db에 적용된 마이그레이션을 기록해 놓는다.
+=>ModelSnapshot.cs화일은 현재 모델의 snapshot을 포함하며 다음 마이그레이션이 추가될때 무엇이 변경되었는지 걸정할때 쓰여진다.
+
+이미 db에 적용된 마이그레이션을 제거하는 방법
+=>Update-Database명령어로 마이그레이션에의해 적용된 데이타베이스 변경들을 undo한다.
+=>Remove-Migration명령어로 마이그레이션 Code file을 삭제한다.
+=>DbContext도 수정
+
+Employee에 PhotoPath 추가한다고 가정하자. db에도 PhtoPath가 있어야 한다! model에 추가시 오타를 내어서 PhtoPat로 마이그레이션 해버렸다.
+add-migration AddPhotoPathColumn
+AddPhotoPathColumn을 보면 Up(), Down()이 있다. add-migration명령시마다 AppDbContext(dbContext이름)ModelSnapshot.cs도 계속 같이 update된다.
+ModelSnapshot.cs는 현재 model의 snapshot을 담고 있다. EF Core api는 다음 마이그레이션을 추가할때 ModelSnapshot.cs화일을 보고 무엇이 변경되었는지 결정한다.
+
+model에 int SomeProperty 추가.
+add-migration AddSomeProperty(엔터)
+
+AddSomeProperty 마이그레이션 삭제 명령어
+remove-migration(엔터)
+AddSomeProperty.cs 마이그레이션 화일 삭제 modelSnapshot revert가 일어난다.
+
+AddPhotoPathColumn 마이그레이션 삭제
+remove-migration(엔터)
+AddPhotoPathColumn.cs 마이그레이션 화일 삭제 modelSnapshot revert가 일어난다.
+
+AlterEmployeesSeedData 마이그레이션 삭제
+remove-migration(엔터)
+에러!
+이미 DB에 적용된 마이그레이션은 remove안된다.
+
+remove-migration은 DB에 적용되지 않은 가장 최근의 migration 1개만 삭제한다. 이미 적용된 마이그레이션은 에러를 일으킨다.(삭제 안댐...)
+그럼 이미 DB에 적용된 마이그레이션은 어떻게 삭제 하는가?
+
+AddSomeProperty까지 마이그레이션을 만든뒤 update-database로 실제 DB에 적용되었다고 가정하자.
+실제 DB안에는 EFMigrationsHistory라는 테이블이 있다. 여기 실제 적용된 migration들이 전부 기록되어 있다.
+update-database AlterEmployeesSeedData(엔터)
+AlterEmployeesSeedData 이후의 AddPhotoPathColumn, AddSomeProperty마이그레이션이 실제 DB에서 revert된다.
+그뒤
+remove-migration(엔터)
+remove-migration(엔터)
+마이그레이션 2개 삭제뒤 모델에서도 수정...
+
+
+53강 File upload in asp net core mvc
+사진 업로드 기능을 만들자!
+image를 선택해서 올리면 wwwroot의img폴더에 사진 저장하자.
+public class EmployeeCreateViewModel <= viewModel
+{
+  
+  [Required]
+  public string Name { get; set; }
+  [Required]
+  public string Email { get; set; }
+  public Dept? Department { get; set; }
+  public IFormFile Photo { get; set; } <= 요거(서버로 전송되는 화일을 Model binding을통해 접근할수 있는 인터페이스)
+}
+
+왜 Employee가 아닌 EmployeeCreateViewModel을 다시 정의했나?
+모델바인딩을 통해 화일에 억세스하기위해 IFromFile type이 필요하다. 왜 Employee에 직접 IFromFile을 추가하지 않는가?
+IFromFile은 complex object이기때문에 EF Core의 navigation property의 생성이 필요하다. 이는 문제를 더 복잡하게 만들수 있다. Employee는 그냥 string PhotoPath로 충분하다.
+
+.cshtml
+<form enctype="multipart/form-data" ...> 추가 필요!
+<input asp-for="Photo"> Photo가 IFromFile과 바인딩 되므로 fileupdate Control로 바꿔준다. <input type="file">
+
+public Class HomeController : Controller
+{
+  [HttpPost]
+  public IActionResult Create(EmployeeCreateViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      string uniqueFileName = null;
+      if(model.Photo != null)
+      {
+        string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath , "images");
+        uniqueFileName = Guid.NewGui().ToString() + "_" + model.Photo.FileName;
+        string filePath = Path.Combile(uploadsFolder, uniqueFileName);
+        model.Photo.CopyTo(new FileStream(filePath, FileMode.Create));
+
+        Employee newEmployee = new Employee
+        {
+          ...
+          PhotoPath = uniqueFileName;
+        };
+
+        _employeeRepository.Add(newEmployee);
+        return RedirectToAction("details", new { id = newEmployee.Id });
+      }
+    }
+  }
+}
+
+54강 Upload multiple files in asp net core mvc
+<input asp-for="Photos" multiple> multiple Attribute를 추가하여 여러개 선택 가능하도록 수정(type="file" "email"만 작동함)
+viewModel수정
+public class EmployeeCreateViewModel <= viewModel
+{
+  ...
+  public List<IFormFile> Photos { get; set; }
+}
+
+public Class HomeController : Controller
+{
+  [HttpPost]
+  public IActionResult Create(EmployeeCreateViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      string uniqueFileName = null;
+      if(model.Photos != null && model.Photos.Count > 0)
+      {
+        foreach(IFromFile photo in model.Photos)
+        {
+          string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath , "images");
+          uniqueFileName = Guid.NewGui().ToString() + "_" + photo.FileName;
+          string filePath = Path.Combile(uploadsFolder, uniqueFileName);
+          photo.CopyTo(new FileStream(filePath, FileMode.Create));
+        }
+
+        Employee newEmployee = new Employee
+        {
+          ...
+          PhotoPath = uniqueFileName;
+        };
+
+        _employeeRepository.Add(newEmployee);
+        return RedirectToAction("details", new { id = newEmployee.Id });
+      }
+    }
+  }
+}
+
+
+55강 Edit view in asp net core mvc
+내용은 기존 유저 정보를 Edit하는 Controller, View를 만드는 내용..
+
+.cshtml
+<a href="#" asp-action="edit" asp-controller="home" asp-route-id="@Model.Employee.Id">Edit</a>
+위으 문장은 에러난다. tag helper를 썼을때 a태그의 href가 있으면 exception 발생한다.
+<a asp-action="edit" asp-controller="home" asp-route-id="@Model.Employee.Id">Edit</a>
+
+HomeController: Controller
+{
+  [HttpGet]
+  public IActionResult Edit(int id)
+  {
+    Employee employee = _employeeRepository.GetEmployee(id);
+    EmployeeEditViewModel employeeEditViewModel = new EmployeeEditViewModel
+    {
+      Id = employee.Id,
+      ...
+      ExistingPhotoPath = employee.PhotoPath
+
+    };
+    return View(EmployeeEditViewModel);
+  }
+}
+
+public class EmployeeEditViewModel : EmployeeCreateViewModel //상속뒤 추가
+{
+  public int Id { get; set; }
+  public string ExistingPhotoPath { get; set; }
+}
+
+Edit.cshtml
+@model EmployeeEditViewModel
+@{
+  var photoPath = "~/Images/" + (Model.ExistingPhotoPath ?? "noimage.jpg");
+}
+....
+<form enctype="multipart/form-data" ...>
+  <input type="hidden" asp-for="Id">
+  <input type="hidden" asp-for="ExistingPhotoPath">
+  ....
+</form>
+
+56강 httppost edit action in asp net core mvc
+
+HomeController: Controller
+{
+  [HttpPost]
+  public IActionResult Edit(EmployeeEditViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      Employee employee = _employeeRepository.GetEmployee(model.Id);
+      employee.Name = model.Name;
+      ...
+      if(model.Photo != null)
+      {
+        if(mode.ExistingPhotoPath != null) //hidden input으로 온다.
+        {
+          string filePath = Path.Combine(hostingEnvironment.WebRootPath, "images", model.ExistingPhotoPath);
+          System.IO.File.Delete(filePath);
+        }
+        employee.PhotoPath = ProcessUploadedFile(model);
+      }
+      
+      _employeeRepository.Update(employee);
+      return RedirectToAction("details", new { id = employee.Id });      
+    }
+  }
+  
+  private string ProcessUploadedFile(EmployeeCreateViewModel model)
+  {
+    string uniqueFileName = null;
+    if(model.Photos != null && model.Photos.Count > 0)
+    {
+      foreach(IFromFile photo in model.Photos)
+      {
+        string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath , "images");
+        uniqueFileName = Guid.NewGui().ToString() + "_" + photo.FileName;
+        string filePath = Path.Combile(uploadsFolder, uniqueFileName);
+        photo.CopyTo(new FileStream(filePath, FileMode.Create)); <= 이부분이 문제 있다.
+      }
+    }
+
+    return uniqueFileName;
+  }
+}
+
+버그가 있다.
+Create()에서 사진 업로드뒤 Edit를 통해 다른 사진을 업로드하면  System.IO.File.Delete(filePath);에서 exception발생한다. used by another process exception.
+ProcessUploadedFile()안으 소스중 photo.CopyTo(new FileStream(filePath, FileMode.Create));부분이 문제임...  Create할때 Dispose되지 않았기때문에 기존의
+화일을 지울수 없다.
+
+private string ProcessUploadedFile(EmployeeCreateViewModel model)
+{
+  string uniqueFileName = null;
+  if(model.Photos != null && model.Photos.Count > 0)
+  {
+    foreach(IFromFile photo in model.Photos)
+    {
+      string uploadsFolder = Path.Combine(hostingEnvironment.WebRootPath , "images");
+      uniqueFileName = Guid.NewGui().ToString() + "_" + photo.FileName;
+      string filePath = Path.Combile(uploadsFolder, uniqueFileName);
+      using(var fileStream = new FileStream(filePath, FileMode.Create)) <= using 문을 사용해서 바로 Dispose되도록 수정한다.
+      {
+        photo.CopyTo(fileStream);
+      }        
+    }
+  }
+  return uniqueFileName;
+}
+
+57강 Handling 404 not found in asp net core mvc
+현재까지 작업한 소스에서 404 에러가 날수 있는 상황은 2가지가 있다.
+1.명시된 ID가 존재하지 않는 리소스(http://localhost/home/details/9999  Edit, Deatail등에 Employee id가 없는 경우)
+2.URL이 어떠한 route와도 매치되지 않을때.(http://localhost/foo/bar)
+
+
+1번 처리 방법
+public class HomeController : Controller
+{
+  public ViewResult Details(int? id)
+  {
+    Employee employee = _employeeRepository.GetEmployee(id.Value);
+    if(employee == null)
+    {
+      Response.StatusCode = 404;
+      return View("EmployeeNotFound", id.Value);
+    }
+
+    ...   
+  }
+}
+
+58걍 Centralised 404 error handling in ASP NET Core
+아래 3가지 미들웨어는 400~599(nonsuccess)사이의 에러를 인터셉트하는데 쓰인다.
+UseStatusCodePages <= 아주 심플한 text만 보여주는 페이지 미들웨어(Status Code:404; Not Found) 실제로 쓰긴 힘들다.
+UseStatusCodePagesWithRedirects
+UseStatusCodePagesWithReExecute
+
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+  else
+  {
+    //아래 2개의 차이는 무엇인가?
+    app.UseStatusCodePagesWithRedirects("/Error/{0}"); <= {0} placeholder는 errorcode로 대체된다! ErrorContrller로 redirect
+    app.UseStatusCodePagesWithReExecute("/Error/{0}"); <= {0} placeholder는 errorcode로 대체된다! ErrorContrller로 redirect
+  }
+
+  app.UseStaticFiles();
+  app.UseMvcWithDefaultRoute();
+}
+
+public class ErrorController : Controller
+{
+  //[Route("Error/404")]
+  [Route("Error/{statusCode}")]
+  public IActionResult HttpStatusCodeHandler(int statusCode)
+  {
+    switch(statusCode)
+    {
+      case 404:
+        ViewBag.ErrorMessage = "resource not found";
+        break;
+    }
+
+    return View("NotFound");
+  }
+}
+
+59강 UseStatusCodePagesWithRedirects vs UseStatusCodePagesWithReExecute
+UseStatusCodePagesWithRedirects
+=> 리다이렉트가 발생하기때문에 주소창의 주소가 바뀐다.
+=> 최종적으로 statusCode 200을 리턴하기때문에 의미적으로 맞지 않다.
+UseStatusCodePagesWithReExecute
+=> 파이프라인을 재실행하며 원레 statusCode를 리턴해준다.
+=> 파이프라인을 재실행하기때문에 redirect request를 발생시키지 않으며 원래 주소창의 주소를 보존한다.
+
+
+
+UseStatusCodePagesWithRedirects
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+  else
+  {    
+    app.UseStatusCodePagesWithRedirects("/Error/{0}");    
+  }
+
+  app.UseStaticFiles();
+  app.UseMvcWithDefaultRoute();
+}
+
+http://localhost/foo/bar 가 request pipeline으로 들어왔을때 
+UseStatusCodePagesWithRedirects(아무것도 안함)->UseStaticFiles(static file이 없으므로 아무것도 안함)->UseMvcWithDefaultRoute(route가 없으므로 statusCode=404 세팅)
+->UseStaticFiles(Response travel에서는 아무것도 안함)->UseStatusCodePagesWithRedirects(statusCode=404가 여기에 걸린다!)
+UseStatusCodePagesWithRedirects는 statusCode를 302로 만들고 응답한다.(302 uri temporarily changed) https://nsinc.tistory.com/168 (301리다이렉트와 302리다이렉트 차이 설명)
+브라우저는 302(리다이렉트)를 받고 /Error/404를 다시 request(브라우저의 주소창을 http://localhost/foo/bar에서 http://localhost/Error/404로 바꿔버린다.)
+->서버의 MVC 미들웨어까지 가서 404를 보여준다!
+
+UseStatusCodePagesWithRedirects => 브라우저 입장에서 봤을때 404에러를 받은적이 없다! 302를 받고 404페이지를 보여주며 200을 받는다. 의미론적으로 좋지 않다!
+많은 개발자들이 이런 이유로 잘 쓰지 않는다.
+
+UseStatusCodePagesWithReExecute
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+  else
+  {    
+    app.UseStatusCodePagesWithReExecute("/Error/{0}");    
+  }
+
+  app.UseStaticFiles();
+  app.UseMvcWithDefaultRoute();
+}
+
+http://localhost/foo/bar 가 request pipeline으로 들어왔을때 
+UseStatusCodePagesWithReExecute(아무것도 안함)->UseStaticFiles(static file이 없으므로 아무것도 안함)->UseMvcWithDefaultRoute(route가 없으므로 statusCode=404 세팅)
+->UseStaticFiles(Response travel에서는 아무것도 안함)->UseStatusCodePagesWithReExecute(statusCode=404가 여기에 걸린다!)
+UseStatusCodePagesWithReExecute는 URI를 새로 /Error/404로 바꾸고 pileline을 다시 실행한다(respose를 자신에게 줬던 UseStatciFiles로 바뀐 URI request를 다시 넘긴다.)
+->UseMvcWithDefaultRoute 미들웨어가 /Error/404 를 찾고 statusCode=200으로 세팅해서 response travel을 다시 시작->UseStatusCodePagesWithReExecute가 response를 다시 받았을때
+statusCode=404로 세팅한다!
+
+UseStatusCodePagesWithReExecute => 브라우저에서는 redirect request가 없으며 주소가 바뀌지 않고 404페이지도 보이며 브라우저에 디버거 상에서 status 404가 정확히 찍힌다.
+
+public class ErrorController : Controller
+{
+  //[Route("Error/404")]
+  [Route("Error/{statusCode}")]
+  public IActionResult HttpStatusCodeHandler(int statusCode)
+  {
+    switch(statusCode)
+    {
+      case 404:
+        ViewBag.ErrorMessage = "resource not found";
+        break;
+    }
+
+    return View("NotFound");
+  }
+}
+
+60강 Global exception handling in asp net core mvc
+=>Exception handling middleware를 추가
+=>ErrorController를 구현
+=>ErrorView를 구현
+
+Production에서 프로그램에 exceoption이 발생하였을때 statusCode 500(Internal server error)가 발생. 브라우저 디폴트 화면이 보이니깐..처리하자...
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+  else
+  {
+    app.UseExceptionHandler("/Error"); <= 요거 추가!
+    app.UseStatusCodePagesWithReExecute("/Error/{0}");    
+  }
+
+  app.UseStaticFiles();
+  app.UseMvc(routes =>
+  {
+    routes.MapRoute("default", "{constroller=Home}/{action=Index}/{id?}");
+  });
+}
+
+
+public class ErrorController : Controller
+{ 
+  [Route("Error/{statusCode}")]
+  public IActionResult HttpStatusCodeHandler(int statusCode)
+  {
+    switch(statusCode)
+    {
+      case 404:
+        ViewBag.ErrorMessage = "resource not found";
+        break;
+    }
+
+    return View("NotFound");
+  }
+
+  [Route("Error")]
+  [AllowAnonymous] <= 나중에 설명
+  public IActionResult Error()
+  {
+    var exceptionDetails = HttpContext.Features.Get<IExceptionhandlerPathFeature>();
+    ViewBag.ExceptionPath = exceptionDetails.Path;
+    ViewBag.ExceptionMessage = exceptionDetails.Error.Message;
+    ViewBag.Stacktrace = exceptionDetails.Error.StackTrace;
+
+    return View("Error");
+  }
+}
+
+Error.cshtml 만들어서 보여줘라!
+
+
+61강 Logging in ASP NET Core
+default logging: debug시 Output에 찍히고 있다. OutOfProcess시 'dotnet.exe'가 프로세스 이름이다 로그를 찍는다. InPorcess시 'iisexpress.exe'로 찍힐거고...
+로그를 막기 위한 세팅
+=> /Tools/Options/Debugging/Output Window 선택
+=> General Ouput Setting의 모든 Message를 Off 선택
+디버그시 프로세스 관련 로그는 아무것도 안나온다.
+
+appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft": "infomation" <= 요거 추가해보자! Microsoft카테고리의 information 로그레벨 이상의 모든 로그를 출력해야한다!(나중에 자세히)
+    }
+  },
+
+  "AllowedHosts": "*",
+  "MyKey":  "Value of MyKey from appsettings.json", <= custom key value
+  "ConnectionStrings":{
+    "EmployeeDBConnection": "server=(localdb)\\MSSQLLocalDB;database=EmployeeDB;Trusted_Connection=true"
+  }
+}
+
+출력을 보면..
+Microsoft.AppNetCore.Hosting.Internal.WebHost:Information: Request finished in ....
+category:loglevel: logtext 형식으로 출력된다.
+Output 및 cmd에서도 나오게 된다.
+info: Microsoft.AppNetCore   logtext (cmd 출력 예)
+
+지금까지 세팅만으로도 잘 나오고 있다. 어떻게 잘 나오고 있는것인가?
+ASP.NET Core logging provider가 존재하며 물리적으로 로그를 저장하거나 출력한다.
+ASP.NET Core logging provider 종류
+=> Console Logging Provider : Console에서 로그 출력
+=> Debug Logging Provider : vs debug window에 로그 출력
+
+CreateWebHostBuilder()->WebHost.CreateDefaultBuilder()는 asp.net이 스타팅되는동안 몇가지 tasks를 수행한다.
+webserver setup, load application configuration, configuring logging
+
+webhost.cs소스를 살펴보면 ConfitureLogging()이라는 함수안에서 "Logging"섹션을 로딩하고 AddConsole(), AddDebug(), AddEventSourceLogger()등으로
+Logging Provider들을 추가하고 있다. 위의 3가지외에도 built-in Logging provider는 다음과 같은것이 있다.
+Console
+Debug
+EventSource
+EventLog => 윈도우 OS의 eventlog
+TraceSource
+AzureAppServicesFile
+AzureAppServicesBlob
+ApplicationInsights
+
+3rd party logging provider
+NLog
+elmah
+Serilog
+Sentry
+Gelf
+JSNLog
+KissLog.net
+Loggr
+
+
+62강 Logging exceptions in ASP NET Core
+=>Inject an instance of ILogger
+=>ILogger가 인젝트 되어지는 controller의 타입을 generic argument에 명시하라.
+=>ILogger를 써서 로그를 남겨라 LogInformation(), LogWarning()등
+
+Exception이 났을때 로그 남기자. 일단 DI부터 시작하자.
+
+public class ErrorController : Controller
+{
+  private readonly ILogger<ErrorController> logger;
+  public ErrorController(ILogger<ErrorController> logger) <=ErrorController클래스 타입을 넘기는 이유 : 타입을 넘김으로서 로그 카테고리 생성가능.complete namesapce + class name이 로그카테고리가 되어야 한다  
+  {
+    this.logger = logger;
+  }
+
+  [Route("Error/{statusCode}")]
+  public IActionResult HttpStatusCodeHandler(int statusCode)
+  {
+    var statusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>(); <= 요기
+
+    switch(statusCode)
+    {
+      case 404:
+        ViewBag.ErrorMessage = "resource not found";
+        logger.LogWarning($"404 Error Occured. Path = {statusCodeResult.OriginalPath}" + $"and QueryString = {statusCodeResult.OriginalQueryString}");<= 요기
+        break;
+    }
+
+    return View("NotFound");
+  }
+
+  [Route("Error")]
+  [AllowAnonymous]
+  public IActionResult Error()
+  {
+    var exceptionDetails = HttpContext.Features.Get<IExceptionhandlerPathFeature>();<= 요기
+
+    //c#6 string interpolation
+    logger.logError($"The path {exceptionDetails.Path} threw an exceoption {exceoptionDetails.Error}" + $...);<= 요기
+
+    ViewBag.ExceptionPath = exceptionDetails.Path;
+    ViewBag.ExceptionMessage = exceptionDetails.Error.Message;
+    ViewBag.Stacktrace = exceptionDetails.Error.StackTrace;
+
+    return View("Error");
+  }
+}
+
+
+63강 Logging to file in asp net core using nlog
+=>NLog.Web.AspNetCore nuget package 설치
+=>NLog.config 화일 프로젝트 루트에 생성(자세한 설정은 NLog github에서 체크, xml포맷)
+=>Enable copy to bin folder(실행시간에 NLog.config화일은 bin화일에 있어야 한다.)
+NLog.config화일 오른쪽클릭=>프로퍼티/Advanced/Copy to Output Directory속성을 Copy if newer로 선택
+=>Nlog를 Logging provider중 하나로 추가한다.
+CreateWebHostBuilder()소스 코드를 보면 하는일중의 하나가 logging을 설정한다.
+logging 설정 하는 부분을 복사하여 붙여넣고 NLog추가 한다.
+
+Program.cs
+public class Program
+{
+  public static void Main(string[] args)
+  {
+    CreateWebHostBuilder(args).Build().Run();
+  }
+
+  public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+    WebHost.CreateDefaultBuilder(args)
+    .ConfigureLogging((hostingContext, logging) =>
+    {
+      logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging:));
+      logging.AddConsole();
+      logging.AddDebug();
+      logging.AddEventSourceLogger();
+      logging.AddNLog(); <= 요거 추가
+    })
+    .UseStartup<Startup>();
+}
+
+
+64강 ASP NET Core LogLevel configuration
+LogLevel은 로그된 메세지의 severity를 나타낸다.(격렬함정도)
+LogLevel 이라는 enum class에 로그레벨이 정의되어 있다.
+
+public enum LogLevel
+{    
+    Trace = 0,
+    Debug = 1,
+    Information = 2,
+    Warning = 3,
+    Error = 4,
+    Critical = 5,
+    None = 6
+}
+
+로그 카테고리를 기준으로 로그를 필터링 할수 있다.
+appsettings.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Trace",  <= Default 카테고리는 project namespace 의미(EmployeeManagement.*)
+      "EmployeeManagement.Controllers.HomeController":"Warning", <= Default이지만 HomeController는 Warning이상만 출력하라!
+      "EmployeeManagement.Models.SQLEmployeeRepository":"Trace", <= Default이지만 SQLEmployeeRepository는 Trace이상만 출력하라!
+      "Microsoft": "infomation"
+    }
+  }
+}
+
+또한 logging provider를 기준으로 로그를 필터링 할수도 있다.
+appsettings.json
+{
+  "Logging": {
+    "Debug":{  <= Debug logging Provider용 세팅!
+      "LogLevel": {
+        "Default": "Warning",
+        "EmployeeManagement.Controllers.HomeController":"Warning",
+        "EmployeeManagement.Models.SQLEmployeeRepository":"Warning",
+        "Microsoft": "Warning"
+      }
+    },
+
+    "LogLevel": { <= Debug logging provider이외의 다른 provider용 세팅 (cmd 에서 출력해 보면 위와 다르게 나오는것이 확인가능하다.)
+      "Default": "Trace",
+      "EmployeeManagement.Controllers.HomeController":"Trace",
+      "EmployeeManagement.Models.SQLEmployeeRepository":"Trace",
+      "Microsoft": "Warning"
+    }
+  }
+}
+
+ASPNETCORE_ENVIRONMENT에 따라 env용 appsetting이 Logging 을 override 할수 있으니 주의하자.
+
+appsettings.Developmenst.json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Trace",   
+      "Microsoft": "infomation"
+    }
+  }  
+}
+
+=>로그들은 Log Category, Logging Provider, 혹은 둘 다 로 필터링 되어질수 있다.
+
+65강 ASP NET Core Identity tutorial from scratch
+ASP NET Core Ident ity : Built-in membership system
+=> CRUD user account
+=> Account confirmation
+=> Authentication & Authorization
+=> Password Recovery
+=> Two-factor authentication with SMS
+=> Supports external login providers link Microsoft, Facebook, google
+=> 글구 더 있음~
+
+
+Step1 : 어플리케이션 DbContext는 IndentityDbContext를 상속 받아야 한다
+public class AppDbContext : IndentityDbContext => 상속 받아야 하는 이유는? 
+IndentityDbContext class가 database의 identity table들을 관리하기위해 필요한DBSet 프로퍼티들을 제공하기때문에 필요하다.(정의를 쫒아 가다 보면 나온다.)
+{
+
+}
+
+Step2 : ASP.NET Core Identity service를 추가한다.
+Startup.cs
+ConfigureServices(IServiceCollection services)
+{
+  services.AddIdentity<IdentityUser, IdentityRole>)() <= IdentityUser를 쫒아가다보면 Email, PasswordHash등 Identity는 이런 Built-in User class를 등록된 유저들의 디테일을 관리하는데 쓴다.
+  또한 이 클래스에 쓰이는 모든 프로퍼티들은 해당 user테이블의 컬럼으로 나타난다. 프로퍼티를 추가하고 싶으면 IdentityUser를 상속 받고 프로퍼티 추가하면 된다.
+  IdentityRole은 user role 정보를 관리하는데 쓰여진다.
+  .AddEntityFrameworkStores<AppDbContext>(); <= Identity system이 EF를 사용해서 정보를 관리하길 원한다.
+}
+
+
+Step3 : UseAuthentication middleware를 추가한다.
+Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+  if(env.IsDevelopment())
+  {
+    app.UseDeveloperExceptionPage();
+  }
+  else
+  {
+    app.UseExceptionHandler("/Error"); <= 요거 추가!
+    app.UseStatusCodePagesWithReExecute("/Error/{0}");    
+  }
+
+  app.UseStaticFiles();
+  app.UseAuthentication(); <= request가 MVC middleware에 도착하기전에 유저 인증을 할수 있어야 한다.
+  app.UseMvc(routes =>
+  {
+    routes.MapRoute("default", "{constroller=Home}/{action=Index}/{id?}");
+  });
+}
+
+Stop4 : ASP.NET Core Identity 테이블들을 생성한다.
+Add-Migration AddingIdentity엔터
+IdentityUserLogin<string> requires a primary key to be defined 에러가 난다면
+OnModelCreateing()에서 base.OnModelCreating()을 호출하지 않아서 일것이다.
+
+Update-database엔터
+AspNetUsers table등 많은 테이블들이 생겨 있다.
+
+
+66강 Register new user using asp net core identity
+유저 등록 기능을 만든다.
+public class RegisterViewModel
+{
+  [Required]
+  [EmailAddress]
+  public string Email { get; set; }
+
+  [Required]
+  [DataType(DataType.Password)] <= DataType은 Validation에 쓰이진 않는다.
+  The DataType attributes only provide hints for the view engine to format the data (and supplies elements/attributes such as <a> for URL's and <a href="mailto:EmailAddress.com"> for email. 
+  public string Password { get; set; }
+
+  [DataType(DataType.Password)]
+  [Display(Name="Confirm password")]
+  [Compare("Password", ErrorMessage = "Password and confirmation password do not match.")]
+  public string ConfirmPassword { get; set; }
+}
+
+public class AccountController : Controller
+{
+  [HttpGet] => 이게 없으면 Get Post에 둘다 반응한다!
+  public IActionResult Register()
+  {
+    return View();
+  }
+}
+
+Register.cshtml
+@model RegisterViewModel
+이메일
+패스워드
+confim패스워드 폼을 만든다.
+
+
+67강 ASP NET Core Identity UserManager and SignInManager
+UserManager<IdentityUser> =>generic parameter를 바꿈으로서 추가 데이타를 넣을수 있다.
+CreateAsync, DeleteAsync, UpdateAsync, Etc...
+SignInManager<IdentityUser>
+SignInAsync, SignOutAsync, IsSignedIn, Etc...
+
+
+public class AccountController : Controller
+{
+  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) <= DI
+
+  [HttpGet]
+  public IActionResult Register() ...
+
+
+  [HttpPost]
+  public async Task<IActionResult> Register(RegisterViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      var user = new IdentityUser{UserName = model.Email, Email = model.Email}; <= 유저 이름을 EMail로 쓴다.
+      var result = await userManager.CreateAsync(user, model.Password);
+      if(result.Succeeded)
+      {
+        await signInManager.SignInAsync(user, isPersistent:false);
+        return RedirectToAction("index", "home");
+      }
+
+      foreach(var error in result.Errors)
+      {
+        ModelState.AddModelError("", error.Description);
+      }
+    }
+
+    return View(model);
+  }
+}
+
+
+68강 ASP NET core identity password complexity
+password를 validation하는 default validation rule들은 어디에 정의되어 있나?
+IdentityOptions안에 PasswordOptions등 많은 옵션들이 있다.
+public class IdentityOptions
+{
+  public ClaimsIdentityOptions ClaimsIdentity { get; set; }
+  public UserOptions User { get; set; }
+  public PasswordOptions Password { get; set; }
+  ...
+}
+
+public class PasswordOptions
+{
+    public int RequiredLength { get; set; } = 6;
+    public int RequiredUniqueChars { get; set; } = 1;
+    public bool RequireNonAlphanumeric { get; set; } = true;
+    public bool RequireLowercase { get; set; } = true;
+    public bool RequireUppercase { get; set; } = true;
+    public bool RequireDigit { get; set; } = true;
+}
+
+PasswordOptions에 default configure가 있다. 어떻게 수정하는가? IdentityOptions에 PasswordOptions이외에도 많은 것들이 있으니 아래의 방법으로 수정하면된다.
+Option들은 config하는 패턴이 슬슬 보이고 있는 것 같다.
+ConfigureServices(IServiceCollection services)
+{
+  방법1 : Configure()로 IdentityOptions을 가져온다.
+  services.Configure<IdentityOptions>(options =>{
+    options.Password.RequiredLength = 10;
+    options.Password.RequiredUniqueChars = 3;
+  });
+
+  방법2 : 기존의 AddIdentity()에서 파라메터로 IdentityOptions가 오기때문에 이를 써서 수정한다.
+  services.AddIdentity<IdentityUser, IdentityRole>)(options =>{
+    options.Password.RequiredLength = 10;
+    options.Password.RequiredUniqueChars = 3;
+  });
+}
+
+
+69강 Show or hide login and logout links based on login status
+_Layout.cshtml
+@using Microsoft.AspNetCore.Identity; <= _ViewImports에 옮기는게 좋다.
+@inject SignInManager<IdentityUser> signInManager;
+
+IsSignedIn: ClaimsPrincipal parameter를 요구한다. ClaimsPrincipal을 로그인된 User로 간주해라...
+<body>
+...
+@if(signInManager.IsSignedIn(User)) <= User는 RazorPageBase에 정의되어 있으며 현재 로그인된 유저다!
+{
+  ... 폼태그 안에서 
+  Logout @User.Identity.Name  <= 유저 이름 접근
+} 
+else
+{
+  여기서 밑의 AccountController Logout() 호출하는 링크 태크 만들기
+}
+
+
+public class AccountController : Controller
+{
+  ...
+  [HttpPost]
+  public async Task<IActionResult> Logout()
+  {
+    await signInManager.SignOutAsync();
+    return RedirectToAction("index", "home");
+  }
+}
+
+
+70강 Implementing login functionality
+=>LoginViewModel, Login View, Login Actions - Account Controller 를 만들면 된다.
+public class LoginViewModel
+{
+  [Required]
+  [EmailAddress]
+  public string Email { get; set; }
+
+  [Required]
+  [DataType(DataType.Password)]
+  public string Password { get; set; }
+
+  [Display(Name = "Remember me")]
+  public bool RememberMe { get; set; }  <= 이 옵션에 따라 persistent cookie, session cookie을 생성하면 된다. .ASPNetCore.Identity.Application 이라는 이름으로 cookie가 생성된다.
+}
+
+cshtml 특이한 부분
+<label asp-for="RememberMe">
+  <input asp-for="RemeberMe" />
+  @Html.DisplayNameFor(m => m.RememberMe)   <= html helper 근데 이게 뭘까? DisplayNameFor? LoginViewModel의 [Display(Name = "Remember me")] 부분과 연관?
+</label>
+
+public class AccountController : Controller
+{
+  public IActionResult Login()
+  {
+    return View();
+  }
+
+  [HttpPost]
+  public async Task<IActionResult> Login(LoginViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      var result = await signInManager.PasswordSignInAsync(mode.Email, model.Password, model.RememberMe, false);
+
+      if(result.Succeeded)
+      {
+        return RedirectToAction("index", "home");
+      }
+      ModelState.AddModelError(string.Empty, "Invalied Login Attempt");
+    }
+
+    return View(model);  
+  }
+}
+
+
+71강 Authorization
+Authentication(인증) : 유저가 누구인지 구별, 확인한다.
+Authorization : 유저가 무엇을 할수 있고 없는가?
+=>[Authorize] Attribute가 Authorization을 컨트롤 한다. 가장 간단한 형태로 아무것도 parameter를 쓰지 않으면 로그인한 유저만 접근할수 있다는 뜻이다.
+
+현재 anonymous유저든 인증된 유저든 Details와 Edit View가 접근이 가능하다.
+인증유저는 Create, edit가능, 비인증 유저는 불가능하게 비인증, 인증 유저 모두가 Employee list와 Details는 가능하도록 만들어 보자.
+public class HomeController : Controller
+{
+  [HttpGet]
+  [Authorize] <= 비인증 유저는 실행 불가!, 대응 되는 post도 같이 처리한다. 비인증 상태에서 접근하려고 하면 Login페이지로 redirect되게 나중에 만들자.
+  public ViewResult Create();
+
+  [HttpGet]
+  [Authorize]
+  public ViewResult Edit();
+}
+
+ControllerLevel에서 [Authorize]를 쓸수 있다.
+[Authorize] <= 모든 action은 인증해야 실행가능하다!
+public Class HomeController : Controller
+{
+  [AllowAnonymous] <= Index는 예외!
+  public ViewResult Index();
+
+  [AllowAnonymous]
+  public ViewResult Details();
+
+}
+
+Controller level에 [AllowAnonymous]를 주고 특정 Action에 [Authorize]를 주는것은 안된다. Controller에 [AllowAnonymous]가 있으면 Action의 [Authorize]는 무시된다.
+맨 위처럼 Controller에 아무것도 쓰지 말자.
+
+[Authorize]를 global하게 줄수 있는가? 줄수 있다.
+ConfigureServices()
+{
+  services.AddMvc(options => {
+    var policy = new AuthoriztionPoliyBuilder()  <= 다음에 AuthoriztionPoliy가 뭔지 설명
+                     .RequireAuthenticatedUser()
+                     .Build();
+    options.Filters.Add(new AuthorizeFilter(policy)); 
+  }).AddXmlSerializerFormatters();
+}
+
+문제가 있다! Global하게 [Authorize]를 주었기 때문에 Account:Login()쪽에 로그인되지 않은 유저가 접근할수 없다.
+[HttpGet]
+[AllowAnonymous] <= 추가(post에도 추가 해야된다.)
+public IActionResult Login()
+{
+  return View();
+}
+
+Account:Register()도 [AllowAnonymous]가 필요하다
+
+로그인 창이 뜰때 다음과 같은 url을 만들어서 원래 가려고 했던 곳으로 보낼수 있게 만들자.
+http://localhost/Account/Login?ReturnUrl=/home/edit/1
+
+현재는 RequireAuthenticatedUser()로 AuthenticatedUser로 Authorization을 한것이다.
+이외에 
+Role based Authorization => Claims based Authorization => Policy based Authorization 이 있다.
+
+72강 Redirect user to original url after login
+
+http://localhost/Account/Login?ReturnUrl=/home/edit/1가 작동 가능하도록 만들자.
+
+public class AccountController : Controller
+{  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> Login(LoginViewModel model, string returnUrl) <=returnUrl model binding
+  {
+    if(ModelState.IsValid)
+    {
+      var result = await signInManager.PasswordSignInAsync(mode.Email, model.Password, model.RememberMe, false);
+
+      if(result.Succeeded)
+      {
+        if(!string.IsNullOrEmpty(returnUrl))
+        {
+          return Redirect(returnUrl); <= 심각한 보안 문제가 있다! Open Redirect vulnerability
+        }
+        else
+        {
+          return RedirectToAction("index", "home");
+        }
+      }
+      ModelState.AddModelError(string.Empty, "Invalied Login Attempt");
+    }
+
+    return View(model);  
+  }
+}
+
+
+73강 Open redirect vulnerability example
+Application Vulnerable to Open Redirect Attacks
+다음 2가지 조건이 되면 취약점이 된다.
+1. Application(웹서버) 이 request를 통해(querystring 혹은 form data 같은 것들) 명시된 URL로 redirect를 하고 있다.
+2. URL이 local URL인지 체크없이 rediretion이 수행된다.
+
+예
+=> email로 온 다음의 링크를 무심코 유저가 누른다. returnUrl이 공격자의 웹사이트로 세팅되어 있다.
+http://example.com/account/login?returnUrl=http://exampie.com/account/login(example.com이 아니라 exampie.com이다)
+
+=> authentic사이트(example.com)에 유저는 로그인에 성공하며 공격자의 사이트로 리다이렉트 된다.
+=> 유저는 첫 로그인에서 실수 한줄 알고 공격자의 사이트에서 다시 로그인을 한다.(여기서 Credential이 털린다)
+=> 유저는 authentic사이트로 다시 리다이렉트 된다.
+=> 이 과정에서 유저는 Credential이 탈취당한것을 인지 하지 못한다.
+
+어떻게 막을것인가?
+현재 우리는 어떠한 validation없이 외부 사이트로 redriect하고 있다.
+
+public class AccountController : Controller
+{  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> Login(LoginViewModel model, string returnUrl) <=returnUrl model binding
+  {
+    if(ModelState.IsValid)
+    {
+      var result = await signInManager.PasswordSignInAsync(mode.Email, model.Password, model.RememberMe, false);
+
+      if(result.Succeeded)
+      {
+        if(!string.IsNullOrEmpty(returnUrl))
+        {
+          //return Redirect(returnUrl); <= 심각한 보안 문제가 있다! Open Redirect vulnerability
+          return LocalRedirect(returnUrl); <= local url이 아닌경우 exception이 발생한다!          
+        }
+        else
+        {
+          return RedirectToAction("index", "home");
+        }
+      }
+      ModelState.AddModelError(string.Empty, "Invalied Login Attempt");
+    }
+
+    return View(model);  
+  }
+}
+
+
+public class AccountController : Controller
+{  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> Login(LoginViewModel model, string returnUrl) <=returnUrl model binding
+  {
+    if(ModelState.IsValid)
+    {
+      var result = await signInManager.PasswordSignInAsync(mode.Email, model.Password, model.RememberMe, false);
+
+      if(result.Succeeded)
+      {
+        if(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) <= 이 if문으로 위의 if문 수정, exception 발생 안하도록!
+        {
+          return Redirect(returnUrl);
+        }
+        else
+        {
+          return RedirectToAction("index", "home");  
+        }
+      }
+      ModelState.AddModelError(string.Empty, "Invalied Login Attempt");
+    }
+
+    return View(model);  
+  }
+} 
+
+74강 ASP NET Core client side validation
+server side validation : model의 validation Attribute를 통해서 서버쪽에서 validation된다.
+client side validation : 역시 model을 통해서 하려면
+jquery.js
+jquery.validate.js
+jquery.validate.unobtrusive.js =>unobtrusive validate라 부르는 이유는 server side validation attribute들을 사용해 client validation을 하기때문. js를 한줄도 안쓴다!
+3개의 script를 순서대로 적용한다.
+
+tag-helper를 form에 써서 model과 bind시키면(asp-for="Email") validation attributes들을 참고하여 data-val-*등을 tag에 써서 출력하게 된다.
+data-val-*들은 client에서 필요로 하는 모든 정보를 갖고 있다.
+jquery.validate.unobtrusive.js가 data-val attributes들을 읽어서 client side validation을 수행한다.
+
+
+75강 ASP NET core remote validation
+remote validation : client side script를 사용하여 controller의 action을 호출할수 있게한다. 74강에서 쓰인 jquery.validate.js들을 전부 넣어줘야 한다.
+full page postback없이 server side method를 호출할때 매우 유용하다. 예)이메일을 타이핑할때 사용중인 이메일인지 실시간 확인할때 서버쪽에서 체크해야한다.
+postback : HTTP post를 사용하여 같은 웹페이지로 데이타 전송.
+
+
+public class RegisterViewModel
+{
+  [Required]
+  [EmailAddress]
+  [Remote(action: "IsEmailInUse", controller:"Account")] <= RegisterView의 모델은 RegisterViewModel이며 email UI 필드는 이 모델의 email과 바인딩되어있기때문에 Model에 attribute를 써준다.
+  public string Email { get; set; }
+
+  [Required]
+  [DataType(DataType.Password)] <= DataType은 Validation에 쓰이진 않는다.The DataType attributes only provide hints for the view engine to format the data (and supplies elements/attributes such as <a> for URL's and <a href="mailto:EmailAddress.com"> for email. 
+  public string Password { get; set; }
+
+  [DataType(DataType.Password)]
+  [Display(Name="Confirm password")]
+  [Compare("Password", 
+            ErrorMessage = "Password and confirmation password do not match.")]
+  public string ConfirmPassword { get; set; }
+}
+
+public class AccountController : Controller
+{
+  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) <= DI
+
+  [HttpGet]
+  public IActionResult Register() ...
+
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> Register(RegisterViewModel model) ...
+
+  //[HttpPost][HttpGet]
+  =>[AcceptVerbs("Get", "Post")] : client쪽에서 get을 호출한다.
+  [AllowAnonymous]
+  public async Task<IActionResult> IsEmailInUse(string email)
+  {
+    var user = await userManager.FindByEmailAsync(email);
+    if(user == null)
+    {
+      return Json(true); <= 왜 json을 리턴하는가? jquery validate에서 json이 결과로 올것으로 만들어져 있으니깐..
+    }
+    else
+    {
+      return Json($"Email {email} is already in use"); <= validation error msg 리턴
+    }
+  }
+}
+
+
+76강 Custom validation attribute
+특정 도메인의 이메일만 유저 등록을 할수 있게 하려면 내장된 RegularExpression 속성을 사용해도 되지만 custom validator를 만들어보자.
+
+public class RegisterViewModel
+{
+  [Required]
+  [EmailAddress]
+  [Remote(action: "IsEmailInUse", controller:"Account")]
+  [ValidEmailDomain(allowedDomain:"pragimtech.com", ErrorMessage ="Email domain must be pragimtech.com")] <= 이렇게 사용하는 attribute를 만들자! 확장성이 있게 파라메터를 받을수 있도록 만든다.
+  ErrorMessage 프로퍼티는 베이스 클래스인 ValidationAttribute의 public 프로퍼티다 (흠...생성자에는 allowedDomain:으로 파라메터를 주고 프로퍼티는 컴마찍고 초기화 하는건가?)
+  public string Email { get; set; }
+
+  [Required]
+  [DataType(DataType.Password)]
+  public string Password { get; set; }
+
+  [DataType(DataType.Password)]
+  [Display(Name="Confirm password")]
+  [Compare("Password", 
+            ErrorMessage = "Password and confirmation password do not match.")]
+  public string ConfirmPassword { get; set; }
+}
+
+
+Utilities 폴더안에 ValidEmailDomainAttribute.cs화일 생성한다.
+namespace EmployeeManagement.Utilities
+{
+  public class ValidEmailDomainAttribute : ValidationAttribute <= ValidationAttribute를 상속 받아야 한다.
+  {
+    private readonly string allowedDomain;
+    public ValidEmailDomainAttribute(string allowedDomain) <= 파라메터 이름을 맞춰준다.
+    {
+      ...
+    }
+
+    public override IsValid(object value)
+    {
+      string[] strings = value.ToString().Split('@');
+      return strings[1].ToUpper() == allowedDomain.ToUpper();
+    }
+  }
+}
+
+77강 Extend IdentityUser in ASP NET Core
+city, country, gender등 유저에 추가적인 정보를 저장하고 싶을때 확장한다.
+public class ApplicationUser : IdentityUser
+{
+  public string City { get; set; }
+}
+
+소스상의 모든 IdentityUser를 ApplicationUser로 교체. View에 @inject로 된것들도 체크할것!
+
+User table에 City컬럼이 없으므로 migration이 필요하다.
+add-migration Extend_IdentityUser 명령어를 치면 새로운 마이그레이션 화일이 생성되었지만 Migration code가 전혀 없다.
+remove-migration으로 삭제하고 원인 파악해보자.
+
+AppDbContext는 AppcationUser에 대해 전혀 모름...그래서 AppDbContext를 보고 EF가 migration을 생성하지 못한다.
+public class AppDbContext : IndentityDbContext  <= 이건 디폴트 IdentityUser를 사용하게된다.
+public class AppDbContext : IndentityDbContext<ApplicationUser> <= 이렇게 수정하고 
+add-migration
+update-database 명령.
+
+registerview에 City입력 받도록 추가.
+
+78강 Creating roles
+UserManager<IdentityUser>가 User의 CRUD 담당 AspNetUsers table
+RoleManager<IdentityRole>이 Role의 CRUD 담당 AspNetRoles table
+AspNetRoles table을 보면 Id와 Name이 있다. id는 자동으로 생성되며 role의 Name을 넣어주면 된다.
+
+어떠한 Controller에도 DI를 통해 inject가능하다.
+
+Role을 편집하는 mvc를 만들자.
+
+public class CreateRoleViewModel
+{
+  [Required]
+  public string RoleName{ get; set; }
+}
+
+public AdministrationController : Controller
+{
+  private readonly ReleManager<IdentityRole> roleManager;
+
+  public AdministrationController(RoleMananger<IdentityRole> roleManager)
+  {
+    this.roleManager = roleManager;
+  }
+
+  [HttpGet]
+  public IActionResult CreateRole()
+  {
+    return View();
+  }
+
+  [HttpPost]
+  public async Task<IActionResult> CreateRole(CreateRoleViewModel model)
+  {
+    if(ModelState.IsValid)
+    {
+      IdentityRole identityRole = new IdentityRole
+      {
+        Name = model.RoleName;
+      }
+    }
+
+    IdentityResult result await roleManager.CreateAsync(identityRole);
+    if(result.Succeeded)
+    {
+      return RedirectToAction("index", "home");
+    }
+
+    foreach(IdentityError error in result.Errors)
+    {
+      ModelState.AddModelError("", error.Description);
+    }
+  }
+
+  return View(model);
+}
+
+CreateRoleView.cs
+@model CreateRoleViewModel
+@{
+  ViewBag.title = ...;
+}
+
+
+79강 Get list of roles
+public AdministrationController : Controller
+{
+ ...
+
+ [HttpGet]
+ public IActionResult ListRoles()
+ {
+   var roles = roleManager.Roles;
+   return view(roles);
+ }
+}
+
+ListRoles.cshtml
+@model IEnumerable<IdentityRole>
+...
+@if (Model.Any())
+{
+  foreach (var role in Model)
+  {
+    <div>
+      role들을 표시하는 태그들
+      <div class="card-header">Role Id : @role.Id</div>
+    </div>
+  }
+}
+else
+{
+  <div>no roles 표시 태그들</div>
+}
+
+
+80강 Edit role
+Role은 id와 Name으로 구성되어 있다. id는 고칠수 없으며 Name만 Update가능하다.
+public class EditRoleViewModel
+{
+  public EditRoleViewModel()
+  {
+    Users = new List<string>();
+  }
+
+  public string Id { get; set; }
+
+  [Required(ErrorMessage="Role Name is required")]
+  public string RoleName { get; set; }
+
+  public list<string> Users { get; set; }
+}
+
+listRoles view에서 edit button을 클릭하면 EditRolesView로 가게 하자!
+ListRoles.cshtml
+<a class="btn btn-primary" asp-action="EditRole" asp-controller="Administration" asp-route-id="@role.Id"> =>role의 id를 파라메터로 넘긴다.
+
+
+public AdministrationController : Controller
+{
+ ...
+
+ [HttpGet]
+ public IActionResult ListRoles()
+ {
+   var roles = roleManager.Roles;
+   return view(roles);
+ }
+
+ [HttpGet]
+ public async Task<IActionResult> EditRole(string id) <= id는 url로 온다
+ {
+   var role = await roleManager.FindByIdAsync(id);
+
+   if(role == null)
+   {
+     ViewBag.ErrorMessage = $"Role with Id = {id} cannot be found";
+     return View("NotFound");
+   }
+
+   var model = new EditRoleViewModel
+   {
+     Id = role.Id,
+     RoleName = role.Name
+   };
+
+   foreach(var user in userManager.Users)
+   {
+     if(await userManager.IsInRoleAsync(user, role.Name))
+     {
+       model.Users.Add(user.UserName);
+     }
+   }
+
+   return View(model);
+ }
+
+[HttpPost]
+ public async Task<IActionResult> EditRole(EditRoleViewModel model)
+ {
+   var role = await roleManager.FindByIdAsync(model.Id);
+
+   if(role == null)
+   {
+     ViewBag.ErrorMessage = $"Role with Id = {model.Id} cannot be found";
+     return View("NotFound");
+   }
+   else
+   {
+     role.Name = model.RoleName;
+     var result = await roleManager.UpdateAsync(role);
+
+     if(result.Succeeded)
+     {
+       return RedirectToAction("ListRoles");
+     }
+
+     foreach(var error in result.Errors)
+     {
+       ModelState.AddModelError("", error.Description);
+     }
+
+     return View(model);
+   }  
+ }
+}
+
+
+EditRole.cshtml
+@model EditRoleViewModel
+...
+
+
+
+81강 Add or remove users from role
+EditUsersInRole View를 만들어보자. (Admin을 갖고 있는 모든 아이디를 보여주고 아이디 옆에는 체크 박스가 있는 view)
+Users는 AspNetUsers table에 Roles는 AspNetRoles table에 저장된다.
+AspNetUsers와 AspNetRoles는 Many to Many relationship을 갖는다.
+User와 Role의 mapping data는 AspNetUserRoles table에 저장된다.
+AspNetUserRoles 는 UserId:RoleId 로 구성된다. 둘다 foreign key이다.
+
+public class UserRoleViewModel
+{
+  public string UserId { get; set; }
+  //public string RoleId { get; set; } <= UserRoleView에서는 one to many rela tionship이 되므로 RoleId는 삭제. ViewBag에 RoleId를 넣을예정
+  public string UserName { get; set; }
+  public bool IsSelected { get; set; }
+}
+
+public class AdministrationController : Controller
+{
+  ...
+
+  [HttpGet]
+  public async Task<IActionResult> EditUsersInRole(string roleId)
+  {
+    ViewBag.roleId = roleId;  <= 이렇게 넘기자 Role 1개에 여러개의 User가 있으므로 Model에 넣을 필요가 없다!
+    var role = await roleManager.FindByIdAsync(id);
+
+    if(role == null)
+    {
+      ViewBag.ErrorMessage = $"Role with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+
+    var model = new List<UserRoleViewModel>();
+    foreach(var user in userManager.Users)
+    {
+      var userRoleViewModel = new UserRolesViewModel
+      {
+        UserId = user.Id,
+        UserName = user.UserName
+
+        if(await userMananger.IsInRoleAsync(user, role.Name))
+        {
+          userRoleViewModel.IsSelected = true;
+        }
+        else
+        {
+          userRoleViewModel.IsSelected = false;
+        }
+
+        model.Add(userRoleViewModel);
+      }
+
+      return View(model);
+    }
+  }
+
+  //form의 결과를 받는 action
+  [HttpPost]
+  public async Task<IActionResult> EditUsersInRole(List<UserRoleViewModel> model, string roleId)  <=UserRoleViewModel의 리스트!
+  {
+    var role = await roleManager.FindByIdAsync(id);
+
+    if(role == null)
+    {
+      ViewBag.ErrorMessage = $"Role with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+
+    for(int i = 0; i < model.Count; i++)
+    {
+      var user = await userManager.FindByIdAsync(model[i].UserId);
+      IdentityResult result = null;
+
+      if(model[i].IsSelected && !(await userManager.IsInRoleAsync(user, role.Name)))
+      {
+        result = await userManager.AddToRoleAsync(user, role.Name);
+      } 
+      else if(!model[i].IsSelected && !(await userManager.IsInRoleAsync(user, role.Name))
+      {
+        result = await userManager.RemoveFromRoleAsync(user, role.Name);
+      }
+      else
+      {
+        continue;
+      }
+
+      if(result.Succeeded)
+      {
+        if( i < (model.Count - 1))
+          continue;
+        else
+          return RedirectToAction("EditRole", new { Id = roleId });
+      }
+    }
+  }
+
+    return RedirectToAction("EditRole", new { Id = roleId });
+  }
+
+
+EditUsersInRole.cshtml
+@model List<UserRoleViewModel>
+
+@{
+  var roleId = ViewBag.roleId;
+}
+
+대충 이런 코드들을
+<form method="post">
+  <div class="card-body">
+    <div class="card-body">
+      @for (int i = 0; i < Model.Count; i++)
+      {
+        <div class="form-check m-1">
+          <input type="hidden" asp-for="@Model[i].UserId" /> <= 폼에서 UserId와 UserName을 보내도록 hidden 추가!
+          <input type="hidden" asp-for="@Model[i].UserName" />
+          <input asp-for="@Model[i].IsSelected" class="form-check-input" />
+          <label class="form-check-label" asp-for="@Model[i].IsSelected">
+            @Model[i].UserName
+          </label>
+        </div>
+      }
+    </div>
+  </div>
+</form>
+
+
+
+82강 ASP NET Core role based authorization
+authorization 유저가 무엇을 할수 있는지? 할수없는지 알아보는 process이다.
+authorization은 [Authorize] attribute로 control된다.
+
+[Authorize] 파라메터 없이 가장 간단한 형태로 쓰이면 user가 authenticated되었는지 만을 체크한다. 이를 simple authorization이라 한다.
+
+[Authorize(Roles = "Admin,User")] <= Admin or User role required
+public class AdministrationController : Controller
+
+[Authorize(Roles = "Admin")]
+[Authorize(Roles = "User")] <= Admin and User both role required
+public class AdministrationController : Controller
+
+Authorize attribute는 Controller level, 개별젹인 action level, 혹은 양쪽 모두에 쓰일수 있다.
+[Authorize(Roles = "Admin,User")]
+public class AdministrationController : Controller
+{
+  public ActionResult ABC() <= Admin or User role have access
+  {
+
+  }
+
+  [Authorize(Roles = "Admin")]
+  public ActionResult XYZ() <= Only Admin role have access
+  {
+
+  }
+
+  [AllowAnonymous]
+  public ActionResult Anyone() <= Anyone including anonymous
+  {
+
+  }
+}
+
+
+83강 Show or hide navigation menu based on user role
+_Layout.cshtml
+@inject SignInManager<ApplicationUser> signInManager;
+
+@if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+{
+  <li class="nav-item">
+    <a asp-action="ListRoles" asp-controller="Administration" class="nav-link">
+      Manage Roles
+    </a>
+  </li>
+}
+
+권한 없는 유저가 /Account/EditRole로 접근했을때 /Account/AccessDenied로 리다이렉트 된다.
+[HttpGet]
+[AllowAnonymous]
+public IActionResult AccessDenied()
+{
+  return View();
+}
+
+AccessDenied.cshtml 잘 만들어보자.
+
+
+84강 List all users from asp net core identity database
+admin이 접속해서 유저들의 리스트를 보며 유저를 등록 삭제 관리하는 기능 만들기
+
+[Authorize(Roles = "Admin")]
+public class AdministrationController : Controller
+{
+  ...
+  [HttpGet]
+  public IActionResult ListUsers()
+  {
+    var users = userManager.Users;  <= 모든 유저 가져오기!
+    return View(users);
+  }
+}
+
+public class AccountController : Controller
+{
+  신규등록했을때(Register) 일반유저들은 home에 index로 로그인한 상태로 리다이렉트 되지만
+  관리자가 Reigster에서  다른 유저들을 추가하면 Administration으로 가게 if문 추가 
+}
+
+
+85강 Edit identity user
+public class EditUserViewModel
+{
+  public EditUserViewModel()
+  {
+    Claims = new List<string>();
+    Roles = new List<string>();
+  }
+
+  public string Id { get; set;}
+  [Required]
+  public string UserName { get; set;}
+  [Required][EmailAddress]
+  public string Email { get; set;}
+  public string City { get; set;}
+
+  public List<string> Claims { get; set;}
+  public IList<string> Roles { get; set;}
+}
+
+public class AdministrationController : Controller
+{
+  ...
+  [HttpGet]
+  public async Task<IActionResult> EditUser(string id)
+  {
+    var user = await userManager.FindByIdAsync(id);
+
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = $"User with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+
+    var userClaims = await userManager.GetClaimsAsync(user);
+    var userRoles = await userManager.GetRolesAsync(user);
+
+    var model = new EditUserViewModel
+    {
+      Id = user.Id,
+      ...
+      Claims = userClaims.Select(c => c.Value).ToList(),
+      Roles = userRoles
+    };
+
+    return View(model);
+  }
+
+
+  [HttpPost]
+  public IActionResult EditUser(EditUserViewModel model)
+  {
+    var user = await userManager.FindByIdAsync(model.Id);
+
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = $"User with Id = {model.id} cannot be found";
+      return View("NotFound");
+    }
+    else
+    {
+      user.Email = model.Email;
+      ...
+
+      var result = await userManager.UpdateAsync(user);
+      if (result.Succeeded)
+      {
+        return RedirectToAction("ListUsers");
+      }
+
+      foreach(var error in result.Errors)
+      {
+        ModelState.AddModelError("", error.Description);
+      }
+
+      return View(model);
+    }    
+  }
+}
+
+86강 Delete identity user in asp net core
+Delete op은 get으로 하지 말것! 
+1.해커들의 공격에 시달릴것...
+2.검색엔진이 get을 날린다. 그때 delete면 지워질것...
+따라서 a링크로 되어 있는 Delete button을 form으로 감싸고 submit버튼으로 만든다.
+
+public class AdministrationController : Controller
+{
+  public async Task<IActionResult> DeleteUser(string id)
+  {
+    var user = await userManager.FindByIdAsync(model.Id);
+
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = $"User with Id = {model.id} cannot be found";
+      return View("NotFound");
+    }
+    else
+    {
+      var result = await userManager.DeleteAsync(user);
+      if(result.Succeeded)
+      {
+        return RedirectToAction("ListUsers");
+      }
+
+      foreach(var error in result.Errors)
+      {
+        ModelState.AddModelError("", error.Description);
+      }
+
+      return View("ListUsers");
+    }
+  }
+}
+
+87강 ASP NET Core delete confirmation
+1. 브라우저의 alert창을 쓰는방법
+ListUsers.cshtml
+<form>
+=> onclick이 true를 리턴해야 form의 submit이 실행된다.
+<button type="submit" class="btn btn-danger" onclick="return confirm('delete? : @user.UserName')">Delete</button>
+</form>
+2.인라인 방법 <= 팝업이 뜨는것이 아니라 눌렀을경우 페이지에서 에러메세지 처럼 한번더 확인하는것!
+<span id="confirmDeleteSpan" style="display:none">
+  <span>Are you sure want delete?</span>
+  <button type="submit" class="btn btn-danger">Yes</button>
+  <a href="#" class="btn btn-primary">No</a>
+</span>
+<span id="deleteSpan">
+  <a href="#" class="btn btn-danger">Delete</a>
+</span>
+
+span에 id를 주었는데 위의 id들이 루프를 돌며 생성되어 여러개가 생기게 된다. id에 _@user.Id를 적어 유니크하게 만들어준다.
+
+<span id="confirmDeleteSpan_@user.Id" style="display:none">
+  ...
+</span>
+<span id="deleteSpan_@user.Id">
+  ...
+</span>
+
+js 만들고(버튼을 보이게 했다 안보이게했다 하는 js 스킵!) 다음과 같이 포함 시켜준다.
+@section Scripts {
+  <script src="~/js/CustomScript.js></script>
+}
+
+_Layout.cshtml
+@if(IsSectionDefined("Scripts"))
+{
+  @RenderSection("Scripts", required: true)
+}
+
+
+88강 Delete identity role
+UserManager를 통해 유저를 지우는 것과 비슷하다.
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> DeleteRole(string id)
+  {
+    var role = await roleManager.FindByIdAsync(Id);
+
+    if(role == null)
+    {
+      ViewBag.ErrorMessage = $"Role with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+    else
+    {
+      var result = await roleManager.DeleteAsync(role);
+      if(result.Succeeded)
+      {
+        return RedirectToAction("ListRoles");
+      }
+
+      foreach(var error in result.Errors)
+      {
+        ModelState.AddModelError("", error.Description);
+      }
+
+      return View("ListRoles");
+    }
+  }
+}
+
+89강 Enforce ON DELETE NO ACTION in entity framework core
+Cascading referential integrity constraint(연계 참조 무결성 제약 조건)
+자신을 참조하고 있는 foreign key가 있는 key를 update하거나 delete할때 SQL이 어떠한 action을 해야하는지 정의할수 있게 해준다.
+
+Employee table
+ID NAME GenderID
+1 Mary 2
+2 John 1
+3 David 1
+4 Sara 2
+
+Gender table
+ID Gender
+1 Male
+2 Female
+
+
+위의 2개의 테이블이 있을때 GenderID가 FK이며 Gender table에서 2 Female을 지우려고 시도하면 Database는 어떤 행동을 취할것인가?
+No Action
+Cascade
+Set NULL
+Set Default
+https://www.youtube.com/watch?v=ETepOVi7Xk8&list=PL08903FB7ACA1C2FB&index=5 (SQL 관련강의)
+
+User는 AspNetUsers
+Role은 AspNetRoles
+User와 Role의 mapping data는 AspNetUserRoles 이며 UserId와 RoleId 2개의 컬럼만 있다. 이 2개는 FK이다.
+만약 AspNetRoles에서 role을 지운다면 EF에서의 default behavior는 무엇인가? role을 지우면 AspNetUserRoles에 있는 해당 role을 FK로 갖고 있는
+모든 행이 지워진다.(Cascade 옵션)
+vs의 sql server object의 view designer를 통해 AspNetUserRoles의 T-SQL을 보면 ON DELETE CASCADE문장을 볼수있다.
+
+만약 role에 한명의 유저라도 있을경우 role을 삭제 할수 없도록 수정하려면 No Action으로 옵션을 고쳐야할 필요가 있다.
+role에 할당된 유저를 전부 지우고 그다음 role을 삭제하도록...만약 삭제 하려고 하면 exception이 일어나고 삭제가 되지 않는다.
+
+OnModelCreating(ModelBuilder modelBuilder)
+{
+  base.OnModelCreating(modelBuilder);
+  foreach(var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))  <= 모델에 있는 모든 모든 FK에 NO ACTION을 건다!
+  {
+    foreignKey.DeleteBehavior = DeleteBehavior.Restrict;  //No Action
+  }
+}
+
+public enum DeleteBehavior
+{
+  ClientSetNull = 0,
+  Restrict = 1,
+  SetNull = 2,
+  Cascade = 3
+}
+
+
+위와 같이 수정뒤 add-migration update-database를 하면된다.
+vs의 sql server object의 view designer를 통해 T-SQL을 보면 ON DELETE 문장이 없으며 이는 디폴트 No Action이다.
+
+수정뒤 유저가 할당되어 있는 role을 지우려 하면 exception page가 보인다.
+
+90강 Custom error page
+익셉션 페이지가 유저에게 보이면 유저에게 아무런 의미가 없고 보안적인 측면에서 좋지 않다. launchsettings.json에서 ASPNETCORE_ENVIRONMENT를 Production등으로
+설정하면 이전에 만든 Custom error page가 보인게된다.
+
+Error.cshtml
+@if(ViewBag.ErrorTitle == null)
+{
+  기존 일반적 error page
+}
+else
+{
+  <h1 class="text-danger">@ViewBag.ErrorTitle</h1>
+  <h6 class="text-danger">@ViewBag.ErrorMessage</h1>
+}
+
+
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> DeleteRole(string id)
+  {
+    var role = await roleManager.FindByIdAsync(Id);
+
+    if(role == null)
+    {
+      ViewBag.ErrorMessage = $"Role with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+    else
+    {
+      try
+      {
+        var result = await roleManager.DeleteAsync(role);
+        if(result.Succeeded)
+        {
+          return RedirectToAction("ListRoles");
+        }
+
+        foreach(var error in result.Errors)
+        {
+          ModelState.AddModelError("", error.Description);
+        }
+
+        return View("ListRoles");
+      }
+      catch(DbUpdateException e)  <= 일반적인 exception이 아니라 DbUpdateException인것에 주목! 일반적인 예외는 뷰가 출력하는것이 다르다.
+      {
+        logger.LogError($"Error deleting role {e}");
+        ViewBag.ErrorTitle = $"{role.Name} role is in use";
+        ViewBag.ErrorMessage = $"{role.Name} role cannot be deleted ..." + 
+          $"If you want to delete ...";
+        
+        return View("Error");
+      }
+    }
+  }
+}
+
+catch(Exceoption e)으로 모든 exception을 잡는것 보다 DbUpdateException만 잡는것이 더 좋다. 다른 exception이 발생한경우 일반적 Error표시가 낫다.
+또한 실제 상황에서는 exception을 log로 기록한다.
+
+ILogger<AdministrationController>를 AdministrationController에 DI하고 쓰면 된다.
+
+
+91강 Manage user roles in asp net core identity
+User가 있을때 User에 role을 추가, 삭제하는 방법.
+81강에서 했던 Role에 유저를 추가, 삭제 하는 방법과 비슷하다.
+EditUser페이지에서 Manage Roles버튼 구현하기.
+
+EditUser.cshtml
+<a asp-action="ManageUserRoles" asp-route-userId="@Model.Id">Manage Roles</a>
+
+user와 role은 이 뷰에서 one to many relationship이다.
+userId는 필요 중복하지 않게 ViewModel에서 제외한다.
+
+public class UserRolesViewModel
+{
+  public string RoleId { get; set; }
+  public string RoleName { get; set; }
+  public bool IsSelected { get; set; }
+}
+
+public class AdministrationController : Controller
+{
+  [HttpGet]
+  public async Task<IActionResult> ManageUserRoles(string userId)
+  {
+    ViewBag.userId = userId;
+
+    var user = await userManager.FindByIdAsync(userId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var model = new List<UserRolesViewModel>();
+
+    foreach(var role in roleManager.Roles)
+    {
+      var userRolesViewModel = new UserRolesViewModel
+      {
+        RoleId = role.Id,
+        RoleName = role.Name
+      };
+
+      if(await userManager.IsInRoleAsync(user, role.Name))
+      {
+        userRolesViewModel.IsSelected = true;
+      }
+      else
+      {
+        userRolesViewModel.IsSelected = false;
+      }
+
+      model.Add(userRolesViewModel);
+    }
+
+    return View(model);
+  }  
+}
+
+@ManageUserRoles.cshtml
+@model List<UserRolesViewModel>
+@{
+  var userId = ViewBag.userId;
+}
+form 태그안의 hidden으로 RoleId와 RoleName을 히든으로 넣는다. 이전에 보았던것과 비슷..
+
+ManageUserRoles post를 처리하는 Action을 만들자..
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> ManageUserRoles(List<UserRolesViewModel> model, string userId)
+  {
+    var user = await userManager.FindByIdAsync(userId);
+    if(user == null)
+    {
+      ...
+      return View("NotFound");
+    }
+
+    var roles = await userManager.GetRolesAsync(user);
+    var result = await userManager.RemoveFromRolesAsync(user, roles);
+
+    if(!result.Succeeded)
+    {
+      ModelState.AddModelError(...);
+      return View(model);
+    }
+
+    result = await userManager.AddToRolesAsync(user, model.Where(x => x.IsSelected).Select(y => y.RoleName));
+    if(!result.Succeeded)
+    {
+      ModelState.AddModelError("....");
+      return View(model);
+    }
+
+    retrun RedirectToAction("EditUser", new { Id = userId });
+  }
+}
+
+92강 Model binding not working on submitting razor view with foreach loop
+@foreach 루프문으로는 submit시 모델바인딩이 동작하지 않는다.
+
+public class AdministrationController : Controller
+{
+  [HttpGet]
+  public async Task<IActionResult> ManageUserRoles(string userId)
+  {
+    ViewBag.userId = userId;
+
+    var user = await userManager.FindByIdAsync(userId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var model = new List<UserRolesViewModel>(); <= model이 UserRolesViewModel의 List임을 주목!
+
+    foreach(var role in roleManager.Roles)
+    {
+      var userRolesViewModel = new UserRolesViewModel
+      {
+        RoleId = role.Id,
+        RoleName = role.Name
+      };
+
+      if(await userManager.IsInRoleAsync(user, role.Name))
+      {
+        userRolesViewModel.IsSelected = true;
+      }
+      else
+      {
+        userRolesViewModel.IsSelected = false;
+      }
+
+      model.Add(userRolesViewModel);
+    }
+
+    return View(model);
+  }  
+}
+
+
+@ManageUserRoles.cshtml
+@model List<UserRolesViewModel>
+@{
+  var userId = ViewBag.userId;
+}
+
+<form mothod="post">
+  <div>
+    @for (int i = 0; i < Model.Count; i++)  <= 이런식으로 for루프를 사용해서 구성했기때문에 정상작동한다.
+    {
+      <input type="hidden" asp-for="@Model[i].RoleId" />
+      <input type="hidden" asp-for="@Model[i].RoleName" />
+      <input asp-for="@Model[i].IsSelected" />
+      <label asp-for="@Model[i].IsSelected>@Model[i].RoleName</label>
+    }
+
+    <input type="submit" value="Update">  <= 여기 form의 submit버튼이 있다.
+  </div>
+</form>
+
+submit을 누르면 ManageUserRoles post가 된다.
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> ManageUserRoles(List<UserRolesViewModel> model, string userId) <= Action의 파라메터로 List가 들어와야 한다!
+  {
+    ...
+  }
+}
+
+model binding은 form의 내용을 Action Parameter인 List<UserRolesViewModel>로 변환해야한다.
+View의 Html을 직접 보면 
+<div>
+  ...
+  <input type="hidden" id="z0__RoleId" name="[0].RoleId" value="...."> <= id에z0__, name에[0]으로 indexer가 있다! 이러한 정보가 있어야 model binding이 가능하다!
+  <input type="hidden" id="z0__RoleName" name="[0].RoleName" value="....">
+  <input type="checkbox" id="z0__IsSelected" ...>
+  <label for="z0__IsSelected">
+  ...
+</div>
+<div>
+  ...
+  <input type="hidden" id="z1__RoleId" name="[1].RoleId" value="....">
+  <input type="hidden" id="z1__RoleName" name="[1].RoleName" value="....">
+  ...
+</div>
+
+id와 name을 주목해서 보자! id와 name이 mvc에의 model binding을 하기 위한 이름으로 쓰여져 있다!
+이러한 정보를 이용하여 form의 정보를 List<UserRolesViewModel> model로 바인딩 할수있다!
+
+
+
+<form mothod="post">
+  <div>
+    @foreach (var role in Model)  <= foreach문으로 교체 했을때!
+    {
+      ...
+    }
+
+    <input type="submit" value="Update">  <= 여기 form의 submit버튼이 있다.
+  </div>
+</form>
+
+View의 Html을 직접 보면 
+<div>
+  ...
+  <input type="hidden" id="role_RoleId" name="role.RoleId" value="...."> <= id가 role_RoleId, name이 role.RoleId로 바뀌었다. 인덱서 정보가 없어졌다!
+  <input type="hidden" id="role_RoleName" name="role.RoleName" value="....">
+  <input type="checkbox" id="role_IsSelected" ...>
+  <label for="role_IsSelected">
+  ...
+</div>
+<div>
+  ...
+  <input type="hidden" id="role_RoleId" name="role.RoleId" value="...."> <= id가 role_RoleId, name이 role.RoleId로 바뀌었다. 인덱서 정보가 없어졌다!
+  <input type="hidden" id="role_RoleName" name="role.RoleName" value="....">
+  <input type="checkbox" id="role_IsSelected" ...>
+  <label for="role_IsSelected">
+  ...
+</div>
+
+2개의 checkbox가 아이디가 갖기때문에 첫번째 checkbox로 모든 체크박스가 동작한다.(버그)
+name이 role.RoleId이기때문에 mvc의 model binder는 이 값이 List<UserRolesViewModel>파라메터에 바인딩되어야 한다는 것을 알지도 못한다. List.Count== 0
+
+
+=>for 루프를 쓰면 생성된 id, name이 유니크해지며 integer indexer를 포함한다.
+그래서 model binder는 controller action의 list파라메터에 input element의 값이 매핑되어야 하는것을 알수있다.
+
+=>foreach 루프를 쓰면 생성된 id, name이 유니크 하지 않으므로 model binder는 list파라메터에 매핑되어야 한다는 것을 모른다.
+
+
+93강 Manage user claims
+자세한건 나중에 설명하겠으니 일단 claim을 access control decision(접근 제어 결정)을 할때 쓰여질수 있는 이름 값 쌍으로 생각하고 있자.
+예) edit employee claim을 가지고 있는 유저만 employee detail을 에디트 할수 있게...
+이러한식으로 claim을 authorization check를 하기 위해 쓸수있다. 이러한 방법을 claims based authoriaztion이라 부른다.
+
+만드는 application에서 쓰이는 모든 claims를 가져 올수 있어야 한다. 이는 database, configuration file, static화일등에 저장되어 있을수 있다.
+우리는 static class에 저장한다.
+public static class ClaimsStore
+{
+  public static List<Claim> AllClaims = new List<Claim>() <= Claim클래스는 System.Security.Claims에 있다.
+  {
+    new Claim("Create Role", "Create Role"),
+    new Claim("Edit Role", "Edit Role"),
+    new Claim("Delete Role", "Delete Role")
+  }
+}
+
+
+EditUser.cshtml
+<a asp-action="ManageUserClaims" asp-route-userId="@Model.Id">Manage Claims</a> 추가
+
+UserClaimsViewModel.cs
+public class UserClaimsViewModel
+{
+  public UserClaimsViewModel()
+  {
+    Claims = new List<UserClaim>();
+  }
+
+  public string UserId { get; set; }
+  public List<UserClaim> Claims { get; set; }  <= List<Claim>이 아니라 List<UserClaim>이다.
+}
+
+UserClaim.cs
+public class UserClaim
+{
+  public string ClaimType { get; set; }
+  public bool IsSelected { get; set; }
+}
+
+
+
+public class AdministrationController : Controller
+{
+  [HttpGet]
+  public async Task<IActionResult> ManageUserClaims(string userId)
+  {
+    var user = await userManager.FindByIdAsync(userId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var existingUserClaims = await userManager.GetClaimsAsync(user);
+    var model = new UserClaimsViewModel
+    {
+      UserId = userId
+    }
+
+    foreach(Claim claim in ClaimsStore.AllClaims)
+    {
+      UserClaim userClaim = new UserClaim
+      {
+        ClaimType = claim.Type
+      };
+
+      if(existingUserClaims.Any(c => c.Type == claim.Type))
+      {
+        userClaim.IsSelected = true;
+      }
+
+      model.Claims.Add(userClaim);
+    }
+
+    return View(model);
+  }
+}
+
+
+ManageUseClaims.cshtml
+@model UserClaimsViewmodel
+<form method="post">
+
+  @for (int i = 0; i < Model.Claims.Count; i++)
+  {
+    <div>
+      <input type="hidden" asp-for="@Model.Claims[i].ClaimType"  />
+      <input asp-for="@Model.Claims[i].IsSelected" />
+      <lable asp-for="@Model.Claims[i].IsSelected>@Model.Claims[i].ClaimType</label>
+    </div>
+  }
+
+  <input type ="submit" value="Update"..>
+  <a asp-action="EditUser" asp-route-id="@Model.UserId" ..>Cancel</a>
+</form>
+
+
+마지막으로 Update를 눌렀을때 post처리를 만든다.
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> ManageUserClaims(UserClaimsViewModel model)
+  {
+    var user = await userManager.FindByIdAsync(model.UserId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var claims = await userManager.GetClaimsAsync(user);
+    var result = await userManager.RemoveClaimsAsync(user, claims);
+
+    if(!result.Succeeded)
+    {
+      ...
+      return;
+    }
+
+    //.Where()가 리턴하는것은 IEnumerable<UserClaim>이다. 파라메터로 필요로 하는것으 IEnumerable<Claim>이기때문에
+    //.Select에서 Claim을 만들어 리턴한다.
+    result = await userManager.AddClaimsAsync(user, model.Claims.Where(c => c.IsSelected).Select(c => new Claim(c.ClaimType, c.ClaimType)) );
+
+    if(!result.Succeeded)
+    {
+      ...
+      return;
+    }
+
+    return RedirectToAction("EditUser", new { Id = model.UserId });
+  }
+}
+
+위와 같이 저장한 claim들은 AspNetUserClaims table에 저장된다.
+
+94강 Claims based authorization
+Claim들을 policy에 넣고 policy에 Claim들을 등록후 policy등록한다. 그뒤에 policy를 사용하여 제어한다.
+
+Claims based Authorization을 구현 하는 방법
+step1. Create Claims Policy
+startup.cs 
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {
+      options.AddPolicy("DeleteRolePolicy", policy => policy.RequireClaim("Delete Role"));
+    }
+  );
+
+
+  //policy에 여러개의 Claim을 추가할 경우 chainning한다.
+  services.AddAuthorization( options =>
+    {
+      options.AddPolicy("DeleteRolePolicy", policy => policy.RequireClaim("Delete Role").RequireClaim("Create Role"));
+    }
+  );
+
+
+
+
+  ...
+}
+
+step2. Use the Policy for Authorization Checks
+Controller혹은 Controller Action에 Policy를적용할수 있다.
+
+[Authorize(Roles="Admin")]] <= Controller에 Adimin Role 적용
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  [Authorize(Policy="DeleteRolePolicy")] <= Admin Role이면서 DeleteRolePolicy를 가지고 있어야 실행할수있다.
+  public async Task<IActionResult> DeleteRole(string id)
+  {
+    ...
+  }
+}
+
+Role base authorization과 Claims base authorization은 무슨 차이가 있는건가? 언제 Role을 쓰고 언제 Claim을 쓰는 건가?
+
+
+95강 Role based authorization vs claims based authorization
+authorization은 기본적으로 로그인한 유저가 어떤 것을 할수있는지 없는지 결정하는 프로세스이다.
+Asp.net에서는 role, claims,혹은 둘의 조합을 사용해서 사용할수있다.
+
+Employee, manager, HR등 대부분의 조직에서는 미리 정의된 Role이 있다. 이 Role에 기반해서 어떠한 리소스를 접근허가 하는 것이
+Role based authorization(RBAC Role Based Access Control)이다.
+
+[Authorize(Roles="Admin,Employee")]] <= Controller에 Adimin Role 적용
+public class AdministrationController : Controller
+{
+
+}
+
+Claims based authorization을 이야기하기 전에 Claim이란 무엇인가?
+Claim은 name value pair이다. 무엇을 할수 있고 없고가 아니라 아니라 유저에대한 인포메이션 조각이다.
+예를 들면 유저에대한 정보를 지니고 있는 username, email, age, gender등이 모두 Claim이다.
+이러한 Claim을 어떻게 authorization check에 사용할지는 전적으로 사업이나 authorization requirements에 달려있다.
+예를 들면 Employee 포탈을 만든다고할때 로그인한 유저가 gender의 값이 Female일 경우에만 출산휴가를 신청할수 있다던가
+ecommerce 앱을 만들때 로그인한 유저가 age 값이 18 이상일 경우만 주문할수있도록 하는것등을 할수있다.
+
+Asp.net에서는 Claim은 Policy based이다. Policy를 생성하고 1개 이상의 claim들을 포함시킨다.
+우리는 authorize attribute의 Policy 파라메터를 사용하여 claims based authorization을 구현한다.
+
+[Authorize(Policy="DeleteRolePolicy")]]
+public class AdministrationController : Controller
+{
+
+}
+
+asp.net core에서 Role은 Tyee Role(Role의 Type은 Role)인 표준 Claim 타입이다.
+디버그를 걸고 immediate window에서 다음을 타이핑해보자.
+User.Claims.Where(c => c.Type == ClaimTypes.Role)   User=>login한 유저를 가져온다.
+출력
+Admin
+TestRole
+Claims안에 Role이 있다!
+
+Claim은 Policy를 기반으로 하며 Role도 역시 Type 이 Role인 Claim이다. 
+이것이 의미하는 것은 Role들로 새로운 Policy 문법을 쓸수 있다는 의미이다.
+
+코드를 보면 
+startup.cs 
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {
+      options.AddPolicy("DeleteRolePolicy", policy => policy.RequireClaim("Delete Role"));
+    }
+  );
+  ...
+}
+
+Role도 Claim이므로 
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {
+      options.AddPolicy("DeleteRolePolicy", policy => policy.RequireClaim("Delete Role"));
+      options.AddPolicy("AdminRolePolicy", policy => policy.RequireRole("Admin,TestRole")); <= Role을 Policy에 추가했다.
+    }
+  );
+  ...
+}
+
+이런식으로 사용 가능하다.
+[Authorize(Policy="AdminRolePolicy")]]
+public class AdministrationController : Controller
+{
+
+}
+
+근데 왜 Role, Claim 2개가 있나?
+이전 버전에는 Claims based authorization이 없었다. Claims based authorization이 최신이며 이를 사용하길 추천한다.
+이를 사용하여 Facebook, google등 외부의 Identity provider이 제공한 Claims들을 사용할수 있다.
+Role based Authorization은 하위호환을 위해 여전히 지원된다.
+
+
+96강 Authorization in views in asp net core mvc
+View에서 Authorization체크를 어떻게 하는가? 이를 알면 UI에서 로그인한 유저의 권한에따라 UI를 Show/Hide 할수 있게 된다.
+83강에서 아래와 같이 Role base Authorization일때 View에서 Authorization Check를 했다.
+
+_Layout.cshtml(Role base Authorization nav에 Manage Roles을 Role에 따라 표시 하기)
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> signInManager;
+@if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+{
+  <li class="nav-item">
+    <a asp-action="ListRoles" asp-controller="Administration" class="nav-link">
+      Manage Roles
+    </a>
+  </li>
+}
+
+
+Claims based Authorization일 경우(EditUser View의 Edit 버튼을 Claim에 따라 온/오프)
+
+"Edit Role" Claim이 있을경우만 Edit 표시
+
+startup.cs
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {
+      options.AddPolicy("DeleteRolePolicy", policy => policy.RequireClaim("Delete Role"));
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role")); <= Edit Role Claim을 EditRolePolicy에 추가!
+      options.AddPolicy("AdminRolePolicy", policy => policy.RequireRole("Admin,TestRole"));
+    }
+  );
+  ...
+}
+
+ListRoles.cshtml
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService authorizationService  <= 위의 2줄 추가!
+
+@if((await authorizationService.AuthorizeAsync(User, "EditRolePolicy")).Succeeded) <= 추가!
+{
+  <a>Edit</a>
+}
+
+그런데 이렇게 UI만 막는것은 충분하지 않다는 것을 기억하자! 관련된 Controller Action도 보호되어야 한다.
+만약 유저가 주소창에 직접 localhost/Administration/EditRole/user-id 를 치면 Role을 에디트 할수 있는 화면으로 넘어갈수있으며 관련된 Action도 막아야한다.
+get, post action 모두를 막는다.
+
+[HttpGet]
+[Authorize(Policy="EditRolePolicy")] <= 추가
+public async Task<IActionResult> EditRole(string id)
+{
+  ...
+}
+
+[HttpPost]
+[Authorize(Policy="EditRolePolicy")] <= 추가
+public async Task<IActionResult> EditRole(EditRoleViewModel model)
+{
+  ...
+}
+
+UI를 막는 것뿐만 아니라 관련된 Action을 막는 것이 중요하다.
+
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService authorizationService
+위의 2줄을 많은 View에서 쓴다면 _ViewImports에 넣어두면 좋다.
+
+97강 Change AccessDenied route
+Asp.net Core의 디폴트 AccessDenied Route는 /Account/AccessDenied 이다.
+
+디폴트 AccessDenied Route를 바꾸려면 다음을 추가한다.
+public void ConfigureServices(IServiceCollection services)
+{
+  services.ConfigureApplicationCookie(options =>         <= 이 함수의 options를 사용하여 많은 것을 변경할수 있다.
+  {
+    options.AccessDeniedPath = new PathString("/Admin/AccessDenied");
+  });
+}
+
+
+98강 Claim type and claim value in claims policy based authorization
+AspNetUserClaims table을 보면
+Id  UserId  ClaimType ClaimeValue
+31  asdfas Edit Role  Edit Role
+32  asdfas Create Role  Create Role
+32  asdfas Delete Role  Create Role
+102 fdazxc Create Role  Create Role
+위와 같은 형태로 저장되어 있다. 현재 ClaimType과 ClaimValue가 같다. ClaimValue로 ClaimeType을 그냥 썼기때문이다.
+
+
+startup.cs
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {
+      //아래의 "Edit Role" Policy를 만족하려면 "Edit Role" claim이 존재 해야한다.
+      //중요한 건은 ClaimType이 존재하는지 체크하는것이지 ClaimType의 ClaimValue를 체크하고 있는것이 아니다.
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role"));     
+    }
+  );
+  ...
+}
+
+ClaimType과 ClaimValue를 함께 체크하려면
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {      
+      //아래의 "Edit Role" Policy를 만족하려면 "Edit Role" claimType이 존재 하고 그타입의 값이 "true"이어야 한다.
+      //주의점은 RequireClaim() 의 ClaimType부분은 대소문자를 구별하지 않지만 ClaimValue부분은 대소문자를 구별한다.
+      //ClaimType 비교는 case in-sensitive, ClaimValue 비교는 case sensitive
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role", "true"));     
+    }
+  );
+
+
+  services.AddAuthorization( options =>
+    {
+      //다음과 같이 여러개를 쓰면 그중에 한개여야 한다.    
+      //Country라는 ClaimType이 존재하며 값이 뒤따르는 3개중 하나면 AllowedCountryPolicy는 성공으로 평가된다.
+      options.AddPolicy("AllowedCountryPolicy", policy => policy.RequireClaim("Country", "USA", "Korea", "UK"));     
+    }
+  );
+  ...
+}
+
+
+public class AdministrationController : Controller
+{
+  [HttpPost]
+  public async Task<IActionResult> ManageUserClaims(UserClaimsViewModel model)
+  {
+    var user = await userManager.FindByIdAsync(model.UserId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var claims = await userManager.GetClaimsAsync(user);
+    var result = await userManager.RemoveClaimsAsync(user, claims);
+
+    if(!result.Succeeded)
+    {
+      ...
+      return;
+    }
+    
+    //아래 문장에서 같은 값을 넣어주고 있었다.
+    //result = await userManager.AddClaimsAsync(user, model.Claims.Where(c => c.IsSelected).Select(c => new Claim(c.ClaimType, c.ClaimType)) );
+    =>다음과 같이 고친다. .Where는 필요 없어졌다. ManagerUserClaims에서 update 하면 이 유저의 모든 DB의 ClaimType 값이 true, false로 바뀐다.
+    result = await userManager.AddClaimsAsync(user, model.Claims.Select(c => new Claim(c.ClaimType, c.IsSelected ? "true" : "false")) );
+
+    if(!result.Succeeded)
+    {
+      ...
+      return;
+    }
+
+    return RedirectToAction("EditUser", new { Id = model.UserId });
+  }
+}
+
+class Administration : Controller
+{
+  ...
+  [HttpGet]
+  public async Task<IActionResult> EditUser(string id)
+  {
+    var user = await userManager.FindByIdAsync(id);
+
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = $"User with Id = {id} cannot be found";
+      return View("NotFound");
+    }
+
+    var userClaims = await userManager.GetClaimsAsync(user);
+    var userRoles = await userManager.GetRolesAsync(user);
+
+    var model = new EditUserViewModel
+    {
+      Id = user.Id,
+      ...
+      //Claims = userClaims.Select(c => c.Value).ToList(),
+      =>Claims = userClaims.Select(c => c.Type + " : " + c.Value).ToList(), 로 수정!
+      Roles = userRoles
+    };
+
+    return View(model);
+  }
+  ...  
+
+  [HttpGet]
+  public async Task<IActionResult> ManageUserClaims(string userId)
+  {
+    var user = await userManager.FindByIdAsync(userId);
+    if(user == null)
+    {
+      ViewBag.ErrorMessage = ...
+      return View("NotFound");
+    }
+
+    var existingUserClaims = await userManager.GetClaimsAsync(user);
+    var model = new UserClaimsViewModel
+    {
+      UserId = userId
+    }
+
+    foreach(Claim claim in ClaimsStore.AllClaims)
+    {
+      UserClaim userClaim = new UserClaim
+      {
+        ClaimType = claim.Type
+      };
+
+      //claimType만 체크하고 있었다! 값도 같이 체크 해야한다.
+      //if(existingUserClaims.Any(c => c.Type == claim.Type))
+      if(existingUserClaims.Any(c => c.Type == claim.Type && c.Value == "true"))
+      {
+        userClaim.IsSelected = true;
+      }
+
+      model.Claims.Add(userClaim);
+    }
+
+    return View(model);
+  }
+}
+
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    {      
+      //아래의 "Edit Role" Policy를 만족하려면 "Edit Role" claimType이 존재 하고 그타입의 값이 "true"이어야 한다.
+      //주의점은 RequireClaim() 의 ClaimType부분은 대소문자를 구별하지 않지만 ClaimValue부분은 대소문자를 구별한다.
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role", "true"));     
+    }
+  );
+  ...
+}
+
+99강 Create custom authorization policy using func
+func를 사용해서 왜? 그리고 어떻게 custom authorization policy를 만드는가?
+현재 상황을 점검해보면, AdministrationController EditRole Action을 실행하려면 Role이 Admin이고 "Edit Role" Claim이 "true"이어야 한다.
+
+위의 요구상황이 변경된다고 가정해보자.
+다음과 같은 요구조건이 있는 policy를 만들어야 한다.
+1. Role이 Admin이며 
+2. "Edit Role" Claim의 값이 true이거나
+3. Role이 SuperAdmin일때
+
+1과2를 만족하거나 3을 만족할때의 policy를 만들어야 한다. (1&&2) || 3
+
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    { 
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireRole("Admin")
+                                                          .RequireClaim("Edit Role", "true")
+                                                          .RequireRole("SuperAdmin")                                                          
+      );     
+    }
+  );
+  ...
+}
+
+위와 같이 하면 될것 같지만 단순한 이유로 우리의 요구사항을 만족하지 못한다.
+.Require함수들로 chainning되면 조건들이 And로 연결되어진다.
+
+이러한 Custom policy를 만들기 위해 Func type(Func delegate)을 써서 Policy를 만든다.
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    { 
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireAssertion(context =>
+        context.User.IsInRole("Admin") &&
+        context.User.HasClaim(claim => claim.Type == "Edit Role" && claim.Value == "true") ||
+        context.User.IsInRole("Super Admin")
+      ));     
+    }
+  );
+  ...
+}
+
+위의 RequireAssertion함수가 Func delegate를 인자로 받는다. 이를 이용해 다음과 같이 다시 쓸수도 있다.
+
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    { 
+      options.AddPolicy("EditRolePolicy", policy => policy.RequireAssertion(context => AuthorizeAccess(context)));     
+    }
+  );
+  ...
+}
+
+private bool AuthorizeAccess(AuthorizationhandlerContext context)
+{
+  return context.User.IsInRole("Admin") &&
+          context.User.HasClaim(claim => claim.Type == "Edit Role" && claim.Value == "true") ||
+          context.User.IsInRole("Super Admin");
+}
+
+
+100강 Custom authorization requirements and handlers
+지금까지 본것들 정리, 전부 built-in requirement를 가지는 policy들이다.
+
+1가지 requirement가 있다. 그건 RequireClaim 메소드로 표현되고 있으며 "Edit Role" claim이 존재해야한다.
+options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role"));
+
+1가지 requirement가 있다. 그건 RequireClaim 메소드로 표현되고 있으며 "Edit Role" claim이 존재하고 값이 true 이어야 한다.
+options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role", "true"));
+
+1가지 requirement가 있다. 그건 RequireClaim 메소드로 표현되고 있으며 "Edit Role" claim이 존재하고 값이 true 또는 yes이어야 한다.
+options.AddPolicy("EditRolePolicy", policy => policy.RequireClaim("Edit Role", "true", "yes"));
+
+2가지 requirement가 있다. 그건 RequireClaim, RequireRole 메소드로 표현되고 있으며 "Edit Role" claim이 존재하고 값이 true 또는 yes이어야 하며
+Admin Role이 있어야 한다. 2개의 requirements가 and로 연결되는 것에 주목하자.
+options.AddPolicy("EditRolePolicy", policy => policy
+                                              .RequireClaim("Edit Role", "true", "yes")
+                                              .RequireRole("Admin"));
+
+requirements간에 or 관계가 있으면 RequireAssertion() requirement를 쓴다.
+Admin Role이고 "Edit Role" claim의 값이 true이거나 SuperAdmin Role인경우
+ options.AddPolicy("EditRolePolicy", policy => policy.RequireAssertion(context =>
+        context.User.IsInRole("Admin") &&
+        context.User.HasClaim(claim => claim.Type == "Edit Role" && claim.Value == "true") ||
+        context.User.IsInRole("Super Admin")
+      ));  
+
+
+위에서 쓰인 3개의 함수 RequireClaim, RequireRole, RequireAssertion는 built-in requirement
+(ClaimsAuthorizationRequirement, RolesAuthorizationRequirement, AssertionRequirement)를 policy에 add한다.
+간단한 application이라면 위의 built-in requirements만으로도 괜찮지만 대부분 built-in보다 더 필요하다.
+이때가 Custom authorization requirement가 필요할때이다.
+
+
+AuthoriaztionPolicy는 1개 이상의 Requirement를 가지며 각각의 Requirement는 1개 이상의 Handler를 가진다.
+built-in requirement들인 ClaimsAuthorizationRequirement, RolesAuthorizationRequirement, AssertionRequirement 3개의 requirement들은 IAuthorizationRequirement를
+구현한다.
+우리가 Custom authorization requirements 클래스를 구현할때는 반드시 IAuthorizationRequirement를 구현해야한다.
+IAuthorizationRequirement는 empty marker interface로 특별히 구현해야할 메소드가 없다.
+
+Controller의 Action같은 리소스의 접근을 허가하거나 거부할 로직을 쓰는 곳은 Requirement안의 Handler이다.
+AuthorizationHandler<T> where T is the Requirement와 같은 형태로 구현된다.
+
+예를 들어 Amdin유저는 다른 Admin유저의 Role을 할당하거나 제거할수 있다고하자 그런데 자신의 Role은 수정할수 없다.
+이를 하기 위해선 로그인된 userID와 edit하려는 userID를 알아야 한다. 
+edit하려는 userID는 URL의 querystring로 전달되며 authorization handler로부터 route data와 url querystring parameter를 접근할수 있다.
+DI역시 지원되며 만약 필요하다면 다른 service들을 inject해서 쓸수있다는 이야기이다.
+
+101강 Custom authorization requirement and handler example
+다음과 같은 요구사항이 있다고 하자.
+Admin유저는 다른 Admin유저의 Role과 Claim을 관리할수있으나 자기 자신의 Role과 Claim은 관리 할수 없다.
+UserID와 에디트할 UserID가 필요하다. 만약 2개의 userID가 같다면 access를 허가하지 않는다.
+
+에디트할 UserID는 현재 querystring으로 전달되어진다. => localhost/Administration/EditUser/0289570-98457-02
+
+Func delegate와 RequireAssertion()을 사용한 해법고려...
+=> Func는 다음과 같은 경우 사용될수 없다.
+1. route data또는 query string parameter가 필요한 경우
+2. DI를 통해 다른 service에 access해야할 경우 (authorization requirements가 복잡해질수록 다른 service에 접근이 필요해 진다.) 
+
+위와 같은 경우 custom requirements와 handler를 생성해야한다.
+
+Security라는 folder를 만들자.
+ManageAdminRolesAndClaimsRequirement.cs생성
+public class ManageAdminRolesAndClaimsRequirement : IAuthorizationRequirement
+{ }
+
+CanEditOnlyOtherAdminRolesAndClaimsHandler.cs 생성
+
+public class CanEditOnlyOtherAdminRolesAndClaimsHandler 
+: AuthorizationHandler<ManageAdminRolesAndClaimsRequirement> //AuthorizationHandler<T> where T is the Requirement
+{
+
+}
+
+override를 치면 override 가능한 interface가 나오고 다음과 같은 mothod를 선택한다.
+public class CanEditOnlyOtherAdminRolesAndClaimsHandler : 
+    AuthorizationHandler<ManageAdminRolesAndClaimsRequirement>
+{
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
+        ManageAdminRolesAndClaimsRequirement requirement)
+    {
+        //context.Resource 는 Object를 return 
+        //context.Resource 는 우리가 protect하려는 action method들을 AuthorizationFilterContext을 통해 리턴한다(?)
+        //AuthorizationFilterContex를 통해 HttpContext, RouteData, MVC와 Razor Page들에의해 제공되어지는 모든 것들을 access할수있다.
+        var authFilterContext = context.Resource as AuthorizationFilterContext;
+        if (authFilterContext == null) //null이면 아무것도 체크할수 없으므로 Task.CompletedTask 리턴.
+        {
+            return Task.CompletedTask;
+        }
+
+        string loggedInAdminId =
+            context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value; //로그인 아이디를 얻기 위한 코드
+
+        string adminIdBeingEdited = authFilterContext.HttpContext.Request.Query["userId"];
+
+        if (context.User.IsInRole("Admin") &&
+            context.User.HasClaim(claim => claim.Type == "Edit Role" && claim.Value == "true") &&
+            adminIdBeingEdited.ToLower() != loggedInAdminId.ToLower())
+        {
+            context.Succeed(requirement); //성공할때 호출한다.
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+
+우리가 만든 위의 Handler를 등록해야한다.
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    { 
+      //requirement를 생성하여 policy에 등록
+      options.AddPolicy("EditRolePolicy", policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement()));
+    }
+  );
+  ...
+
+  //핸들러를 등록!
+  services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
+}
+
+등록된 Custom policy를 사용한다.
+[HttpGet]
+[Authorize(Policy = "EditRolePolicy")]
+public async Task<IActionResult> ManageUserRoles(string userId)
+{
+    // Implementation
+}
+
+현재 우리의 Custom Requirement를 처리하기 위해 단지 1개의 Custom handler가 있다.
+Custom Requirement를 처리하기 위해 여러개의 Custom handler를 두는 것도 가능하다.
+
+
+정리하면
+1. Custom Requirement 생성
+2. Custom Handler 생성
+3. Custom Handler 등록
+4. Custom Policy를 사용
+
+102강 Multiple custom authorization handlers for a requirement in asp net core
+or에 기반하는 평가를 하고 싶은 케이스가 있을때 한개의 Requirement에대한 여러개의 handler를 구현한다.
+
+로그인한 유저가 유저의 Role과 claim을 관리할수 있으려면 다음 2가지 조건중 하나를 만족 시켜야 한다.
+조건1:
+user는 Admin role이고 "Edit Role" true를 가져야 한다. 그리고 로그인한 유저는 에디트할 유저의 id와 같이 않아야 한다.
+조건2:
+유저는 SuperAdmin role 이어야 한다.
+
+조건1 또는 조건2를 만족해야한다. or조건이며 조건1은 이미 만들었다.
+
+다음은 조건2를 만족시키는 handler이다.
+public class SuperAdminHandler :
+    AuthorizationHandler<ManageAdminRolesAndClaimsRequirement>
+{
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        ManageAdminRolesAndClaimsRequirement requirement)
+    {
+        if (context.User.IsInRole("Super Admin"))
+        {
+            context.Succeed(requirement);
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+
+사용하기 위해 우리가 만든 위의 Handler를 등록해야한다.
+ConfigureService(services)
+{
+  ...
+  
+  services.AddAuthorization( options =>
+    { 
+      //requirement를 생성하여 policy에 등록
+      options.AddPolicy("EditRolePolicy", policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement()));
+    }
+  );
+  ...
+
+  //조건1 핸들러를 등록!
+  services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
+  //조건2 핸들러를 등록!
+  services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
+}
+
+자신이 만든 Custom handler가 동작하지 않는 경우 디버그로 브레이크를 걸어볼것. 브레이크에 걸리지 않는다면 대부분 Handler를 등록하지 않아서 생기는 일이다.
+
+
+103강 Custom authorization handler success vs failure
+authorization handler가 무엇을 return하며 다른 handler들과 Policy에 어떠한 영향을 미치는지 알아보자.
+
+requirement를 평가할때 handler는 다음중 어떠한 것도 return 할수 있다.
+Success - context.Succeed()
+Failure  - context.Fail()
+Nothing - Task.CompletedTask
+
+handler가 무엇을 리턴하는지, 리턴값에의해 다른 handler에 어떤 영향을 주는지 이해 하는것은 매우 중요하다.
+=>Failure는 Success보다 우선순위가 높다.
+=>어떤 handler가 Failure를 retrun 하면 다른 handler들이 Success를 return 하더라도 Policy는 실패한다.
+=>같은 requirement를 처리하는 다른 handler들이 성공할수 있기때문에 일반적으로는 handler에서 Failure를 리턴하지 말것.
+=>명시적으로 failure를 return할때만이 다른 handler들이 성공하더라도 policy가 실패하는것을 보장한다.
+=>어떠한 handler도 explicit success를 return하지 않는다면 policy는 성공하지 않는다.
+=>Policy가 성공하기 위해서는
+  * handler들중 하나에서 반드시 명시적 success를 리턴하고
+  * 다른handler에서 명시적 failure를 리턴하지 않아야 한다.
+
+=>디폴트로 handler가 무엇을 return 하던 상관없이 모든 handler들은 호출된다. 이런 동작이 디폴트인 이유는 다른 handler에서 requirement를 평가하는 일외에
+다른 무엇가를 할수 있기도 하기때문이다. 예를 들면 로깅을 하고 있다던가...
+=>만약 failure가 return이 되었을때 나머지 핸들러들이 불려지지 않도록 하려면 InvokehandlersAfterFailure property를 false로 세팅한다.
+  디폴트는 true이다.
+
+services.AddAuthorization(options =>
+{
+    options.AddPolicy("EditRolePolicy", policy =>
+        policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement()));
+
+    options.InvokeHandlersAfterFailure = false; <= 여기!
+});
+
+104강 External identity providers in asp net core
+google, Microsoft, facebook등 trusted identity provider라고 부른다. 
+정확히는 External identity providers이다.
+asp.net core는 이러한 external authentication provider들을 통합할수있는 built-in 지원이 있다.
+하나를 구현 하면 다른 것도 비슷하게 구현가능하다.
+
+external authentication provider을 사용하여 로그인하였을때 각각 다른 유저가 아닌 같은 유저의 인증을 하는 다른 방법들이다.
+어떠한 유저가 각기 다른 provider를 사용하여 로그인하였을때 같은 유저의 여러개의 계정을 만드는 것은 우리가 원하는 것이 아니다.
+우린 이렇게 다른 로그인 방법들과 실제 유저를 결합시키는 방법이 필요하다.
+
+
+105강 Create google oauth credentials Client Id and Client Secret
+ClinetID와 Client secret 받기
+
+STS : security token service
+
+
+Register Application
+https://console.developers.google.com
+
+step1 : Create Project
+step2 : Enable google+ API
+step3 : Congfigure OAuth consent Screen  => google에서 로그인했을때 redirect할 주소등동 설정가능!
+step4 : Create OAuth client credentials
+
+106강 ASP NET Core google authentication setting up the UI
+google authentication을 통합하기 위해 UI와 Google 버튼이 클릭되었을때 Google로 리다이렉트 하는 것을 설정한다.
+다음 강좌에 Google로부터 받은 user identity를 처리하는 방법을 배운다.
+
+
+ConfigureServices()에 Google을 넣는다.
+public void ConfigureServices(IServiceCollection services)
+{
+  services.AddAuthentication().AddGoogle(options =>
+    {
+        options.ClientId = "XXXXX";
+        options.ClientSecret = "YYYYY";
+    });
+}
+AddGoogle()은 Microsoft.AspNetCore.Authentication.Google nuget패키지에 있다.
+2.2 이전버전에서는 따로 받아야 했으나 2.2 이상에서는 meta package의 일부로 자동으로 포함되어 있다.
+
+LoginViewModel에 ReturnUrl과 ExternalLogins 프로퍼티를 추가한다.
+public class LoginViewModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
+
+    [Required]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
+
+    [Display(Name = "Remember me")]
+    public bool RememberMe { get; set; }
+
+    public string ReturnUrl { get; set; }
+
+    // AuthenticationScheme is in Microsoft.AspNetCore.Authentication namespace
+    public IList<AuthenticationScheme> ExternalLogins { get; set; }
+}
+ReturnUrl은 인증전에 접근하려 했던 URL이다. ReturnUrl을 사용하여 requests간에 넘기고 보존하여 인증성공시 유저가 리다이렉트 될수있게 한다.
+(유저가 로그인 하지 않은채로 /CreateUser/에 접근하려할때 [Authorize]를 만나면 Account/Login/ResutUrl=CreateUser와 같이 주소가 바뀌며 login 화면이 나오게 된다.
+Login화면을 생성하는 Get을 처리하는 Account.Login(string returnUrl)에 model binding에 의해 return url이 채워진다. 이를 LoginViewModel에 저장해 놓는것!)
+
+ExternalLogins은 어플리케이션에서 사용할수있게 된 external login(facabook, google)들의 리스트를 저장한다.
+실제 사용시 더 잘 이해 가능하다.
+
+Login Action in AccountController
+-ReturnUrl과 ExternalLogins를 채워 view로 전달한다.
+-SignInManager의 GetExternalAuthenticationSchemesAsync()메서드는 설정되어진 external identity provider들의 리스트를 리턴한다.
+-현재 Google만 설정되어 있다.
+
+[HttpGet]
+[AllowAnonymous]
+public async Task<IActionResult> Login(string returnUrl)
+{
+    LoginViewModel model = new LoginViewModel
+    {
+        ReturnUrl = returnUrl,
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+    };
+
+    return View(model);
+}
+
+Login Page (Login.cshtml)에 ExternalLogins를 보고 버튼 만들기
+<form method="post" asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl">  AccountController.ExternalLogin(string provider) 호출!
+    <div>
+        @foreach (var provider in Model.ExternalLogins) <= 설정된 external login만큼 form안에 버튼을 만든다.
+        {
+            <button type="submit" class="btn btn-primary"
+                    name="provider" value="@provider.Name"  <= 버튼에 name="provider"를 주었다! model binding에 의해 파라메터로 넘겨진다.
+                    title="Log in using your @provider.DisplayName account">
+                @provider.DisplayName
+            </button>
+        }
+    </div>
+</form>
+
+
+
+ExternalLogin action in AccountController
+[AllowAnonymous]
+[HttpPost]
+public IActionResult ExternalLogin(string provider, string returnUrl)
+{
+    var redirectUrl = Url.Action("ExternalLoginCallback", "Account",  <= Google 로그인 성공시 보내야할 Url을 설정한다.
+                        new { ReturnUrl = returnUrl });
+    var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+    return new ChallengeResult(provider, properties);  <= google sign in page로 보내는 함수
+}
+ExternalLoginCallback가 없어서 google sign in에 성공해도 404에러가 난다.
+ExternalLoginCallback을 다음 강에서 이어서!
+
+107강 ExternalLoginCallback action
+만약 LoginView의 Google버튼을 클릭하면 Google sign-in page로 리다이렉트 된다.
+다음과 같은 함수로 유저를 external login provider로 리다이렉트 시키며 이는 이전 강좌에서 다루었다.
+[AllowAnonymous]
+public IActionResult ExternalLogin(string provider, string returnUrl)
+{
+    var redirectUrl = Url.Action("ExternalLoginCallback", "Account", <= Google 로그인 성공시 보내야할 Url을 설정한다.
+        new { ReturnUrl = returnUrl });
+    var properties = signInManager
+        .ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+    return new ChallengeResult(provider, properties);
+}
+
+
+다음은 ExternalLoginCallback의 풀소스이다.
+[AllowAnonymous]
+public async Task<IActionResult>
+            ExternalLoginCallback(string returnUrl = null, string remoteError = null)  <= remoteError External provider에서 준 에러메세지
+{
+    returnUrl = returnUrl ?? Url.Content("~/");  <= returnUrl이 없으면 루트 화면으로 가자! (ExternalLogin에서 들어온 returnUrl이다)
+
+    LoginViewModel loginViewModel = new LoginViewModel
+    {
+        ReturnUrl = returnUrl,
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+    };
+
+    if (remoteError != null)
+    {
+        ModelState
+            .AddModelError(string.Empty, $"Error from external provider: {remoteError}");
+
+        return View("Login", loginViewModel);
+    }
+
+    // Get the login information about the user from the external login provider
+    // info.LoginProvider:"Google", info.Principal:안에 Claim들을 담고 있다. info.ProviderKey:Google의 userid ("114000563242345")    
+    // AspNetUserLogins 테이블에 위의 정보가 들어간다.
+    // AspNetUserLogins 테이블은 external provider에서 제공 받은 정보와 AspNetUsers테이블에 있는 Local User들과를 잇는 테이블?
+    // AspNetUserLogins 테이블 스키마
+    LoginProvider   ProviderKey   ProviderDisplayName   UserId(AspNetUsers 테이블에대한 FK)
+
+    var info = await signInManager.GetExternalLoginInfoAsync();
+    if (info == null)
+    {
+        ModelState.AddModelError(string.Empty, "Error loading external login information.");
+
+        return View("Login", loginViewModel);
+    }
+
+    // If the user already has a login (i.e if there is a record in AspNetUserLogins
+    // table) then sign-in the user with this external login provider
+    // 외부에서 받은 정보를 가지고 sign-in 시도
+    var signInResult = await signInManager.ExternalLoginSignInAsync(info.LoginProvider,
+        info.ProviderKey, isPersistent: false, bypassTwoFactor: true);  <= bypassTwoFactor 나중에 설명
+
+    if (signInResult.Succeeded)
+    {
+        return LocalRedirect(returnUrl);
+    }
+    // If there is no record in AspNetUserLogins table, the user may not have
+    // a local account
+    else
+    {
+        // Get the email claim value, 메일 주소가 같은 
+        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+        if (email != null)
+        {
+            // Create a new user without password if we do not have a user already
+            var user = await userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                };
+
+                await userManager.CreateAsync(user);  <= AspNetUsers 테이블에 local user 생성!
+                //여기서 생성된 user는 AspNetUsers에 PasswordHash가 없다. external provider를 통해 생성되었기때문에 패스워드가 없음...
+            }
+
+            // Add a login (i.e insert a row for the user in AspNetUserLogins table)
+            await userManager.AddLoginAsync(user, info); <= FK인 user도 같이줘서 AspNetUserLogins에 행을 추가한다.
+            await signInManager.SignInAsync(user, isPersistent: false); <= 데이타를 다 넣었으니 다시 signin하자~
+
+            return LocalRedirect(returnUrl);
+        }
+
+        // If we cannot find the user email we cannot continue
+        ViewBag.ErrorTitle = $"Email claim not received from: {info.LoginProvider}";
+        ViewBag.ErrorMessage = "Please contact support on Pragim@PragimTech.com";
+
+        return View("Error");
+    }
+}
+
+application을 google에 등록할때 Authorized redirect URIs에 https://localhost:44376/signin-google을 입력했었으며 이는 asp.net core의 기본값이다.
+이를 바꾸려면 다음과 같이 설정해 주어야 한다.
+
+public void ConfigureServices(IServiceCollection services)
+{
+  services.AddAuthentication().AddGoogle(options =>
+    {
+        options.ClientId = "XXXXX";
+        options.ClientSecret = "YYYYY";
+        options.CallbackPath = "여기에 바꾼 주소";
+    });
+}
+
+
+108강 Register application with facebook
+https://developers.facebook.com
+Step 1: Create a new App
+Step 2: Add Facebook Login Product
+Step 3: Enable Client OAuth Login and include Valid OAuth Redirect URI
+Step 4: Obtain App ID and App Secret
+
+
+109강 ASP NET Core facebook authentication
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = "XXXXX";
+            options.ClientSecret = "XXXXX";
+        })
+        .AddFacebook(options =>                <= facebook 추가!
+        {
+            options.AppId = "XXXXX";
+            options.AppSecret = "XXXXX";
+        });
+}
+
+위의 Google에서 사용한 같은 Email을 쓰고 있다면 1개의 local user로 2개의 exteranl provider가 연결되게 된다!
+    // Get the email claim value, 메일 주소가 같은 
+    var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+    if (email != null)
+    {
+        // Create a new user without password if we do not have a user already
+        var user = await userManager.FindByEmailAsync(email);
+
+        if (user == null) <= 이미 메일이 같은 user가 있으므로 user의 생성은 건너뛴다.
+        {
+            user = new ApplicationUser
+            {
+                UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+            };
+
+            await userManager.CreateAsync(user);
+        }
+
+        // Add a login (i.e insert a row for the user in AspNetUserLogins table)
+        await userManager.AddLoginAsync(user, info); <= FK인 user도 같이줘서 AspNetUserLogins에 행을 추가한다.(이것으로 local user와 external provider가 연결된다!)
+        await signInManager.SignInAsync(user, isPersistent: false); <= 데이타를 다 넣었으니 다시 signin하자~
+
+        return LocalRedirect(returnUrl);
+
+110강 ASP NET Core secret manager
+Secret Manager를 쓰는 이유는 database connection string, API, encryption key 같은 secret들을 source제어에서 제외하기 위해서이다.
+
+왜 secret들을 configuration file들에 저장하면 안되는가?
+보통 database connection string, API, encryption key, 서드파티 인증정보등을 web.config(classic asp.net), appsetting.json에 저장한다.
+이러한 configuration 화일은 프로젝트의 일부이다. 그래서 깃등을 사용하여 커밋되었을때 이 리포지토리에 접근하는 모든 사람들은 민감한 정보에 접근할수 있고
+오용할수있다.
+보안적인 측면에서 비밀번호나 민감한 데이타를 configuration화일이나 소스에 저장하는것은 좋은생각이 아니다.
+
+Secret Manager는 asp.net core개발중에 민감한 데이타를 저장, 검색할수있게 한다. user secret같은 민감한 테이타를 secret.json에 저장한다.
+
+프로젝트에서 오른쪽눌러 Mananger User Secrets를 누르면 secret.json화일을 추가한다.
+appsetting과 비슷한 구조를 갖는다. 중요한 점은 이 화일은 프로젝트 폴더의 일부가 아니다. 다음과 같은 프로젝트 폴더 바깥에 위치하게 된다.
+
+C:\Users\{UserName}\AppData\Roaming\Microsoft\UserSecrets\{ID}
+{UserName} is the windows user name that you use to log into the computer.
+{ID} is a GUID (Globally Unique Identifier)
+
+한대의 컴퓨터에 여러개의 asp.net 프로젝트가 있을수 있으므로 GUID를 사용하여 구분한다. 프로젝트와 secret.json을 연결하기 위해 다음과 같이 
+UserSecretsId node를 .csproj화일에 추가한다.
+
+<PropertyGroup>
+  <UserSecretsId>490dfb7b-5991-4b34-bdd0-f961453843ef</UserSecretsId>
+</PropertyGroup>
+
+Using Secret Manager to store database connection string
+connection string을 appsetting.json에서 지우고 secret.json으로 옮기자.
+
+{
+  "ConnectionStrings": {
+    "EmployeeDBConnection": 
+      "server=(localdb)\\MSSQLLocalDB;database=EmployeeDB;Trusted_Connection=true"
+  }
+
+Access secrets from Secrets.json file
+asp.net core프로젝트는 configuration setting을 다음과 같은 여러 소스에서 가져온다.
+
+1.appsettings.json
+2.User secrets
+3.Environment variables
+4.Command-line arguments
+
+IConfiguration service는 위와 같은 모든 소스에서 읽어 1개의 configuration을 만든다.
+나중에 읽혀지는 소스가 전에 있던 데이타를 오버라이드한다.
+WebHost 클래스의 CreateDefaultBuilder() 메서드가 자동으로 호출되고 지정된 순서대로 configuration 소스를 읽는다.
+ConfigureAppConfiguration()를 깃허브에서 찾아 보면 읽는 순서를 알수있다.
+
+User secrets in production
+위의 이유때문에 secret.json화일은 source control repository에 체크되지 않는다. 이는 실제 build, deploy시 secrets.json이 production server에 
+복사되지 않는다는 것을 의미한다. 그럼 어떻게 connection string을 어플리케이션이 찾을수 있는가?
+production server는 environment variable에서 connection string을 찾게된다. IConfiguration service는 위에 적혀있는 순서대로 읽어서 configuration을
+완성하기때문이다.
+
+Secret Mananger는 Staging이나 Production을 위한것이 아니다. Developmenst 머신에서만 사용되어야 한다.
+Production에서는 environment variable, Azure Key Valut, 3rd party secret management system을 사용하라.
+
+
+111강 Why email confirmation is important
+Prevents accidental account hijacking
+Reduces spam registrations
+Prevents unsolicited emails
+Easy to recover account
+
+
+112강 Block login if email is not confirmed
+만약 email address가 confirm되지 않았을때 유저가 로그인하려하면 validation error를 출력한다.
+application의 user는 AspNetUsers에 저장되어 있다.
+EmailConfirmed 컬럼은 email address가 confirm이 되었는지 결정하는 컬럼이다.
+이번강은 어떻게 confirm되지 않은 계정을 block하는가?이다. 다음은 email confirmation에 관해 알아본다.
+
+StartUp 클래스의 ConfigureServices()에 RequireConfirmedEmail을 설정한다.
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.SignIn.RequireConfirmedEmail = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>();
+}
+
+만약 email 주소가 아직 확인되지 않았다면 SignInManager.PasswordSignInAsync()함수는 정확히 로그인했더라도 NotAllowed를 리턴하며 실패한다.
+ExternalLoginSignInAsync()도 마찬가지 이다.
+
+다음의 코드로 에러메세지를 출력한다.
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> Login(LoginViewModel model, string returnUrl)
+{
+    model.ExternalLogins =
+        (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+    if (ModelState.IsValid)
+    {
+        var user = await userManager.FindByEmailAsync(model.Email);
+
+        if (user != null && !user.EmailConfirmed && <= 메일 확인이 안되었을때
+                    (await userManager.CheckPasswordAsync(user, model.Password)))  <= 로그인시키는게 아니라 password체크를 하고 있다!
+        {
+            ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+            return View(model);
+        }
+
+        var result = await signInManager.PasswordSignInAsync(model.Email,
+                                model.Password, model.RememberMe, false);
+
+        if (result.Succeeded)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction("index", "home");
+            }
+        }
+
+        ModelState.AddModelError(string.Empty, "Invalid Login Attempt");
+    }
+
+    return View(model);
+}
+
+
+Email not confirmed yet error; 이 에러 메세지는 유저가 정확인 username과 password를 제공하고 Email이 확인되지 않았을때만 출력된다.
+왜 유저의 username, password를 체크할 필요가 있는지 궁금할것이다. 이는 account enumeration과 brute force attack을 피하기 위해서이다.
+만약 패스워드 체크없이 Email not confirmed yet error를 출력했다고 가정해보자.
+공격자는 random email의 주소를 가지고 있고 위 메세지를 보는 순간 이는 로그인이 가능한 valid한 이메일 주소라고 판단하게된다.
+실제 유저에 의해 email이 확인될때까지 며칠 기다렸다가 email의 password를 얻기위해 random password를 사용하여 공격할것이다.
+
+이러한 타입의 account enumeration과 brute force attack을 피하기 위해 정확한 로그인 정보를 입력했을때만 validation error를 출력한다.
+또한 external login 계정이 사용되었을때 external login 계정의 이메일 주소가 확인되지 않았을 경우 로그인을 block할수있다.
+
+[AllowAnonymous]
+public async Task<IActionResult>
+    ExternalLoginCallback(string returnUrl = null, string remoteError = null)
+{
+    returnUrl = returnUrl ?? Url.Content("~/");
+
+    LoginViewModel loginViewModel = new LoginViewModel
+    {
+        ReturnUrl = returnUrl,
+        ExternalLogins =
+        (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+    };
+
+    if (remoteError != null)
+    {
+        ModelState.AddModelError(string.Empty,
+            $"Error from external provider: {remoteError}");
+
+        return View("Login", loginViewModel);
+    }
+
+    var info = await signInManager.GetExternalLoginInfoAsync();
+    if (info == null)
+    {
+        ModelState.AddModelError(string.Empty,
+            "Error loading external login information.");
+
+        return View("Login", loginViewModel);
+    }
+
+    // Get the email claim from external login provider (Google, Facebook etc)
+    var email = info.Principal.FindFirstValue(ClaimTypes.Email);   <= 여기 추가!
+    ApplicationUser user = null;
+
+    if (email != null)
+    {
+        // Find the user
+        user = await userManager.FindByEmailAsync(email);
+
+        // If email is not confirmed, display login view with validation error
+        if (user != null && !user.EmailConfirmed)
+        {
+            ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+            return View("Login", loginViewModel);
+        }
+    }
+
+    var signInResult = await signInManager.ExternalLoginSignInAsync(info.LoginProvider,
+        info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+    if (signInResult.Succeeded)
+    {
+        return LocalRedirect(returnUrl);
+    }
+    else
+    {
+        if (email != null)
+        {
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                };
+
+                await userManager.CreateAsync(user);
+            }
+
+            await userManager.AddLoginAsync(user, info);
+            await signInManager.SignInAsync(user, isPersistent: false);
+
+            return LocalRedirect(returnUrl);
+        } 
+
+        ViewBag.ErrorTitle = $"Email claim not received from: {info.LoginProvider}";
+        ViewBag.ErrorMessage = "Please contact support on Pragim@PragimTech.com";
+
+        return View("Error");
+    }
+}
+
+external login을 사용했을경우 username과 password를 우리 application에 제공하지 않는다.
+외부에서 성공적으로 인증했을때 ExternalLoginCallback()가 호출되며 우리는 유저가 이미 인증되었다는 것을 알고 있으므로
+Email not confirmed. validataion error를 출력한다. username과 password를 체크할 필요없다.
+
+113강 ASP NET Core email confirmation
+이메일을 실제 보내는것은 다음에, 로그로 confirmation link를 만들어 테스트한다.
+
+1.Generate email confirmation token in asp.net core
+var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+위의 코드로 생성가능
+
+2.Build the email confirmation link
+유저가 email confirmation link을 클릭하면 email이 확인되도록 하는 주소 만들기
+var confirmationLink = Url.Action("ConfirmEmail", "Account",
+    new { userId = user.Id, token = token }, Request.Scheme); <= Request.Scheme이 있어야 절대경로, 없으면 상대경로 생성한다.
+
+아래와 같은 주소 생성한다.
+https://localhost:44304/Account/ConfirmEmail?userId=987009e3-7f78-445e-8bb8-4400ba886550&token=CfDJ8Hpirs
+
+3.Confirming the email
+var result = await userManager.ConfirmEmailAsync(user, token); 을 사용하여 email confirm.
+성공시 AspNetUsers테이블의 EmailConfirmed컬럼이 true로 세팅된다.
+
+4.Add ASP.NET core default token providers
+userManager.GenerateEmailConfirmationTokenAsync(user);을 호출시 익셉션 발생!
+NotSupportedException: No IUserTwoFactorTokenProvider<TUser> named 'Default' is registered.
+이는 TokenProvider가 없어서 그렇다.
+email confirmation, password reset, two factor authentication등을 위한 default token provider를 등록한다.
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.SignIn.RequireConfirmedEmail = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();  <= 이거!
+}
+
+
+5.Register and ConfirmEmail actions
+public class AccountController : Controller
+{
+    private readonly UserManager<ApplicationUser> userManager;
+    private readonly SignInManager<ApplicationUser> signInManager;
+    private readonly ILogger<AccountController> logger;
+
+    public AccountController(UserManager<ApplicationUser> userManager,
+                                SignInManager<ApplicationUser> signInManager,
+                                ILogger<AccountController> logger)
+    {
+        this.userManager = userManager; this.signInManager = signInManager;
+        this.logger = logger;  <= logger DI, NLogger설정해놨다고 가정
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl)
+    {
+        if (ModelState.IsValid)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                City = model.City,
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                    new { userId = user.Id, token = token }, Request.Scheme);
+
+                logger.Log(LogLevel.Warning, confirmationLink);  <= 로그로 주소를 알수있따. 나중에 주소창에 넣어 confimation가능!
+
+                if (signInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("ListUsers", "Administration");
+                }
+
+                ViewBag.ErrorTitle = "Registration successful";
+                ViewBag.ErrorMessage = "Before you can Login, please confirm your " +
+                        "email, by clicking on the confirmation link we have emailed you";
+                return View("Error");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        return View(model);
+    }
+
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmail(string userId, string token)
+    {
+        if (userId == null || token == null)
+        {
+            return RedirectToAction("index", "home");
+        }
+
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            ViewBag.ErrorMessage = $"The User ID {userId} is invalid";
+            return View("NotFound");
+        }
+
+        var result = await userManager.ConfirmEmailAsync(user, token);
+        if (result.Succeeded)
+        {
+            return View();
+        }
+
+        ViewBag.ErrorTitle = "Email cannot be confirmed";
+        return View("Error");
+    }
+
+    // rest of the code
+}
+
+
+6.ConfirmEmail View
+<h3>Thank you for confirming your email</h3>
+
+114강 External login email confirmation
+external login으로부터 email 확인을 하는 방법에대해.
+
+external login을 사용했을때 email을 external login provider로 부터 받는다. 이 email을 사용하여 local user account를 만든다.
+local user account를 생성한뒤 confirmation link를 email로 보낸다. 만약 email이 확인되지 않으면 Email not confirmed yet.
+만약 확인 되었으면 external login을 생성(AspNetUserLogins)하고 sign-in한다.
+
+external login provider(google, facebook)
+=> Email claim - Create local Account(AspNetUsers Table)
+=> Send confirmation email
+
+1=> If email NOT confirmed
+1=> Error - Email not confirmed
+
+2=> If email confirmed
+2=> Create External Login (AspNetUserLogins)
+2=> Sign-in user
+
+[AllowAnonymous]
+public async Task<IActionResult>
+ExternalLoginCallback(string returnUrl = null, string remoteError = null)
+{
+    returnUrl = returnUrl ?? Url.Content("~/");
+
+    LoginViewModel loginViewModel = new LoginViewModel
+    {
+        ReturnUrl = returnUrl,
+        ExternalLogins =
+        (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+    };
+
+    if (remoteError != null)
+    {
+        ModelState.AddModelError(string.Empty,
+            $"Error from external provider: {remoteError}");
+
+        return View("Login", loginViewModel);
+    }
+
+    var info = await signInManager.GetExternalLoginInfoAsync();
+    if (info == null)
+    {
+        ModelState.AddModelError(string.Empty,
+            "Error loading external login information.");
+
+        return View("Login", loginViewModel);
+    }
+
+    var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+    ApplicationUser user = null;
+
+    if (email != null)
+    {
+        user = await userManager.FindByEmailAsync(email);
+
+        if (user != null && !user.EmailConfirmed)
+        {
+            ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+            return View("Login", loginViewModel);
+        }
+    }
+
+    var signInResult = await signInManager.ExternalLoginSignInAsync(
+                                info.LoginProvider, info.ProviderKey,
+                                isPersistent: false, bypassTwoFactor: true);
+
+    if (signInResult.Succeeded)
+    {
+        return LocalRedirect(returnUrl);
+    }
+    else
+    {
+        if (email != null)
+        {
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                };
+
+                await userManager.CreateAsync(user);
+
+                // After a local user account is created, generate and log the
+                // email confirmation link
+                var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                                new { userId = user.Id, token = token }, Request.Scheme);
+
+                logger.Log(LogLevel.Warning, confirmationLink);
+
+                ViewBag.ErrorTitle = "Registration successful";
+                ViewBag.ErrorMessage = "Before you can Login, please confirm your " +
+                    "email, by clicking on the confirmation link we have emailed you";
+                return View("Error");
+            }
+
+            await userManager.AddLoginAsync(user, info);
+            await signInManager.SignInAsync(user, isPersistent: false);
+
+            return LocalRedirect(returnUrl);
+        }
+
+        ViewBag.ErrorTitle = $"Email claim not received from: {info.LoginProvider}";
+        ViewBag.ErrorMessage = "Please contact support on Pragim@PragimTech.com";
+
+        return View("Error");
+    }
+}
+
+[HttpGet]
+[AllowAnonymous]
+public async Task<IActionResult> ConfirmEmail(string userId, string token)
+{
+    if (userId == null || token == null)
+    {
+        return RedirectToAction("index", "home");
+    }
+
+    var user = await userManager.FindByIdAsync(userId);
+
+    if (user == null)
+    {
+        ViewBag.ErrorMessage = $"The User ID {userId} is invalid";
+        return View("NotFound");
+    }
+
+    var result = await userManager.ConfirmEmailAsync(user, token);
+
+    if (result.Succeeded)
+    {
+        return View();
+    }
+
+    ViewBag.ErrorTitle = "Email cannot be confirmed";
+    return View("Error");
+}
+
+115강 Forgot password
+
+1.Forgot Password link
+<div>
+    <a asp-action="ForgotPassword">Forgot Password?</a>
+</div>
+위와 같은 Forgot Password? 링크를 loginView에 추가
+
+2.Forgot Password View Model
+Email만 입력 받으면 된다.
+namespace EmployeeManagement.ViewModels
+{
+    public class ForgotPasswordViewModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+    }
+}
+
+3.Forgot Password Action Methods
+Account controller에 HttpPost HttpGet ForgotPassword() action을 넣는다.
+
+[HttpGet]
+[AllowAnonymous]
+public IActionResult ForgotPassword()
+{
+    return View();
+}
+
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        // Find the user by email
+        var user = await userManager.FindByEmailAsync(model.Email);
+        // If the user is found AND Email is confirmed
+        if (user != null && await userManager.IsEmailConfirmedAsync(user))  <= 유저가 있으며 EmailConfirmed된 유저에게만 reset기능이 있다.
+        이는 account enumeration과 brute force attack을 피하기 위해서이다.
+        {
+            // Generate the reset password token
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Build the password reset link
+            var passwordResetLink = Url.Action("ResetPassword", "Account",
+                    new { email = model.Email, token = token }, Request.Scheme);
+
+            <= https://localhost:44305/Account/ResetPassword?email=pragim@pragimtech.com&token=CfDJ8HpirsZUXNxBvU8n%2... 생성
+
+            // Log the password reset link
+            logger.Log(LogLevel.Warning, passwordResetLink);
+
+            // Send the user to Forgot Password Confirmation view
+            return View("ForgotPasswordConfirmation");
+        }
+
+        // To avoid account enumeration and brute force attacks, don't
+        // reveal that the user does not exist or is not confirmed
+        return View("ForgotPasswordConfirmation");
+    }
+
+    return View(model);
+}
+
+4.Forgot Password View
+@model ForgotPasswordViewModel
+
+<h2>Forgot Password</h2>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+
+5.Forgot Password Confirmation View
+<h4>
+    If you have an account with us, we have sent an email
+    with the instructions to reset your password.
+</h4>
+
+AccountController에 ResetPassword()기능을 다음에 만든다.
+
+116강 Reset password in asp net core
+user password를 리셋하기위해서는 다음이 필요하다.
+1.Email
+2.Password reset token
+3.New Password and 
+4.Confirm Password
+
+Email과 Password reset token은  password reset link에 있다. => password reset link를 받았을때 input hidden으로 써서 내려준다.
+
+1. Reset Password View Model
+namespace EmployeeManagement.ViewModels
+{
+    public class ResetPasswordViewModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", 
+            ErrorMessage = "Password and Confirm Password must match")]
+        public string ConfirmPassword { get; set; }
+
+        public string Token { get; set; }
+    }
+}
+
+2. Reset Password View
+@model ResetPasswordViewModel
+
+<h2>Reset Password</h2>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input asp-for="Token" type="hidden" /> <= password reset link 주소로 부터 받는다.
+            <input asp-for="Email" type="hidden" />
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Reset</button>
+        </form>
+    </div>
+</div>
+
+3.Reset Password Action Methods
+[HttpGet]
+[AllowAnonymous]
+public IActionResult ResetPassword(string token, string email)
+{
+    // If password reset token or email is null, most likely the
+    // user tried to tamper the password reset link
+    if (token == null || email == null)
+    {
+        ModelState.AddModelError("", "Invalid password reset token");
+    }
+    return View();
+}
+
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        // Find the user by email
+        var user = await userManager.FindByEmailAsync(model.Email);
+
+        if (user != null)
+        {
+            // reset the user password
+            var result = await userManager.ResetPasswordAsync(user, model.Token, model.Password);  <= reset시 Token이 필요하다. token을 조작하면 error떨어진다.
+            if (result.Succeeded)
+            {
+                return View("ResetPasswordConfirmation");
+            }
+            // Display validation errors. For example, password reset token already
+            // used to change the password or password complexity rules not met
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return View(model);
+        }
+
+        // To avoid account enumeration and brute force attacks, don't
+        // reveal that the user does not exist
+        return View("ResetPasswordConfirmation");
+    }
+    // Display validation errors if model state is not valid
+    return View(model);
+}
+
+4.Reset Password Confirmation View
+<h4>
+    Your password is reset. Please click <a asp-action="Login">here to login</a>
+</h4>
+
+117강 How tokens are generated and validated in asp net core
+Email Confirmation Token, Password Reset Token에대해 학습했다.
+
+UserMananger는 이러한 token을 생성, 검증하는데 유용한 메서드들을 제공한다.
+var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+var token = await userManager.GeneratePasswordResetTokenAsync(user);
+위2개의 메서드들은 내부적으로  GenerateUserTokenAsync()를 호출한다.
+
+https://github.com/aspnet/AspNetCore/blob/release/2.2/src/Identity/Extensions.Core/src/UserManager.cs
+깃허브에서 위의 UserManager의 소스코드를 볼 수 있으며 GenerateUserTokenAsync()를 호출하고 있음을 확인할수있다.
+public virtual Task<string> GenerateEmailConfirmationTokenAsync(TUser user)
+{
+    ThrowIfDisposed();
+    return GenerateUserTokenAsync(user,     <= 둘다 결국은 GenerateUserTokenAsync()를 호출한다.
+        Options.Tokens.EmailConfirmationTokenProvider, ConfirmEmailTokenPurpose); <= ConfirmEmailTokenPurpose은 단순 const string이다.
+}
+
+public virtual Task<string> GeneratePasswordResetTokenAsync(TUser user)
+{
+    ThrowIfDisposed();
+    return GenerateUserTokenAsync(user, 
+        Options.Tokens.PasswordResetTokenProvider, ResetPasswordTokenPurpose);
+}
+
+GenerateUserTokenAsync() 은 3개의 파라메터를 갖는다.
+- user : token이 쓰일 user
+- token provider : 실제 token을 생성한다.
+- token purpose : 예를 들면 password reset 또는 email confirmation Token은 주어진 목적에 맞게 쓰여질때만 의미있다.
+email confirmation Token은 password reset token대신 쓰여질수 없다.
+
+DataProtectorTokenProvider
+password reset, email confirmation Token 모두 내장된 DataProtectorTokenProvider에의해 생성된다.
+https://github.com/aspnet/Identity/blob/release/2.2/src/Identity/DataProtectionTokenProvider.cs
+GenerateAsync()가 token을 생성하고 ValidataAsync()가 token을 검증한다.
+
+DataProtectorTokenProvider GenerateAsync() 
+깃헙 코드를 보면 생성된 token은 다음을 포함한다.
+-Token Creation Time
+-User ID
+-Token Purpose
+-Security Stamp (database에 있음)
+
+모든 데이타는 encrypt되고 base64 endcoding을 거처 네트워크를 통해 보내어진다.
+asp.net core는 Data Protection API(DP API)를 사용하여 encryption을 한다. 다음 강좌에 query string같은 것을을 어떻게 encript하는지 살펴보자
+public virtual async Task<string> GenerateAsync(string purpose, UserManager<TUser> manager, TUser user)
+{
+    if (user == null)
+    {
+        throw new ArgumentNullException(nameof(user));
+    }
+    var ms = new MemoryStream();
+    var userId = await manager.GetUserIdAsync(user);
+    using (var writer = ms.CreateWriter())
+    {
+        writer.Write(DateTimeOffset.UtcNow);
+        writer.Write(userId);
+        writer.Write(purpose ?? "");
+        string stamp = null;
+        if (manager.SupportsUserSecurityStamp)
+        {
+            stamp = await manager.GetSecurityStampAsync(user);
+        }
+        writer.Write(stamp ?? "");
+    }
+    var protectedBytes = Protector.Protect(ms.ToArray());
+    return Convert.ToBase64String(protectedBytes);
+}
+
+DataProtectorTokenProvider ValidateAsync()
+ValidateAsync()는 이름그대로의 일을 한다. 
+우선 Base64 decoding, decrypt를 한다. decryption은 DP API를 사용한다.
+
+creation time을 token으로 부터 읽는다. 여기에 token life span을 더한다. 만약 계산된 DateTime이 현재의 UTL DateTime보다 작다면 token은 expired된것이다.
+메서드는 false를 리턴한다. expired된 token은 쓸수없다. default life span은 하루이며 이는 바꿀수있다.
+
+token의 UserID는 token이 사용되어지는 UserID와 비교된다. UserID가 다르다면 false리턴.
+
+token으로부터 purpose를 읽어 의도한 purpose인지 확인한다. 목적이 다르다면 false.
+
+만약 user와 purpose가 다르다면 token validate는 실패한다. 간단히 이야기하면 Password Reset Token은 email주소를 확인하는데 쓰여질수 없다.
+
+token에 있는  security stamp가 현재 user database의 security stamp와 다르다면 validation은 실패한다.
+
+public virtual async Task<bool> ValidateAsync(string purpose, string token, UserManager<TUser> manager, TUser user)
+{
+    try
+    {
+        var unprotectedData = Protector.Unprotect(Convert.FromBase64String(token));
+        var ms = new MemoryStream(unprotectedData);
+        using (var reader = ms.CreateReader())
+        {
+            var creationTime = reader.ReadDateTimeOffset();
+            var expirationTime = creationTime + Options.TokenLifespan;
+            if (expirationTime < DateTimeOffset.UtcNow)
+            {
+                return false;
+            }
+
+            var userId = reader.ReadString();
+            var actualUserId = await manager.GetUserIdAsync(user);
+            if (userId != actualUserId)
+            {
+                return false;
+            }
+            var purp = reader.ReadString();
+            if (!string.Equals(purp, purpose))
+            {
+                return false;
+            }
+            var stamp = reader.ReadString();
+            if (reader.PeekChar() != -1)
+            {
+                return false;
+            }
+
+            if (manager.SupportsUserSecurityStamp)
+            {
+                return stamp == await manager.GetSecurityStampAsync(user);
+            }
+            return stamp == "";
+        }
+    }
+    // ReSharper disable once EmptyGeneralCatchClause
+    catch
+    {
+        // Do not leak exception
+    } 
+    return false;
+}
+
+118강 ASP NET Core password reset token lifetime
+password reset token과 email confirmation token은 내장된 DataProtectorTokenProvider클래스를 사용하여 생성된다.
+이전 강좌에서 이 클래스가 어떻게 생성, 검증하는지 봤다.
+
+DataProtectorTokenProvider클래스가 password reset token을 생성한다. token life span은 DataProtectionTokenProviderOptions클래스에의해
+컨트롤된다. 이는 소스코드를 통해 확인할수있다.
+https://github.com/aspnet/Identity/blob/release/2.2/src/Identity/DataProtectionTokenProvider.cs
+
+디폴트 token의 life span은 1일이며 DataProtectionTokenProviderOptions클래스를 다음 링크를 통해 확인할수있다.
+https://github.com/aspnet/Identity/blob/release/2.2/src/Identity/DataProtectionTokenProviderOptions.cs
+
+보안의 측면에서 password reset token의 life span을 5시간으로 줄여보자.
+public void ConfigureServices(IServiceCollection services)
+{
+    // rest of the code
+
+    services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequiredLength = 10;
+        options.Password.RequiredUniqueChars = 3;
+
+        options.SignIn.RequireConfirmedEmail = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+    => https://docs.microsoft.com/ko-kr/aspnet/core/fundamentals/configuration/options?view=aspnetcore-3.1
+    // Set token life span to 5 hours
+    services.Configure<DataProtectionTokenProviderOptions>(o =>
+        o.TokenLifespan = TimeSpan.FromHours(5));
+
+    // rest of the code
+}
+
+위의 코드는 DataProtectorTokenProvider 클래스에 의해 생성되는 모든 token의 life span을 5시간으로 만든다.
+password reset token이 5시간이 되지만 email confirmation token도 5시간이 되어버린다. 이는 원하는것이 아니다.
+email confirmation token은 3일정도가 되었으면 한다.
+이를 만족하기 위해서는 Custom DataProtectorTokenProvider와 DataProtectionTokenProviderOptions가 필요하다.
+
+119강 ASP NET Core custom token provider
+내장된 DataProtectorTokenProvider는 Email Confirmation Token, Password Reset Token같은 다른 타입들의 token을 생성할수있다.
+이러한 token type들의 defatul lifespan은 1일이다. default life span을 바꿀수 있는 한 방법은 내장된 DataProtectionTokenProviderOptions을 사용하는것이다.
+이 클래스는 모든 타입의 토큰의 lifespan을 같은 값으로 세팅한다.
+
+services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(5));
+
+만약 특정 타입의 토큰만 lifespan을 바꾸고 싶다면 custom token provider를 생성해서 바꿀수있다.
+예를 들어 email confirmation token을 3일로 바꾸어보자.
+
+1.Create custom email confirmation token provider options
+email confirmation token을 생성하는것은 DataProtectorTokenProvider클래스이다.
+DataProtectorTokenProvider을 상속받아 custom provider class를 만든다. 실제 token을 생성하는 모든 기능은 DataProtectorTokenProvider이 할것이다.
+해야할것은 base class의 생성자를 호출하는 생성자이다.
+CustomEmailConfirmationTokenProviderOptions 인스턴스가 base class 생성자에 패스된다.
+
+public class CustomEmailConfirmationTokenProvider<TUser> : DataProtectorTokenProvider<TUser> where TUser : class
+{
+    public CustomEmailConfirmationTokenProvider(IDataProtectionProvider dataProtectionProvider,
+                                    IOptions<CustomEmailConfirmationTokenProviderOptions> options)
+        :base(dataProtectionProvider, options)
+    { }
+}
+
+2.Register custom token provider
+public void ConfigureServices(IServiceCollection services)
+{
+    // Rest of the code
+
+    services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        ...
+        options.Tokens.EmailConfirmationTokenProvider = "CustomEmailConfirmation"; <= "CustomEmailConfirmation"이란 이름으로 연결이된다.
+        ...
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders()
+    .AddTokenProvider<CustomEmailConfirmationTokenProvider
+            <ApplicationUser>>("CustomEmailConfirmation");
+
+    // Rest of the code
+}
+
+3.Change email confirmation token lifespan
+public void ConfigureServices(IServiceCollection services)
+{
+    // Changes token lifespan of all token types
+    services.Configure<DataProtectionTokenProviderOptions>(o =>
+            o.TokenLifespan = TimeSpan.FromHours(5));
+
+    // Changes token lifespan of just the Email Confirmation Token type
+    services.Configure<CustomEmailConfirmationTokenProviderOptions>(o =>
+            o.TokenLifespan = TimeSpan.FromDays(3));
+}
+
+120강 ASP NET Core encryption and decryption example
+route value들을 encrypt, decrypt하는 방법에대해...
+query strings, database connection strings and other application sensitive data을 encrypt하기위해 같은 테크닉을 쓸수있다.
+Data Protection API(DP API)를 사용하여 encryption을 수행할것이다.
+
+예를들어 route값을 encriyting 하는것을 이해해보자.
+다음의 url은 5라는 id를 가진 employee를 보는 url이다.
+
+https://localhost:1111/home/details/5
+
+우리는 encrypt되어 읽지 못하게 하고 싶다.
+
+https://localhost:44376/home/details/CfDJ8J-n2P...
+
+DataProtectorTokenProvider class source code를 보자.
+https://github.com/aspnet/Identity/blob/release/2.2/src/Identity/DataProtectionTokenProvider.cs
+이는 email confirmation token, password reset token 등을 생성하는 클래스이다. 
+이 클래스는 token을 encrypting, decrypting을 해야하는 책임을 가지고있다.
+
+IDataProtector 인터페이스의 Protect(), Unprotect()를 사용할것이다.
+
+1.Create purpose string
+encryption, decryption에 필요한 purpose string을 가지고 있어야한다.
+public class DataProtectionPurposeStrings
+{
+    public readonly string EmployeeIdRouteValue = "EmployeeIdRouteValue";
+}
+
+2.Register purpose string class with DI container
+이는 어떤 controller에도 class instance를 inject할수 있게 해준다.
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddSingleton<DataProtectionPurposeStrings>();
+}
+
+3.Model property to hold encrypted ID
+
+public class Employee
+{
+    public int Id { get; set; }
+
+    [NotMapped]
+    public string EncryptedId { get; set; }
+
+    // rest of the properties
+}
+
+4.IDataProtector Protect and Unprotect methods
+using EmployeeManagement.Models;
+using EmployeeManagement.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+
+namespace EmployeeManagement.Controllers
+{
+    [Authorize]
+    public class HomeController : Controller
+    {
+        private readonly IEmployeeRepository _employeeRepository;
+        // It is through IDataProtector interface Protect and Unprotect methods,
+        // we encrypt and decrypt respectively
+        private readonly IDataProtector protector;
+
+        // It is the CreateProtector() method of IDataProtectionProvider interface
+        // that creates an instance of IDataProtector. CreateProtector() requires
+        // a purpose string. So both IDataProtectionProvider and the class that
+        // contains our purpose strings are injected using the contructor
+        public HomeController(IEmployeeRepository employeeRepository,
+                              IDataProtectionProvider dataProtectionProvider,  <= DI!!
+                              DataProtectionPurposeStrings dataProtectionPurposeStrings)
+        {
+            _employeeRepository = employeeRepository;
+            // Pass the purpose string as a parameter
+            this.protector = dataProtectionProvider.CreateProtector(
+                dataProtectionPurposeStrings.EmployeeIdRouteValue);
+        }
+
+        [AllowAnonymous]
+        public ViewResult Index()
+        {
+            var model = _employeeRepository.GetAllEmployee()
+                            .Select(e =>
+                            {
+                                // Encrypt the ID value and store in EncryptedId property
+                                e.EncryptedId = protector.Protect(e.Id.ToString());
+                                return e;
+                            });
+            return View(model);
+        }
+
+        // Details view receives the encrypted employee ID
+        [AllowAnonymous]
+        public ViewResult Details(string id)
+        {
+            // Decrypt the employee id using Unprotect method
+            string decryptedId = protector.Unprotect(id);
+            int decryptedIntId = Convert.ToInt32(decryptedId);
+
+            Employee employee = _employeeRepository.GetEmployee(decryptedIntId);
+
+            return View(employee);
+        }
+
+        // rest of the code
+    }
+}
+
+5.Encrypted ID in View
+@model IEnumerable<Employee>
+
+@{
+    ViewBag.Title = "Employee List";
+}
+
+<div class="card-deck">
+    @foreach (var employee in Model)
+    {
+        <div class="card-footer text-center">
+            <a asp-controller="home" asp-action="details"
+               asp-route-id="@employee.EncryptedId"
+               class="btn btn-primary m-1">View</a>
+        </div>
+    }
+</div>
+
+Purpose string in ASP.NET Core
+purpose string을 encryption key로 간주하면된다. 이 키는 master 혹은 root key(IDataProtectionProvider)와 결합되어 unique key를 생성한다.
+각각의 맞는 키로만 풀수있다.
+
+
+121강 Change password in asp net core
+왜 필요한가? 실제 유저가 맞는 지 확인하기 위해 필요함. 공용 pc에서 로그아웃을 안하고 자리를 떳을 경우 해킹 당할수 있다.
+
+UserManager ChangePasswordAsync Method
+var result = await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+SignInManager RefreshSignInAsync() Method
+await signInManager.RefreshSignInAsync(user);
+ChangePasswordAsync() 성공뒤 RefreshSignInAsync()을 호출해야한다. 이는 로그인된 유저의 sign-in cookie를 리프레시한다.
+
+Change Password ViewModel
+public class ChangePasswordViewModel
+{
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "Current password")]
+    public string CurrentPassword { get; set; }
+
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "New password")]
+    public string NewPassword { get; set; }
+
+    [DataType(DataType.Password)]
+    [Display(Name = "Confirm new password")]
+    [Compare("NewPassword", ErrorMessage = 
+        "The new password and confirmation password do not match.")]
+    public string ConfirmPassword { get; set; }
+}
+
+Change Password View
+@model ChangePasswordViewModel
+
+<h2>Change Password</h2>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CurrentPassword"></label>
+                <input asp-for="CurrentPassword" class="form-control" />
+                <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="NewPassword"></label>
+                <input asp-for="NewPassword" class="form-control" />
+                <span asp-validation-for="NewPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+    </div>
+</div>
+
+Change Password Confirmation View
+<h4>
+    Your password is successfully changed.
+</h4>
+
+HttpGet ChangePassword Action
+[HttpGet]
+public IActionResult ChangePassword()
+{
+    return View();
+}
+
+HttpPost ChangePassword Action
+[HttpPost]
+public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        var user = await userManager.GetUserAsync(User); <= User : login되어 있는 유저, 유저가 진짜로 있는지 확인!
+        if (user == null)
+        {
+            return RedirectToAction("Login");
+        }
+
+        // ChangePasswordAsync changes the user password
+        var result = await userManager.ChangePasswordAsync(user,
+            model.CurrentPassword, model.NewPassword);
+
+        // The new password did not meet the complexity rules or
+        // the current password is incorrect. Add these errors to
+        // the ModelState and rerender ChangePassword view
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View();
+        }
+
+        // Upon successfully changing the password refresh sign-in cookie
+        await signInManager.RefreshSignInAsync(user);
+        return View("ChangePasswordConfirmation");
+    }
+
+    return View(model);
+}
+
+Change password menu item in Layout view
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink"
+        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Manage
+    </a>
+    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+        <a class="dropdown-item" asp-controller="Administration" asp-action="ListUsers">
+            Users
+        </a>
+        <a class="dropdown-item" asp-controller="Administration" asp-action="ListRoles">
+            Roles
+        </a>
+        <a class="dropdown-item" asp-controller="Account"   <= 편의를 위해 대강 넣은거...
+            asp-action="ChangePassword">
+            Password
+        </a>
+    </div>
+</li>
+
+122강 Add password to local account linked to external login
+external login으로 생성된 local user에 password를 다시 주기.
+external login, local user로 둘다 로그인 가능해진다.
+
+Add password to a local account
+userManager.AddPasswordAsync(user, model.NewPassword);  external login으로 로그인해서 password 컬럼이 null일때 password를 주는 함수
+
+Add Password View Model
+public class AddPasswordViewModel
+{
+    [Required]
+    [DataType(DataType.Password)]
+    [Display(Name = "New password")]
+    public string NewPassword { get; set; }
+
+    [DataType(DataType.Password)]
+    [Display(Name = "Confirm new password")]
+    [Compare("NewPassword", ErrorMessage = 
+        "The new password and confirmation password do not match.")]
+    public string ConfirmPassword { get; set; }
+}
+
+Add Password View
+@model AddPasswordViewModel
+
+<h2>Add Password</h2>
+<hr />
+<p class="text-info">
+    You have used an external account to login and do not have a local username and
+    password. Simply set a new password if you want to login using a local account.
+    Use your email as the username.
+</p>
+<div class="row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="NewPassword"></label>
+                <input asp-for="NewPassword" class="form-control" />
+                <span asp-validation-for="NewPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger">
+                </span>
+            </div>
+            <button type="submit" class="btn btn-primary"
+                    style="width:auto">
+                Set Password
+            </button>
+        </form>
+    </div>
+</div>
+
+Add Password Confirmation View
+<h3>You have successfully set a local password. You can now use either 
+    your local user account or an external account to login</h3>
+
+AddPassword Actions
+[HttpGet]
+public async Task<IActionResult> AddPassword()
+{
+    var user = await userManager.GetUserAsync(User);
+
+    var userHasPassword = await userManager.HasPasswordAsync(user);
+
+    if (userHasPassword)
+    {
+        return RedirectToAction("ChangePassword");
+    }
+
+    return View();
+}
+
+[HttpPost]
+public async Task<IActionResult> AddPassword(AddPasswordViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        var user = await userManager.GetUserAsync(User);
+
+        var result = await userManager.AddPasswordAsync(user, model.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View();
+        }
+
+        await signInManager.RefreshSignInAsync(user);
+
+        return View("AddPasswordConfirmation");
+    }
+
+    return View(model);
+}
+
+
+ChangePassword 버튼을 눌렀을때 external login인경우 addPassword로 리다이렉트!
+[HttpGet]
+public async Task<IActionResult> ChangePassword()
+{
+    var user = await userManager.GetUserAsync(User);
+
+    var userHasPassword = await userManager.HasPasswordAsync(user);
+
+    if (!userHasPassword)
+    {
+        return RedirectToAction("AddPassword");
+    }
+
+    return View();
+}
+
+123강 ASP NET Core account lockout(잠금)
+lockout : 로그인 여러번 실패시 일정 시간동안 계정 잠기는거
+예) 5번 로그인 실패시 15분 잠김, 15분뒤 다시 5번시도 가능
+
+1.Configure account lockout options in asp.net core
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    });
+
+    // Rest of the code
+}
+
+2.Enable account lockout
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> Login(LoginViewModel model, string returnUrl)
+{
+    model.ExternalLogins =
+        (await signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+    if (ModelState.IsValid)
+    {
+        var user = await userManager.FindByEmailAsync(model.Email);
+
+        if (user != null && !user.EmailConfirmed &&
+            (await userManager.CheckPasswordAsync(user, model.Password)))
+        {
+            ModelState.AddModelError(string.Empty, "Email not confirmed yet");
+            return View(model);
+        }
+
+        // The last boolean parameter lockoutOnFailure indicates if the account
+        // should be locked on failed logon attempt. On every failed logon
+        // attempt AccessFailedCount column value in AspNetUsers table is
+        // incremented by 1. When the AccessFailedCount reaches the configured
+        // MaxFailedAccessAttempts which in our case is 5, the account will be
+        // locked and LockoutEnd column is populated. After the account is
+        // lockedout, even if we provide the correct username and password,
+        // PasswordSignInAsync() method returns Lockedout result and the login
+        // will not be allowed for the duration the account is locked.
+        var result = await signInManager.PasswordSignInAsync(model.Email,
+                                        model.Password, model.RememberMe, true);
+
+        if (result.Succeeded)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction("index", "home");
+            }
+        }
+
+        // If account is lockedout send the use to AccountLocked view
+        if (result.IsLockedOut)
+        {
+            return View("AccountLocked");
+        }
+
+        ModelState.AddModelError(string.Empty, "Invalid Login Attempt");
+    }
+
+    return View(model);
+}
+
+3.Account Locked View
+2가지 옵션이 있다 15분을 기다리던가 password를 바꾸던가
+<h3 class="text-danger">
+    Your account is locked, please try again after sometime or you may
+    <a asp-action="ForgotPassword" asp-controller="Account">
+        reset your password by clicking here
+    </a>
+</h3>
+
+4.Set lockout end date on successful password reset
+만약 password reset을 한다면 성공시에도 lockout이 풀리지 않는다. lockoutEnd컬럼이 아직도 미래이기때문...
+SetLockoutEndDateAsync()을 사용하여 lcokoutEnd컬럼을 현재 시간으로 세팅하면 풀리게 된다.
+
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+{
+    if (ModelState.IsValid)
+    {
+        var user = await userManager.FindByEmailAsync(model.Email);
+
+        if (user != null)
+        {
+            var result =
+                await userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                // Upon successful password reset and if the account is lockedout, set
+                // the account lockout end date to current UTC date time, so the user
+                // can login with the new password
+                if (await userManager.IsLockedOutAsync(user))
+                {
+                    await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+                }
+                return View("ResetPasswordConfirmation");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return View(model);
+        }
+
+        return View("ResetPasswordConfirmation");
+    }
+    return View(model);
+}
+
+124강 ASP NET Core course wrap up
+대부분의 asp.net core mvc 컨셉을 다루었다.
+partial views, view components, razor pages, blazor등 중요한 컨셉들이 남아있다. asp.net core 3.0이 나왔으므로 남은 컨셉은 3.0으로 진행한다.

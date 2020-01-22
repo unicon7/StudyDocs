@@ -1,0 +1,20 @@
+https://www.youtube.com/watch?v=pGlkIFrY9QY&list=PLq8wAnVUcTFVq7RD1kuUwkdWabxvDGzfu
+
+오라클 데이터베이스 SQL 강의 3강 - SQL Developer 설치하기
+SQL Developer 별도로 설치해야 하는 클라이언트
+
+오라클 데이터베이스 SQL 강의 4강 - 오라클 PDB 서버에 접속하기
+
+
+
+
+
+
+
+
+
+
+
+
+
+

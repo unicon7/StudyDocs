@@ -1,0 +1,3 @@
+ASP.NET Core in Action 
+https://www.manning.com/books/asp-net-core-in-action
+https://andrewlock.net/free-net-core-ebook-including-asp-net-core-and-ef-core/
