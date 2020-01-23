@@ -2718,8 +2718,150 @@ class FocusInput extends Component {
 }
 
 특수한 상황에서 parent component에서 child component의 refs를 가질수 있다.
-하지만 component는 class component이어야 한다. functional component에는 refs가 attache될수 없다.
+하지만 component는 class component이어야 한다. functional component에는 refs가 attach될수 없다.
 
 ReactJS Tutorial - 30 - Forwarding Refs
+ref forwarding은 자동으로 component를 통해 ref를 children중의 하나에게 보내는 기법이다.
+일단 예제를 통해 이해하자.
+
+이전 강의 예제와 마찬가지로 버튼을 누르면 input이 focus되게 만들고 싶다.
+이전에는 class의 ref를 만들었지만 이번에는 child가 functional component이기때문에 ParentComponent가 native input element를 참조하기 할수 있도록 forwarding ref 기법을 사용한다.
+
+FRParentInput.js
+import React, { Component } from 'react'
+
+class FRParentInput extends Component {
+  constructor(props) {
+    super(props);
+    this.inputRef = React.createRef();  <= 1.ref생성
+  }
+  clickHandler = () =>{
+    this.inputRef.current.focus();
+  }
+
+  render() {
+    return (
+      <div>
+        <FRInput ref={this.inputRef} /> <= 2.ref를 child로 넘겨 forwarding
+        <button onClick={this.clickHandler}>Focus Input</button> <= 4. handler를 생성
+      </div>
+    )
+  }
+}
+
+export default FRParentInput
+
+FRInput.js
+//import React from 'react'
+
+//function FRInput() { <= 원래 functional component라면 이렇게 쓰지만...
+//  return (
+//    <div>
+//      <input type="text" />
+//    </div>
+//  )
+//}
+
+//export default FRInput
+
+3. forward ref는 React.ForwardRef()함수를 사용하여 할수있다.
+일단 
+const FRInput = React.forwardRef((props, ref) => { <= arrow function 형태로 바꾸고 React.forwardRef()의 인자로 넣었다.
+  return (
+    <div>
+      <input type="text" ref={ref}/>  <= 이 ref는 parent로부터 온것이다. 다시말하면 child가 ref를 parent로 forwarding한다.
+    </div>
+  )
+})
+
+모든 functional component는 props를 추가로 받는다. React.forwardRef()를 사용하면 추가로 ref를 인자로 더 받게된다.
+ref에 native input element를 넣어 부모로 다시 pass한다.
+
+정리하면 parent에서 ref를 생성한뒤 child로 넘기고 child가 ref를 native input에 set하고 있다.
+parent는 이제 child의 navtive element에 ref를 통해 접근할수있다.
+
+ref forwarding은 거의 쓰지 않을 기법중의 하나일것이다. 이는 특정 라이브러리를 쓰거나 higher order component를 사용할때 사용해야할것이다.
+하지만 여러가지 react의 컨셉을 알아두는 것은 매우 좋다.
+
+ReactJS Tutorial - 31 - Portals
+Portal은 parent component의 DOM hierarchy 밖에 존재하는 DOM node에 render할수 있게 하는 기능이다.
+지금까지 우리는 react를 HTML에 있는 하나의 DOM element에 mounting하여 써왔다.
+index.html을 보면
+<div id="root"></div>가 있으며 index.js안에는 ReactDOM.render(<App />, document.getElementById('root'))를 사용하여 react에 App component를 mounting하였다.
+react의 모든 component들은 전부 root element <div id="root"></div> 밑에 존재하게된다.
+portal이 제공하는 것은 이 DOM tree를 벗어날수있는 능력이다. component를 root element 밑에 있는 node가 아닌 다른 DOM node에 render할수있게한다.
+
+index.html
+...
+<div id="root"></div>
+<div id="portal-root"></div>
+...
+
+PortalDemo.js
+import React from 'react'
+
+function PortalDemo() {
+  return (
+    <div>
+      <h1>Portals demo</h1>
+    </div>
+  )
+}
+
+export default PortalDemo
+
+실행 시켜서 DOM을 보면
+<div id="root">
+  <div class="App">
+    <h1>Portals demo</h1> <= root element 밑에 들어간다.
+  </div>
+</div>
+<div id="portal-root"></div>
+
+portal-root element 밑으로 넣어보자
+
+PortalDemo.js
+import React from 'react'
+import ReactDOM from 'react-dom'  <= 추가
+
+function PortalDemo() {
+  return ReactDOM.createPortal((
+      <h1>Portals demo</h1>
+  ), document.getElementById('portal-root'))  ;
+}
+
+첫번째 파라메터로 int, string, JSX, components등 그릴수 있는 모든것이 들어간다. 2번째로는 element를 mount할 DOM node가 들어간다.
+실행 시켜서 DOM을 보면
+<div id="root">
+  <div class="App">    
+  </div>
+</div>
+<div id="portal-root">
+  <h1>Portals demo</h1> <= portal-root element 밑에 들어간다.
+</div>
+
+모든 react components는 root node 밑의 App node 밑에 들어가지만 portal을 통해 계층을 벗어나 어떠한 노드에도 그릴수 있게된다.
+
+portal이 왜 필요한가?
+parent가 css를 가지고 있는데 child component가 popup을 modal했을경우, tooltip을 생성했을경우이다.
+예제
+https://codesandbox.io/s/00254q4n6p
+위의 예제에서 createPortal()부분을 지우고 app component에 그려지게 만들면 modal이 망가지게 된다.(modal 뒷배경이 검게 되어야 하는데 작아졌다!)
+이유는 parent가 max-width:400px을 가지고 있기 때문에 modal도 영향을 받아 400px이 max-width가 된것이다...
+언젠가는 child가 다른 DOM node에 위치해야 하고 portal이 기능을 제공한다.
+
+마지막 이슈는 event bubbling이다. DOM tree안의 어떤곳에든 portal이 위치해 있을수있지만 모든 면에서 noraml react child로서 기능한다.
+이는 event bubbling을 포함한다.
+portal 안에서 fire된 event는 DOM tree의 선조가 아닌 react tree를 따른 선조를 따라 bubbling되게된다.
+https://codepen.io/gaearon/pen/jGBWpE
+Parent component에는 clicks라는 counter가 있다.
+Parent component는 Modal component를 포함하고 있고 Modal component는 Child component를 포함한다.
+Child component에 버튼이 있으며 onClick이 없으므로 event가 bubbling된다. Modal component는 물론 portal이다.
+Parent는 root에 Modal은 modal root에 mount되게 된다.
+Child component의 button을 클릭하면 Parent component의 Counter가 올라가게된다. DOM tree를 딸 bubbling된것이아니라 react tree를 따라 event가
+bubbling됨을 확인할수 있다.
+
+render 위치만 바꾸는 것이지 나머지 기능는 다른 일반적인 react tree를 따라 동작하게된다.
 
 
+ReactJS Tutorial - 32 - Error Boundary
