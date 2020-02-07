@@ -2865,3 +2865,1405 @@ render 위치만 바꾸는 것이지 나머지 기능는 다른 일반적인 rea
 
 
 ReactJS Tutorial - 32 - Error Boundary
+life cycle hook에서 stateic getDerivedStateFromError(error), componentDidCatch(error, info) 2개를 간단히 알아만 봤다.
+
+지금까지 에러가 나면(undefined 같은) 브라우저의 화면에 error가 찍히며, react는 broken state가 된다. 기본적으로 전체 component tree를 unmount한다.
+어떤 component에서든 에러가 발생하면 catch하고 fallback UI를 출력하면 좋을 것이다. 이때 사용되는 기능이 Error Boundary이다.
+
+stateic getDerivedStateFromError(error), componentDidCatch(error, info)중 하나 또는 전부를 구현한 class component를 Error Boundary라고 한다.
+stateic getDerivedStateFromError(error)은 error가 throw된뒤 fallback UI를 render하기 위해 사용하며 componentDidMount(error, info)는 error information을
+로깅하기 위해 사용한다.
+
+Hero.js
+import React from 'react'
+
+function Hero({heroName}) {
+  if(heroName === 'Joker'){
+    throw new Error('Not a hero');
+  }
+
+  return (
+    <div>
+      {heroName}
+    </div>
+  )
+}
+
+export default Hero
+
+App.js
+import React, { Component } from 'react'
+import Hero from './components/Hero'
+
+export class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <Hero heroName="Batman" />
+        <Hero heroName="Superman" />
+        <Hero heroName="Joker" />   <= error 발생! 전체 component tree가 죽는다.
+      </div>
+    )
+  }
+}
+
+export default App
+
+전체 component가 아닌 error가 발생한 component만 fallback UI를 출력하게 해보자
+Error Boundary를 사용해보자.
+ErrorBoundary.js
+import React, { Component } from 'react'
+
+export class ErrorBoundary extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      hasError: false
+    }
+  }
+
+  stateic getDerivedStateFromError(error){  
+    return {
+      hasError: true <= error를 받고 새로운 state를 return한다. hasError를 사용하여 fallback UI를 render합자!
+    }
+  }
+
+  render() {
+    if(this.state.hasError) {
+      return <h1>Somthing went wrong</h1>
+    }
+
+    return this.props.children;  <= 실제로 그려야 하는 component를 children으로 참조하자!
+  }
+}
+
+export default ErrorBoundary
+
+App.js
+import React, { Component } from 'react'
+import Hero from './components/Hero'
+import ErrorBoundary from './components/ErrorBoundary'
+
+export class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <ErrorBoundary>  <= Error 발생할수 있는 component들을 감싼다!
+          <Hero heroName="Batman" />
+          <Hero heroName="Superman" />
+          <Hero heroName="Joker" />
+        </ErrorBoundary>
+      </div>
+    )
+  }
+}
+
+실행하면 여전히 에러 화면이 떠 있을것이다. 하지만 이는 React팀의 의도이다. Error Boundary는 production에서 주로 쓸모있으며 development에서는
+가능한 error를 많이 볼수 있게 하길 원했다. development에서는 에러 화면이 뜰것이며 우상단의 x를 누르면 에러화면이 없어지고 application 화면이 나오게 된다.
+
+Error Boundary에 관해 중요한 점은 어디에 놓을까?이다. 현재는 모든 Hero component를 감싸고 있다. 만약 error가 발생하면 ErrorBoundary안의 모든것은 hidden이되며
+fallback UI가 render된다. 이건 이상적이지 않다. 몇천개의 상품을 리스트롤 갖는 리스트를 상상해보자. 1개의 상품에서 에러가 났다고 전체 상품을 보여주지 않는것은
+좋은 생각은 아닌것 같다.
+예에서도 Joker에서 error가 발생했다고 나머지가 안보이는 것도 좋아보이지 않는다.
+App.js
+import React, { Component } from 'react'
+import Hero from './components/Hero'
+import ErrorBoundary from './components/ErrorBoundary'
+
+export class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <ErrorBoundary>
+          <Hero heroName="Batman" />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Hero heroName="Superman" />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Hero heroName="Joker" />
+        </ErrorBoundary>
+      </div>
+    )
+  }
+}
+
+(흠..위의 것도 좋아 보이지 않는데..Hero에서 fallback UI를 직접 구하면 안되나? 나중에 테스트 해보자)
+
+componentDidCatch(error, info)에대해 알아보자
+ErrorBoundary.js
+import React, { Component } from 'react'
+
+export class ErrorBoundary extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      hasError: false
+    }
+  }
+
+  stateic getDerivedStateFromError(error){  
+    return {
+      hasError: true
+    }
+  }
+
+  componentDidCatch(error, info) {
+    console.log(error); <= throw한 error object
+    console.log(info); <= error에 관련된 정보
+    //2개의 로그를 console로 찍었지만 development에서는 react가 자동으로 모든 error를 console에 찍는다.
+  }
+
+  render() {
+    if(this.state.hasError) {
+      return <h1>Somthing went wrong</h1>
+    }
+
+    return this.props.children;  <= 실제로 그려야 하는 component를 children으로 참조하자!
+  }
+}
+
+export default ErrorBoundary
+
+마지막으로 알아야 할 점은 Error Boundary밑에 있는 모든 tree의 constructor들과 lifecycle method render에서 발생하는 erorr를 catch하지만
+event handler들안의 error는 catch하지 않는다는 점이다. onClick handler에서 발생하는 error를 잡고 싶다면 Error Boundary가 아닌 보통의 try catch를 사용해야한다.
+
+정리
+Error Boundary는 child component tree에서 발생하는 javascript error를 catch하여, error를 로깅하며 fallback UI를 출력하는 react component이다.
+stateic getDerivedStateFromError(error), componentDidCatch(error, info)중 하나 또는 전부를 구현한 class component를 Error Boundary라고 한다.
+Error Boundary의 위치도 중요하다. 전체 app의 fallback UI를 가질수도 있고 에러난 component마다 가질수도 있다.
+application에서 우아하게 error처리를 가능하게 해준다.
+
+ReactJS Tutorial - 33 - Higher Order Components (Part 1)
+3파트로 설명한다. 이 파트에서는 Higher Order Components가 왜 필요한지 알아본다.
+
+고객이 button을 누르면 버튼의 클릭횟수를 출력하는 counter를 만들어 달라고 해서 다음과같이 만든다.
+ClickCounter.js
+import React, { Component } from 'react'
+
+export class ClickCounter extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <button onClick="this.incrementCount">Click {count} times</button>      
+    )
+  }
+}
+
+export default ClickCounter
+
+요구 사항이 추가 되었다. 위와 거의 같은 기능의 counter지만 button이 아닌 heading으로 hover를 통해 count를 출력해달라!
+기본적으로 click의 기능성이 hover을 기능으로 바뀌었다.
+HoverCounter.js
+import React, { Component } from 'react'
+
+export class HoverCounter extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <h2 onMouseOver="this.incrementCount">Hover {count} times</h2> <= onMouseOver만 바뀌었고 counter의 increment는 clickcounter로 부터 카피했다!
+    )
+  }
+}
+
+export default HoverCounter
+
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounter />
+        <HoverCounter />
+      </div>
+    )
+  }
+}
+
+export default App
+
+또 추가된다고 가정하자..이번에는 keypress된 count를 출력하는 input이다. 이쯤되면 코드가 계속 중복되며 기능을 재사용 할수 없음을 깨닫게 된다.
+만약 Counter기능을 가진 10개의 다른 component가 생긴다면? 같은 코드를 계속 써야한다.
+이제 질문은 어떻게 이 코드를 제활용 가능하게 할것인가?이다.
+
+가장 먼저 드는 생각은 state를 parent로 옮기고 props로 Handler를 child에게 전달하는 것이다.
+Counter 기능을 App으로 옮기고 props와 state를 ClickCounter, HoverCounter로 전달하면 된다.
+하지만 Counter가 child가 아닌 tree 안쪽 깊은 곳에 존재하며 여러군데 흩어져 있다면 props를 넘기는 것이 어렵게된다.(Parent가 CompA, CompA안의 CompB, CompB안에 HoverCounter가 있다면)
+state와 Handler를 parent로 옮기는 것은 좋은 방법이 아니다.
+
+code를 반복하지 않으면서 component간에 기능을 공유할 필요가 있다.
+이때 higher order components가 필요하다.
+
+ReactJS Tutorial - 34 - Higher Order Components (Part 2)
+왜 higher order components가 필요한가?
+components간의 common functionality를 공유하기위해서!
+
+Higher Order Components(HOC)란?
+함수가 component를 argument로서 받아 새로운 component를 리턴하는 패턴!
+const NewComponent = higherOrderComponent(originalComponent);
+originalComponent에 추가적인 기능을 추가하여 NewComponent를 리턴!
+const EnhancedComponent = higherOrderComponent(originalComponent);로 불리기도한다.
+const IronMan = withSuit(TonyStark)  <= HOC pattern
+
+Counter 예제를 HOC를 사용해보자.(HOC convention의 naming은 나중에 살펴본다)
+withCounter.js <= 소문자로 시작
+import React from 'react'
+const UpdatedComponent = OriginalComponent =>{
+  class NewComponent extends React.Component {   <= 함수안에 class정의
+    render() {
+      return <OriginalComponent name='Vishwas'/>  <= OriginalComponent에 name props 추가!
+    }
+  }
+
+  return NewComponent;  <= 새로운 NewComponent 리턴! 흠..new를 안썼다. component들은 object가 아닌 class들을 export했다. 헛갈리지 말자!
+}
+
+export default UpdatedComponent
+
+위의 형태가 가장 간단한 형태이다.
+
+이게 ClickCounter와 HoverCounter에 HOC를 적용해보자
+ClickCounter.js
+import React, { Component } from 'react'
+import UpdatedComponent from './Component/withCounter'  <= 추가
+
+export class ClickCounter extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <button onClick="this.incrementCount"> {this.props.name} Click {count} times</button>  <= props 출력!
+    )
+  }
+}
+
+export default UpdatedComponent(ClickCounter);  <= HOC 함수 사용!
+
+HoverCounter.js
+import React, { Component } from 'react'
+import UpdatedComponent from './Component/withCounter'  <= 추가
+
+export class HoverCounter extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <h2 onMouseOver="this.incrementCount">{this.props.name} Hover {count} times</h2>  <= props 출력!
+    )
+  }
+}
+
+export default UpdatedComponent(HoverCounter);  <= HOC 함수 사용!
+
+위의 적용 예를 보면 기존의 ClickCounter, HoverCounter에 name props를 inject하였다.
+우리가 원하는 것은 name props가 아니라 Counter functionality를 공유하는 것이다.
+다시 수정해보자
+
+
+
+withCounter.js
+import React from 'react'
+const UpdatedComponent = OriginalComponent =>{
+  class NewComponent extends React.Component {
+  constructor(props){  <= constructor와 incrementCount를 복사했다!
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+    render() {
+      return <OriginalComponent count={this.state.count} incrementCount={this.incrementCount}/>  <= state와 handler를 넘긴다.
+    }
+  }
+
+  return NewComponent;
+}
+
+export default UpdatedComponent
+
+ClickCounter.js
+import React, { Component } from 'react'
+import UpdatedComponent from './Component/withCounter'
+
+export class ClickCounter extends Component {
+  render() {
+    return (
+      const { count, incrementCount } = this.props; <= props로부터 가져온다!
+      <button onClick="incrementCount">Click {count} times</button>
+    )
+  }
+}
+
+export default UpdatedComponent(ClickCounter);
+
+HoverCounter.js
+import React, { Component } from 'react'
+import UpdatedComponent from './Component/withCounter'  <= 추가
+
+export class HoverCounter extends Component {
+  render() {
+    return (
+      const { count, incrementCount } = this.props;
+      <h2 onMouseOver="incrementCount">Hover {count} times</h2>
+    )
+  }
+}
+
+export default UpdatedComponent(HoverCounter);
+
+이전과 똑같이 동작할것이다.
+정리해보자.
+1.App.js에서 시작했다. ClickCounter component를 포함했다.
+2.ClickCounter.js export default UpdatedComponent(ClickCounter);를 사용하여 export했다.(HOC 함수 사용)
+3.UpdatedComponent는 withCounter에 정의 되어있다. UpdatedComponent는 OriginalComponent를 받아 NewCompoenent를 리턴하는 함수이다.
+OriginalComponent는 ClickCounter이다. NewCompoenent는 count property를 가지고 있는 state와 이를 변경하는 incrementCount를 가지고 있다.
+이 둘은 props를 통해 OriginalComponent로 전달된다. OriginalComponent는 Enhanced 되었다.
+4.OriginalComponent인 ClickCounter는 render()에서 props를 destructuring하여 Counter기능을 사용한다.
+
+HOC는 기본적으로 state와 incrementCount를 유지한다.
+
+이러한 흐름은 HoverCounter에서도 마찬가지이다. 
+주의할 점은 2개의 component(ClickCounter, HoverCounter)는 별도의 state를 갖는다.
+
+이제 naming convention에 대해 알아보자.
+
+withCounter.js  <= 1.화일명과 함수는 같은 이름을 쓴다. component에 추가되는 기능성을 설명한다.
+import React from 'react'
+const withCounter = WrappedComponent =>{  <= 1.export할 함수명을 바꾸었다. 2.OriginalComponent는 WrappedComponent라는 이름을 가진다.
+  class WithCounter extends React.Component {  <= 3.NewComponent 함수와 같은 이름을 가지며 pascal case를 쓴다.
+  constructor(props){  <= constructor와 incrementCount를 복사했다!
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+    render() {
+      return <WrappedComponent count={this.state.count} incrementCount={this.incrementCount}/>  <= 2.OriginalComponent는 WrappedComponent라는 이름을 가진다.
+    }
+  }
+
+  return WithCounter; <= 3.NewComponent 함수와 같은 이름을 가지며 pascal case를 쓴다.
+}
+
+export default withCounter 
+
+ClickCounter.js
+import React, { Component } from 'react'
+import withCounter from './Component/withCounter'  <= 4 함수를 import
+
+export class ClickCounter extends Component {
+  render() {
+    return (
+      const { count, incrementCount } = this.props; <= props로부터 가져온다!
+      <button onClick="incrementCount">Click {count} times</button>
+    )
+  }
+}
+
+export default withCounter(ClickCounter); <= 4 함수를 사용하여 export, withCounter functionality와 함께 ClickCounter를 export했다라고 읽는다.
+
+위의 이름 규칙은 rule이 없지만 대부분 convention하게 쓰고 있는 네이밍 방법이다.
+
+1.HOC는 함수가 component를 받아 강화된 component를 리턴하는 패턴이다.
+2.component간에 코드의 중북을 제거하며 공통 기능을 공유할때 쓰는 방법이다.
+
+ReactJS Tutorial - 35 - Higher Order Components (Part 3)
+HOC를 끝내기전에 2가지를 더 한다.
+1. props를 전달하기
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounter name="Vishwas"/>  <= name prop을 전달
+        <HoverCounter />
+      </div>
+    )
+  }
+}
+
+export default App
+
+ClickCounter.js
+import React, { Component } from 'react'
+import withCounter from './Component/withCounter'
+
+export class ClickCounter extends Component {
+  render() {
+    return (
+      const { count, incrementCount } = this.props;
+      <button onClick="incrementCount">{this.props.name}Click {count} times</button> <= name을 찍는다.
+    )
+  }
+}
+
+export default withCounter(ClickCounter);
+
+하지만 화면에는 이름이 찍히지 않는다. 이유는 prop을 WithCounter HOC에 전달한 것이지 ClickCounter에 전달되지는 않았다.
+제일 많이 하는 실수중 하나이므로 주의 하자.
+
+withCounter.js
+import React from 'react'
+const withCounter = WrappedComponent =>{
+  class WithCounter extends React.Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+    render() {
+      return <WrappedComponent count={this.state.count} incrementCount={this.incrementCount} {...this.props}/>  <= spread operator를 사용하여 WrappedComponent로 전달!
+    }
+  }
+
+  return WithCounter;
+}
+
+export default WithCounter
+
+2.HOC function에 parameter 전달하기
+1씩 증가하는 것이 아니라 파라메터로 숫자를 Counter에 준다!
+
+withCounter.js
+import React from 'react'
+const withCounter = (WrappedComponent, incrementNumber) =>{  <= incrementNumber를 추가한다.
+  class WithCounter extends React.Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + incrementNumber} <= incrementNumber를 사용!
+    })
+  }
+
+    render() {
+      return <WrappedComponent count={this.state.count} incrementCount={this.incrementCount} {...this.props}/>  <= spread operator를 사용하여 WrappedComponent로 전달!
+    }
+  }
+
+  return WithCounter;
+}
+
+export default withCounter
+
+ClickCounter.js
+import React, { Component } from 'react'
+import withCounter from './Component/withCounter'
+
+export class ClickCounter extends Component {
+  render() {
+    return (
+      const { count, incrementCount } = this.props;
+      <button onClick="incrementCount">{this.props.name}Click {count} times</button> <= name을 찍는다.
+    )
+  }
+}
+
+export default withCounter(ClickCounter, 5);  <= parameter를 준다!
+
+connect hoc in redux, withRouter in react router, withStyles in material UI등 유명한 react libray에서 위의 패턴을 볼수있다.
+
+ReactJS Tutorial - 36 - Render Props (Part 1)
+Component간 기능 공유를 위해 HOC pattern을 사용했었다.
+HOC와 같은 상황에 쓸수 있는 Render Props 패턴에 대해 알아본다.
+일단 ClickCounterTwo등으로 같은 상황을 만들어보자
+
+ClickCounterTwo.js
+import React, { Component } from 'react'
+
+export class ClickCounterTwo extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <button onClick="this.incrementCount">Click {count} times</button>      
+    )
+  }
+}
+
+export default ClickCounterTwo
+
+
+HoverCounterTwo.js
+import React, { Component } from 'react'
+
+export class HoverCounterTwo extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count } = this.state
+      <h2 onMouseOver="this.incrementCount">Hover {count} times</h2> <= onMouseOver만 바뀌었고 counter의 increment는 clickcounter로 부터 카피했다!
+    )
+  }
+}
+
+export default HoverCounterTwo
+
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+      </div>
+    )
+  }
+}
+
+export default App
+위와같이 HOC 적용전의 같은 상황일 경우 Render Props 패턴에대해 알아보자.
+
+ReactJS Tutorial - 37 - Render Props (Part 2)
+Render Props 패턴이 무엇인지 이해하기위해 baby step 몇가지를 해보자.
+
+User.js
+import React, { Component } from 'react'
+
+class User extends Component {
+  render() {
+    return (
+      <div>
+        Vishwas
+      </div>
+    )
+  }
+}
+
+export default User
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User />
+      </div>
+    )
+  }
+}
+
+Vishwas가 보일 것이다. 몇가지 변화를 주자. Vishwas를 하드코딩하지 말고 props로 전달하자!
+User.js
+import React, { Component } from 'react'
+
+class User extends Component {
+  render() {
+    return (
+      <div>
+        {this.props.name}
+      </div>
+    )
+  }
+}
+
+export default User
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User name="Vishwas"/>
+      </div>
+    )
+  }
+}
+
+똑같다..다음 baby step으로 약간 미친 짓을 해보자.
+name prop으로 string Vishwas대신 Vishwas를 리턴하는 함수를 전달하자
+
+User.js
+import React, { Component } from 'react'
+
+class User extends Component {
+  render() {
+    return (
+      <div>
+        {this.props.name()}  <= 함수 호출!
+      </div>
+    )
+  }
+}
+
+export default User
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User name={() => "Vishwas"}/> <= 함수 전달
+      </div>
+    )
+  }
+}
+
+다음으로 함수에 파라메터를 줘보자
+
+User.js
+import React, { Component } from 'react'
+
+class User extends Component {
+  render() {
+    return (
+      <div>
+        {this.props.name(true)}  <= isLoggedIn 파라메터를 함수에 전달!
+      </div>
+    )
+  }
+}
+
+export default User
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User name={(isLoggedIn) => isLoggedIn ? 'Vishwas' : 'Guest'}/> <= isLoggedIn 파라메터를 함수에 추가
+      </div>
+    )
+  }
+}
+
+다음 baby step으로 name을 render로 이름을 바꾸자.
+
+User.js
+import React, { Component } from 'react'
+
+class User extends Component {
+  render() {
+    return (
+      <div>
+        {this.props.render(true)}
+      </div>
+    )
+  }
+}
+
+export default User
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User render={(isLoggedIn) => isLoggedIn ? 'Vishwas' : 'Guest'}/>
+      </div>
+    )
+  }
+}
+
+이 예에서 기억할 점이 있다.
+react에서는 component에서 실제 무엇이 render될지를 control하기 위해 값이 함수인 prop을 사용하는 것이 가능하다.
+이는 Render Props 패턴이 기초하는 것이기때문에 기억해야한다.
+
+Render Props이란?
+"Render Props"이란 용어는 React components간의 code sharing을 위해 값이 함수인 prop을 사용하는 테크닉을 말한다.
+이 정의에는 2부분이 있다.
+1.code sharing
+2.값이 함수인 prop
+여기까지 prop의 값이 함수인것을 어떻게 사용하는 지 보았다.
+
+이제 기능을 어떻게 공유하는지 알아보자.
+ClickCounterTwo, HoverCounterTwo는 공유할수있는 코드인 state와 incrementCount를 가지고있다.
+Render Props패턴을 사용하여 공유하여 보자.
+
+Counter.js
+import React, { Component } from 'react'
+
+class Counter extends Component {
+  render() {
+    return (
+      <div>
+        
+      </div>
+    )
+  }
+}
+
+export default Counter
+
+Conter Component는 공통 기능을 구현할 container component이다. 공통 기능은 state와 incrementCount이다.
+
+Counter.js
+import React, { Component } from 'react'
+
+class Counter extends Component {
+  constructor(props){  <= ClickCounterTwo, HoverCounterTwo에 있는 공통 기능을 옮긴다.
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        
+      </div>
+    )
+  }
+}
+
+export default Counter
+render()는 JSX가 비어있다. 이는 이 Counter Component에 의해 Redner Prop이 무엇이 그려질지를 control하기 위해 비어있는 것이다.
+Counter.js
+import React, { Component } from 'react'
+
+class Counter extends Component {
+  constructor(props){  <= ClickCounterTwo, HoverCounterTwo에 있는 공통 기능을 옮긴다.
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        {this.props.render(this.state.count, this.incrementCount)} <= 이 문장이 표현하는 것은 state.count, incrementCount를 받아서 니가 원하는 것을 그려!라고 이야기하는 것!
+         render할 함수를 파라메터로 받겠다
+      </div>
+    )
+  }
+}
+
+{this.props.render(this.state.count, this.incrementCount)} 
+이 문장이 표현하는 것은 state.count, incrementCount를 받아서 니가 원하는 것을 그려!라고 이야기하는 것! 나는 Counter logic을 가지고 있을테니 무엇을 render할지는 너에게 달렸어!라고
+Counter component가 이야기 하고 있는것! Counter component는 Counter logic만을 갖고 Counter를 사용하는 쪽이 무엇을 랜더링할지 결정하도록 한다!
+
+우리는 ClickCounterTwo, HoverCounterTwo를 그려야 하며 count state와 count state Increment method를 전달할것이다!
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>
+        {/*  <= comment out
+        <ClickCounterTwo />
+        <HoverCounterTwo />
+        <User render={(isLoggedIn) => isLoggedIn ? 'Vishwas' : 'Guest'}/>
+        */}
+        <Counter render={(count, incrementCount) => (
+          <ClickCounterTwo count={count} incrementCount={incrementCount} />
+          )} 
+        />
+        <Counter render={(count, incrementCount) => (
+          <HoverCounterTwo count={count} incrementCount={incrementCount} />
+          )} 
+        />
+      </div>
+    )
+  }
+}
+
+ClickCounterTwo.js, HoverCounter.js도 동일하게 수정
+import React, { Component } from 'react'
+
+export class ClickCounterTwo extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      const { count, incrementCount } = this.props  <= props로부터 가져온다! 
+      <button onClick="incrementCount">Click {count} times</button>      
+    )
+  }
+}
+
+export default ClickCounterTwo
+
+여기까지가 Render Props 패턴이다.
+
+한번 정리해보자.
+1. App Component에서  
+<Counter render={(count, incrementCount) => (
+    <ClickCounterTwo count={count} incrementCount={incrementCount} />
+  )} 
+/>
+를 만나게 된다.
+
+2.Counter Component에서는 Count state와 method가 있다. 하지만 Counter Component는 스스로 뭔가를 render하지 않는다.
+단순히 render prop으로 들어온 것을 호출하여 render한다. 호출할때 Count state와 method를 넘겨 호출하게 된다.
+{this.props.render(this.state.count, this.incrementCount)} 이부분!
+
+3.render prop이 뭐였는가? 1번의 ClickCounterTwo Component이다. 2번의 Counter Component로 부터 Count state와 method를 받아
+ClickCounterTwo Component의 prop으로 전달한다.
+
+4. ClickCounterTwo Component는 prop으로 전달된 state, method를 사용하여 실제 UI를 render한다.
+render() {
+  return (
+    const { count, incrementCount } = this.props  <= props로부터 가져온다! 
+    <button onClick="incrementCount">Click {count} times</button>      
+  )
+}
+
+Counter Component는 다른 instance이기때문에 count state 값사이에 충돌은 없다.
+
+한가지 더 주목할것은 prop의 이름이 render일 필요가 없다! 아무이름이나 쓸수있지만 render라는 이름이 convention이다.
+
+render라는 prop을 쓰지 않는 변형이 있다. 대신 children prop이 사용된다.
+
+App.js
+
+export class App extends Component {
+  render() {
+    return (
+      <div>       
+        <Counter>
+        {
+          (count, incrementCount) => (
+            <ClickCounterTwo count={count} incrementCount={incrementCount} />
+          )
+        }
+        </Counter>
+        <Counter>
+        {
+          (count, incrementCount) => (
+            <HoverCounterTwo count={count} incrementCount={incrementCount} />
+          )
+        }
+        </Counter>
+      </div>
+    )
+  }
+}
+
+Counter.js
+import React, { Component } from 'react'
+
+class Counter extends Component {
+  constructor(props){  <= ClickCounterTwo, HoverCounterTwo에 있는 공통 기능을 옮긴다.
+    super(props)
+
+    this.state = {
+      count: 0
+    }
+  }
+
+  incrementCount = () => {
+    this.setState(prevState => {
+      return {count: prevState.count + 1}
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        {this.props.children(this.state.count, this.incrementCount)}  <= render에서 children으로 바꾸어 호출~!
+      </div>
+    )
+  }
+}
+
+ReactJS Tutorial - 38 - Context (Part 1)
+Context API가 필요한 경우를 살펴보자.
+AppComponent안에 여러 component가 있으며 nested된 component안에서 loggedin된 user의 이름을 출력해야한다고 하자.
+AppComponent안에 username으로 정보가 유지된다고 가정할때 prop으로 pass down해야한다.
+중간에 거쳐야 되는 component들이 많아지게 된다. 중간의 component들은 prop이 필요없더라도 pass down에 참여해야한다.
+만약 nested depth가 10이상이라고 생각해보자..
+예를들어 language preference, authenticated user등 상당히 많은 component에서 필요로 하는 prop일경우 특히나 문제가 된다.
+component를 거치지 않고 직접 component로 정보를 줄수 있다면 훨씬 좋을것이다.
+
+Context는 모든 level에서 props를 pass down할 필요없이 component tree를 통해 data를 pass할수 있는 방법을 제공한다.
+
+ReactJS Tutorial - 39 - Context (Part 2)
+top level에서 pass한 user context를 어떠한 level의 component에서도 prop을 읽을수 있는 예제를 만들어본다.
+
+App.js
+import React, { Component } from 'react'
+import ComponentC from './components/ComponentC'
+
+class App extends Component {
+  render() {
+    return (
+      <div>
+        <ComponentC />
+      </div>
+    )
+  }
+}
+
+export default App
+
+ComponentC.js
+import React, { Component } from 'react'
+import ComponentE from './components/ComponentE'
+
+export class ComponentC extends Component {
+  render() {
+    return (
+      <div>
+        <ComponentE />
+      </div>
+    )
+  }
+}
+
+export default ComponentC
+
+ComponentE.js
+import React, { Component } from 'react'
+import ComponentF from './components/ComponentE'
+
+export class ComponentE extends Component {E
+  render() {
+    return (
+      <div>
+        <ComponentF />
+      </div>
+    )
+  }
+}
+
+export default ComponentE
+
+ComponentF.js
+import React, { Component } from 'react'
+import ComponentF from './components/ComponentE'
+
+export class ComponentF extends Component {E
+  render() {
+    return (
+      <div>
+        Component F
+      </div>
+    )
+  }
+}
+
+export default ComponentF
+
+App->ComponentC->ComponentE->ComponentF 순으로 nested 되어 있다.
+
+1.Context를 생성한다.
+userContext.js
+import React from 'react'
+const UserContext = React.createContext();
+
+const UserProvider = UserContext.Provide;  <= context안에는 2개의 component가 있으며 이를 다음에 사용하기 위해 export한다.
+const UserConsumer = UserContext.Consumer;
+
+export {UserProvide, UserConsumer}
+
+2.context value를 제공(Provide)한다.
+자식 component들만 접근할수 있기때문에 Provide의 위치는 중요하다.
+Provide를 App.js에 놓자.
+
+App.js
+import React, { Component } from 'react'
+import ComponentC from './components/ComponentC'
+import {UserProvider} from './components/userContext'
+
+class App extends Component {
+  render() {
+    return (
+      <div>
+        <UserProvider value="Vishwas">  <= 이제 UserProvider component가 후손들에게 information을 제공할수있다. value prop을 통해서 넘긴다.
+          <ComponentC />
+        </UserProvider>
+      </div>
+    )
+  }
+}
+
+
+3.context value를 소모(Comsume))한다.
+ComponentF.js
+import React, { Component } from 'react'
+import ComponentF from './components/ComponentE'
+
+export class ComponentF extends Component {E
+  render() {
+    return (
+      <UserConsumer>
+        {
+          (username) => {
+            return <div>Hello {username}</div>  <= provide의 value가 username으로 들어온다. JSX를 리턴해야한다.
+          }
+        }
+      </UserConsumer>
+    )
+  }
+}
+
+export default ComponentF
+
+ReactJS Tutorial - 40 - Context (Part 3)
+Context API의 2가지 기억해야할 점.
+1. Context에 default value를 정할수있다.
+userContext.js
+import React from 'react'
+const UserContext = React.createContext('codevoluation');  <= 여기에 default value를 넣는다.
+
+const UserProvider = UserContext.Provide;
+const UserConsumer = UserContext.Consumer;
+
+export {UserProvide, UserConsumer}
+
+App.js
+import React, { Component } from 'react'
+import ComponentC from './components/ComponentC'
+import {UserProvider} from './components/userContext'
+
+class App extends Component {
+  render() {
+    return (
+      <div>
+        {/*<UserProvider value="Vishwas">*/}  <= Provider를 쓰지 않아 value가 없으므로 Consumer에서는 default 값을 쓴다.
+          <ComponentC />
+        {/*</UserProvider>*/}
+      </div>
+    )
+  }
+}
+
+Consumer에 대응되는 Provider가 없을때 default 값을 쓰게된다.
+
+2.ContextType property
+Provider가 제공하는 value를 얻기위해 Consumer component를 썼지만 한가지 방법이 더 있다.
+class에 context type property를 사용하는 것이다.
+
+userContext.js
+import React from 'react'
+const UserContext = React.createContext('codevoluation');
+
+const UserProvider = UserContext.Provide;
+const UserConsumer = UserContext.Consumer;
+
+export {UserProvide, UserConsumer}
+export default UserContext  <= 1.UserContext를 export한다.
+
+
+
+ComponentE.js
+import React, { Component } from 'react'
+import ComponentF from './components/ComponentE'
+import UserContext from '.userContext';
+
+export class ComponentE extends Component {
+  render() {
+    return (
+      <div>
+        Component E context {this.context}  <= 3. this.context로 사용한다.
+        <ComponentF />
+      </div>
+    )
+  }
+}
+
+ComponentE.contextType = UserContext  <= 2. UserContext를 contextType에 할당한다.
+
+export default ComponentE
+
+만약 static 문법을 지원한다면..
+
+export class ComponentE extends Component {
+  static contextType = UserContext; <= 2. UserContext를 contextType에 할당한다.
+
+  render() {
+    return (
+      <div>
+        Component E context {this.context}  <= 3. this.context로 사용한다.
+        <ComponentF />
+      </div>
+    )
+  }
+}
+
+Consumer component보다 사용법이 간단하지만 2가지 제한이 있다.
+1.class component에서만 쓸수있다.
+2.consumer component가 context 1개만 가질때 쓸수있다.
+
+참고로 1개 이상의 context를 사용시 다음과 같이 쓴다.
+function Content(){
+  return(
+    <ThemeContext.Consumer>
+      {
+        theme =>(
+          <UserContext.Consumer>
+          {
+            user => (
+              <ProfilePage user={user} theme={theme} />
+            )
+          }
+          </UserContext.Consumer>
+        )
+      }
+    </ThemeContext.Consumer>
+  )
+}
+
+ReactJS Tutorial - 41 - HTTP and React
+react는 HTTP에 관련된 것이 아무것도 없다. state, props을 사용하여 UI를 그리는 라이브러이일뿐...
+HTTP library를 사용하는 것을 추천하며 axios추천..
+
+ReactJS Tutorial - 42 - HTTP GET Request
+Jsonplaceholder 사이트 사용.
+
+Hooks가 새로 나왔지만 Hooks는 따로 설명,
+일단 class component에서의 방법을 설명
+
+PostList.js
+import React, { Component } from 'react'
+import axios from 'axios'
+
+class PostList extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      posts: [],
+      errorMsg: ''
+    }
+  }
+
+  componentDidMount(){
+    axios.get('https://jsonplaceholder.typicode.com/posts')
+    .then(response =>{
+      console.log(response)
+      this.setState({posts: response.data})
+    })
+    .catch(error =>{
+      console.log(error)
+      this.setState({errorMsg: 'Error retreiving data'})
+    })
+  }
+
+  render() {
+    const { posts, errorMsg } = this.state
+    return (
+      <div>
+        List of posts
+        {
+          posts.length ?
+          posts.map(post => <div key={post.id}>{post.title}</div>) : null;
+        }
+        { errorMsg ? <div>{errorMsg}</div> : null }        
+      </div>
+    )
+  }
+}
+
+export default PostList
+
+constructor -> render -> componentDidMount -> axios.get -> setState -> render 순으로 호출된다.
+
+
+ReactJS Tutorial - 43 - HTTP Post Request
+PostFrom.js
+import React, { Component } from 'react'
+import axios from 'axios'
+
+class PostFrom extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      userId: '',
+      title:'',
+      body:''
+    }
+  }
+
+  changeHandler = (e) => {
+    this.setState({[e.target.name]: e.target.value})  <= Computed property name
+  }
+
+  submitHandler = (e) => {
+    e.preventDefault();
+    console.log(this.state)
+    axios.post('https://jsonplaceholder.typicode.com/posts', this.state)
+    .then(response => {
+      console.log(response)
+    })
+    .catch(error => {
+      console.log(errror)
+    })
+  }
+
+  render() {
+    const { suerId, title, body } = this.state
+    return (
+      <div>
+        <form onSubmit={this.submitHandler}>
+          <div>
+            <input type="text" name="userId" value={userId} onChange={this.changeHandler}/>
+          </div>
+          <div>
+            <input type="text" name="title" value={title} onChange={this.changeHandler} />
+          </div>
+          <div>
+            <input type="text" name="body" value={body} onChange={this.changeHandler} />
+          </div>
+          <button type="submit">Submit</button>
+        </form>        
+      </div>
+    )
+  }
+}
+
+export default PostFrom
+
+formik 같은 react form libray, redux axios middleware를 쓰는 것도 괜찮다.
+put, delete도 같은 방법으로 쓴다.
+이제 Hooks를 배울때가 되었다.
