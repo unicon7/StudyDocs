@@ -42,9 +42,10 @@ namespace RazorPagesTutorial.Pages
 }
 
 
-mvc는 3가지 컴포넌트로 구성되지만 razor pages는 display template(cshtml)과 이해 대응되는 page model class(cshtml.cs)로 구성된다.
+mvc는 3가지 컴포넌트로 구성되지만 razor pages는 display template(cshtml)과 이에 대응되는 page model class(cshtml.cs)로 구성된다.
 page model classs는 mvc의 controller와 model을 합친것이다.
-OnGet()은 Controller의 action처럼 보이며 Message프로퍼티는 Model처럼 보인다. display template은 view이다.
+OnGet()은 Controller의 action처럼 보이며 Message프로퍼티는 Model처럼 보인다. 1개이상의 public property를 통해 display template에 Model을 전달할수있다. 
+display template은 mvc의 view에 해당한다.
 
 razor pages는 page에 집중하는 web application을 좀더 빠르고 효율적으로 만들기 위한 새로운 기술이다. asp.net core 2.0에서 처음 나왔었다.
 어떤의미에서 razor pages는 classic asp.net webforms framework와 비슷하다.
@@ -97,6 +98,7 @@ _Layout.cshtml안쪽의 특이점
 
 <title>@ViewData["Title"] - RazorPagesTutorial</title>
 ViewData는 Index.cshtml안의 ViewData를 쓰고 있다.
+
 index.cshtml
 @page  <= razor page임을 나타낸다.
 @model IndexModel
