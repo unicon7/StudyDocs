@@ -1,8 +1,27 @@
 https://www.youtube.com/watch?v=4IgC2Q5-yDE&list=PL6n9fhu94yhVkdrusLaQsfERmL_Jh4XmU
 강의 정리
+1강
+asp.net core가 좋은점
+크로스 플랫폼
+MVC와 Web api가 같은 프로그래밍 모델을 쓴다. (IActionResult => ViewResult혹은 JsonResult일수 있다.)
+dependency injection
+Testability
+오픈소스
+Modular => middleware를 통해 Modularity를 제공한다.
+request, response 파이프라인 모두 middleware components를 사용하여 구성된다.
+
+2강
+개발환경 세팅을 위해 2가지가 필요하다.
+에디터 + .net core sdk
+VisualStudio2017을 인스톨하면 기본적으로 .net core sdk 2.1이 깔린다.
+2.2로 sdk를 업데이트 하려면 따로 받아서 깔아야 된다. 그럼 메뉴에 보일것이다.
+
+
 4강
-.csproj 는 전부 바뀌어 화일참조(프로젝트안에 화일들의 리스트 등이 없다.)들을 하지 않는다. 
-프로젝트 안의 화일들은 디폴트로 화일시스템에 의존한다.(외부에서 추가 삭제하면 솔루션에 바로 적용된다.)
+.csproj화일에 익숙할것이지만 안의 내용이 전부 바뀌어있다.
+이전의 .csproj를 에디트 하려면 unload project를 한뒤 에디트 다시 load project를 해야했지만 .net core에서는 그럴 필요가 없다.
+.csproj 는 전부 바뀌어 폴더, 화일의 참조(프로젝트안에 화일들의 리스트 등이 없다.)들을 하지 않는다. 
+프로젝트 안의 화일들은 디폴트로 화일시스템에 의존한다.(외부에서 추가 삭제하면 솔루션, 프로젝트에 바로 적용된다.)
 
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
@@ -36,10 +55,13 @@ Metapackage - ex) Microsoft.AspNetCore.App
 Metapackage는 그 자체로 content가 없다.(dll등이 없다.) 단지 디펜던시 리스트를 포함하고 있다.(vs에서 화살표가 붙어있어 열수 있음.) Version 속성을 대부분 포함하지 않는다.
 version속성이 없으면 SDK에 의해 implicit version이 결정되며 ms는 이를 사용하길 추천한다.
 
+이외 appsetting.json, Program.cs, Startup.cs 화일이 프로젝트에 있는데 이는 매우 중요하고 계속 볼것이다.
+
 5강 Main method in asp net Core
 Program.cs
 Console application은 보통 Main() 메서드를 갖는다.
 ASP.NET Core application은 최초 Console application으로 시작한다.
+Main()안에서 asp.net core를 컨피그하고 시작한다. 이시점에 asp.net core web application이 된다.
 WebHost.CreateDefaulotBuilder(args).UseStartup<Startup>(); UseStartup은 extention method이며 startup.cs화일에 정의된 클래스를 사용한다.
 Startup.cs
 Startup 클래스가 정의되며 아주 중요한 2가지 메서드가 정의된다.
@@ -50,26 +72,44 @@ HTTP request pipeline을 설정하는 함수(미들웨어 사용)
 
 6강 NET Core in process hosting
 CreateDefaulotBuilder();
-1)웹서버 세팅
-2)host를 로딩하고 configuration source들로 부터 configuration을 한다.
+1)웹서버 세팅  <= InProcess or OutOfProcess
+2)host와 application configuration을 configuration source들로 부터 로딩한다.
 3)logging을 configuring
+
+hosting의 관점에서보면 asp.net core는 InProcess 혹은 OutOfProcess로 호스팅될수있다.
 
 InPorcess hosting
 .csproj 화일
 <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+asp.net core application은 IISExpress의 worker process로 실행된다.
 쓰루풋이 OutOfProcess보다 높다.
 System.Diagnostics.Process.GetCurrentProcess().ProcessName을 출력해보면 어떤 hosting인지 파악 가능하다.
+
 <AspNetCoreHostingModel>OutOfProcess(default)</AspNetCoreHostingModel>
-2개의 웹서버가 동작(internal and external)
-Internal web server는 Kestrel, Exteranl은 IIS, Nginx, Apache등이 될수 있다.
-Kestrel은 그 자체로 edge서버가 될수 있다.
+2개의 웹서버가 동작(internal and external)하게 할수있다.
+Internal web server는 Kestrel, External은 IIS, Nginx, Apache등이 될수 있다.
+Kestrel은 단독으로 edge서버가 될수 있다. 만약 OutOfProcess라면 process의 이름은 dotnet.exe이다.
 dotnet cli
 - dotnet --help
 - dotnet run
+만약 위의 dotnet cli를 통해 실행시킨다면 kestrel이 단독 웹서버가 된다.
 
 7강 ASP NET Core out of process hosting
-dotnet cli로 프로젝트 실행했을경우 kestrel 서버가 단독 웹서버가 되며 OutOfProcess임.
-Kestrel은 Reverse proxy server와 조합으로 쓰여질수도 있다.(IIS, Nginx, Apache)
+<AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel> 이거나 세팅이 없으면 OutOfProcess이다.
+Internal web server는 Kestrel, External은 IIS, Nginx, Apache등이 될수 있다.
+또한 asp.net core를 어떻게 실행시키는가에따라 External 웹서버가 사용되거나 없을수있다.
+
+Kestrel은 Reverse proxy server와 조합으로 쓰여질수도 있다.(IIS, Nginx, Apache) 이경우 kestrel은 인터넷과 마주하고 있지않다.
+kestrel이 단독 웹서버로 쓰일수 있는데 왜 Reverse proxy server를 사용하는가?
+추가적인 configuration과 보안을 제공할수있는 레이어이며 기존의 infra structure와 잘 결합 될 수 있고, load balancing에 사용될수도 있다.
+추가적 사항은 deploy 관련..
+
+OutOfProcess시 visual studio에서 직접 실행하면 디폴트로 iis express를 사용한다. iis가 Reverse proxy server로 사용되어진다.
+이때 process name은 dotnet이다. iis가 단순한 proxy로 사용되어지기때문이다.
+
+dotnet cli에서 실행시킬경우 csproj에 있는 hosting 세팅은 무시된다. 무조건 OutOfProcess가 되며 kestrel이 단독 웹서버가 된다.
+
+kestrel을 안쓸수 있는가? 그렇다. InProcess모델에서는 쓰이지 않는다.
 
 8강 ASP NET Core launchsettings json file
 {
@@ -100,8 +140,11 @@ Kestrel은 Reverse proxy server와 조합으로 쓰여질수도 있다.(IIS, Ngi
   }
 }
 launchsettings.json화일은 solution explorer의 properties안에 있다.
-vs또는 dotnet cli에서 실행할때 쓰이는 화일이며 중요한점은 local에서 실행시에만 쓰인다. publishing등에서는 쓰이지 않는다.(디버그 세팅등의 profiles를 세팅)
+vs또는 dotnet cli에서 실행할때 쓰이는 화일이며 중요한점은 local dev machine에서 실행시에만 쓰인다. publishing등에서는 쓰이지 않는다.(디버그 세팅등의 profiles를 세팅)
 publishing등에서 쓰이는 화일은 appsettings.json화일이다. 보통 application setting은 appsettings.json에서 하게 된다.
+특정 환경에 대한 appsetting.development.json, appsetting.staging.json등을 생성할수있다.
+또한 appsetting.json뿐이 아니라 환경변수, user secret, command line arguments, custom setting등의 소스로 부터 configuration할수도 있다.
+
 launchsettings.json 중요 속성
 iisSettings -> local iis setting
 ASPNETCORE_ENVIRONMENT: "Development" "Staging"등 프로그램에서 env.IsDevelopment()등의 함수등으로 접근가능.
@@ -118,7 +161,7 @@ IIS : InProcess : Only one webserver - IIS
 IIS: OutOfProcess : Kestrel : IIS
 
 9강 ASP NET Core appsettings json file
-configuration sources
+configuration source들은 다음과 같은 것들이 있다. 그리고 쓰여진 순서대로 configuration을 오버라이드 한다.
 -files(appsettings.json, appsettings.{Environment}.json)
 -User secrets
 -Environment Variables
@@ -136,7 +179,9 @@ appsettings.json
   "MyKey":  "Value of MyKey from appsettings.json" <= custom key value, 어떻게 접근할까?
 }
 
-configuration infomation을 접근하기 위해서 IConfiguration Service를 사용한다.
+이러한 configuration infomation들을 접근하기 위해서 IConfiguration Service를 사용한다.
+IConfiguration Service는 이렇게 다른 configuration source들에 어떻게 접근해야하는지 알고 있다.
+
 
 Startup클래스애 IConfiguration을 DI한다.(using Microsoft.Extention.Configuration)
 
@@ -148,9 +193,11 @@ Environment Variables은 local 머신일경우 launchsettings.json에 정의 되
 
 command-line arguments는 dotnet run MyKey="Value from Command Line"과 같이 줄수 있으며 앞의 세팅을 overriding한다.
 
-CreateDefaulotBuilder()안에 위의 순서대로 로딩하고 있다.
+CreateDefaultBuilder()안에 위의 순서대로 로딩하고 있다.
 
 위의 순서대로 로딩이 되어 한개의 config가 생성된다.
+
+나중에 custom configuration 소스를 추가 할수도 있다.
 
 10강 Middleware in ASP NET Core
 Middleware: HTTP Request, Response를 다루는 프로그램 조각.
@@ -188,14 +235,14 @@ Terminal Middleware가 아닐경우 위와 같이 app.Use()를 사용한다.
 Configure()함수에 ILogger<Startup>을 DI하는 것을 보여준다.
 
 middleware componensts 각각안에서 next() 메서드가 호출되기 이전에 일어나는 모든것은 Request travel에서 실행되는 코드이다.
-Middleware가 request를 처리하여 response를 생성하면 request processing pipeline이 거꾸로 시작하게 된다.
+middleware가 request를 처리하여 response를 생성하면 request processing pipeline이 거꾸로 시작하게 된다.
 middleware componensts 각각안에서 next() 메서드가 호출된뒤 일어나는 모든것은 Response travel에서 실행되는 코드이다.
 
 
 12강 Static files in asp net core
 static 화일들을 serve하기 위한 조건
 1.wwwroot폴더(content root folder)안에 화일이 있어야 한다. wwwroot폴더는 프로젝트 root폴더 바로 밑에 있어야 한다.
-2.app.UseStaticFiles(); middleware use!
+2.app.UseStaticFiles!(); middleware use!
 
 default document를 static하게 서비스 하려면
 1.default 화일의 이름은 default.html, default.html, index.htm, index.html중 하나의 이름을 wwwroot폴더에 넣는다.
@@ -257,7 +304,7 @@ Staging : 최대한 Production과 같게 만든다. 이 단계의 존재 이유�
 Production: 실제 환경!
 
 
-ASPNETCORE_ENVIRONMENT에 실행시간 환경을 set. 8강에 있다. 대부분의 경우
+ASPNETCORE_ENVIRONMENT에 실행시간 환경을 세팅한다.. 8강에 있다. 대부분의 경우
 Development: launchsettings.json에 세팅
 Staging, Production : OS에 환경변수 세팅
 
@@ -282,6 +329,12 @@ if(evn.IsEnvironment("Custom"))
 {
 }
 
+1.ASPNETCORE_ENVIRONMENT 변수는 Runtime Environment를 세팅한다.
+2.개발 머신에서는 launchsettings.json에 있는 값으로 세팅한다.
+3.staging혹은 production 서버에서는 os에 세팅한다.
+4.IHostingEnvironment service를 runtime environment에 접근하기 위해 사용한다.
+5.runtime environment의 default는 Production이다.
+6.standard environments와 더불어 custom environment도 지원한다.
 
 15강 ASP NET Core MVC tutorial
 Application Layers는 UserInterface Layer, Business Logic(Domain) Layer, Data Access Layer로 대부분 구성되어 있다.
@@ -314,24 +367,35 @@ Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
   app.UseMvcWithDefaultRoute(); <= 이거!
 }
 
+public class HomeController   <= Controller를 상속 받지 않아도 mvc가 작동하여 Index를 호출해준다.
+{
+  public string Index()
+  {
+    return "hello world";
+  }
+}
+
 17강 ASP NET Core AddMvc vs AddMvcCore
 Json data return 방법
-public class HomeController : Controller
+public class HomeController : Controller  <= mvc에서 작동하는 Controller를 상속 받으면 this에 많은 메서드들이 생긴다. Json도 그중 한가지!
 {
-  public JsonResult Index()
+  public JsonResult Index()  <= JsonResult 타입도 Controller에 정의되어 있다.
   {
     return Json(new{ id=1, name="Pragim"});
   }
 }
+Index() action이 json, view(mvc의 cshtml화일)등을 리턴하려면 Controller를 상속받고 메서드들을 사용해야한다.
 
-만약 HomeController에서 위와 같이 리턴할때 AddMvc()대신 AddMvcCore()를 하면 exception 발생!
+위와 같은 HomeController를 가진 상황에서 위와 같이 리턴할때 AddMvc()대신 AddMvcCore()를 하면 exception 발생!
+InvalidOperationException: No service for type '...JsonResultExecution' has benn registered.
+
 AddMvcCore() : core MVC services만 추가
 AddMvc() : 모든 필요한 MVC services를 전부 추가
 
 AddMvc()는 내부에서 AddMvcCore()함수를 호출한다.
 
 github에서 AddMvc()함수를 찾아 안쪽 소스 살펴보기 => 엄청 많은 서비스들이 AddMvcCore()이후 추가되며 AddJsonFormatters()도 그 중에 하나이다!
-(RazorViewEngine, RazorPages, TagHelper.....등 많은 것이이 추가 설치된다.)
+(RazorViewEngine, RazorPages, TagHelper.....등 많은 것이 추가 설치된다.)
 
 18강 Model in ASP NET Core MVC
 Model = Set of Classes that represent Data(Employee) + Manage Data(IEmployeeRepository)
@@ -472,16 +536,6 @@ view는 model data를 표시하기 위한 로직만을 가진다.
 기본적이 view화일 찾는 방법은 /Views/controller/action.cshtml (/Views/Home/Details.cshtml)
 
 22강 Customize view discovery in asp net core mvc
-->View() 또는 View(object model) : action method와 같은 이름의 view file을 찾는다.
-->View(string viewName) : custom name인 view file을 찾는다.
-: view name 또는 view file path를 적을수 있다.
-: view file path는 absolute 또는 relative이다.
-: absolute path에는 반드시 .cshtml 확장자가 있어야 한다.
-: relative path일때 .cshtml 확장자를 쓰지 마라. 
-->View(string viewName, object model) : view의 이름과 model을 넘기는 View()함수
-
-
-
 public class HomeController : Controller
 {
   public ViewResult Details()
@@ -490,11 +544,20 @@ public class HomeController : Controller
     return View("Test"); => Detail.cshtml이 아닌 Test.cshtml을 디스플레이!(Home 폴더 안에서 찾는다.)
     return View("MyViews/Test.cshtml"); => MyViews폴더 안의 Test.cshtml을 디스플레이!(absolute path인경우 .cshtml 확장자를 써준다. 
     MyViews는 프로젝트 루트밑의 폴더를 의미하는 absolute path이다.)
+    return View("/MyViews/Test.cshtml"); => 위와 같다!
     return View("~/MyViews/Test.cshtml"); => 위와 같다!
 
     return View("../Test/Update"); =? Views폴더 위의 Test폴더 안의 Update.cshtml, 이건 상대경로다. 상대경로인경우 .cshtml 확장자를 쓰지 않는다.
   }
 }
+
+->View() 또는 View(object model) : action method와 같은 이름의 view file을 찾는다.
+->View(string viewName) : custom name인 view file을 찾는다.
+: view name 또는 view file path를 적을수 있다.
+: view file path는 absolute 또는 relative이다.
+: absolute path에는 반드시 .cshtml 확장자가 있어야 한다.
+: relative path일때 .cshtml 확장자를 쓰지 마라. 
+->View(string viewName, object model) : view의 이름과 model을 넘기는 View()함수
 
 
 23강 Passing data to view in ASP NET Core MVC
@@ -543,7 +606,7 @@ public class HomeController : Controller
   public ViewResult Details()
   {
     Employee model = _employeeRepository.GetEmployee(1);
-    ViewBag.Employee = model; <= 이렇게 쓴다!  //dynamic property를 사용한다!
+    ViewBag.Employee = model; <= 이렇게 쓴다!  //dynamic property를 사용한다! (js 처럼)
     ViewBag.PageTitle = "Employee Details";
     return View();
   }
@@ -612,6 +675,13 @@ Model Object가 View가 필요로 하는 모든 data를 포함하고 있지 않�
 
 27강 List view in asp net core mvc
 .cshtml에서 루프 도는 법!
+
+HomeController.cs
+public ViewResult Index(){
+  var model = _employeeRepository.GetAllEmployee(); <= IEnumberable<Employee>를 리턴~
+  return View(model); <= 리스트를 View의 model로 주었다.
+}
+
 @model IEnumberable<EmployeeManagement.Models.Employee>;
 @foreach(var employee in Model)
 {
@@ -622,7 +692,7 @@ Model Object가 View가 필요로 하는 모든 data를 포함하고 있지 않�
 }
 
 28강 Layout view in asp net core mvc
-어떤 특정 controller에 속한 view가 아니기때문에 Shared 폴더 밑에 view를 생성한다. _로 화일명이 시작한다. (_Rayzor Layout선택하여 생성가능하다.)
+어떤 특정 controller에 속한 view가 아니기때문에 Shared 폴더 밑에 view를 생성한다. _로 화일명이 시작한다. (Razor Layout선택하여 생성가능하다.)
 _로 시작하는 의미는 이 화일은 바로 브라우저에의해 쓰여지지 않는 화일이다라는 표시이다.
 <head> <body>등 중복되는 태그 제거 가능하다.
 
@@ -718,12 +788,28 @@ _ViewStart.cshtml
   Layout = "_Layout"; 
 }
 
+Home/_ViewStart.csthml
+@{
+  Layout = "null";   <= 어떠한 layout도 쓰지 않을때 null을 쓸수도 있다.
+}
+또한 다음과 같이 runtime에 동적으로 layout화일을 선택할수도 있다.
+@{
+  if(User.IsInRole("Admin"))
+  {
+    Layout = "_AdminLayout";
+  }
+  else
+  {
+    Layout = "_NoneAdminLayout";
+  }
+}
+
 _ViewStart화일은 View폴더 View/controller폴더등 각각에 존재할수 있으며 상위 폴더의 세팅을 override한다.
 
 
 31강 ViewImports cshtml in ASP NET Core MVC
 _ViewImports화일은 Views폴더에 위치한다.
-공통 namespace들을 include하기 위해 쓴다.
+common namespace들을 include하기 @using을 사용한다.
 다음의 directive를 사용할수 있다.
 @addTagHelper
 @removeTagHelper
@@ -735,7 +821,7 @@ ViewImports도 역시 폴더 구조에 계층적이다.
 
 
 .cshtml
-@model EmployeeManagement.Models.Employee => namespace를 없애고 싶다.
+@model EmployeeManagement.Models.Employee => 너무 장황하여 namespace를 안쓰고 싶다.
 
 다음과 같이 구성한다.
 _ViewImports.cshtml
@@ -760,7 +846,7 @@ Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
   app.UseMvc(); //어떠한 Routing룰 없이 순수 Mvc만 추가!
 
   app.UseMvc(routes =>{
-    routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");
+    routes.MapRoute("default", "{controller=Home}/{action=Index}/{id?}");  <= 이런 형태로 routing 규칙을 설정하는 것이 conventional routing이다.
   });
 }
 
@@ -801,7 +887,9 @@ public class WelcomeController : Controller <= 컨트롤러의 이름 의미 없
   [Route("Home/Index")]
   public IActionResult List() <= 위의 라우팅에 호출된다.
   {
-    
+    ...
+    return View(model);  <= 이것때문에 에러 List.csthml을 찾으므로
+    return View("~/Views/index.cshtml",model);  <= 이런식으로 고친다.
   } 
 }
 
@@ -830,6 +918,9 @@ public class HomeController : Controller
 
 
 Token replacement [controller] [action]
+[controller]는 Home, [action]은 action의 이름으로 교체된다.
+이는 controller, action의 이름이 변경될때 Route를 고칠필요가 없게 만든다.
+
 [Route("[controller]")]
 public class HomeController : Controller
 {
@@ -843,10 +934,10 @@ public class HomeController : Controller
   }
 
   [Route("[action]/{id?}")] <= 여기
-  public IActionResult Details(int? id) <= 여기
+  public IActionResult Details(int? id)
   {
     ...
-    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    Employee = _employeeRepository.GetEmployee(id??1)
     ...
   }
 }
@@ -872,8 +963,8 @@ public class HomeController : Controller
   }
 }
 
-위의 routing은 localhost/home 에서 404 에러 발생한다. action이 없기때문이다.
-[Route("[controller]/[action=index]")] 같은 형식으로 쓰는것을 허용하지 않는다.
+위의 routing은 localhost/home 에서 404 에러 발생한다. [Route("[controller]/[action]")]에서 action은 필수이다.
+이전 버전에서는 사용할수 있었지만 지금은 디폴트 라우트인 [Route("[controller]/[action=index]")] 같은 형식으로 쓰는것을 허용하지 않는다.
 
 [Route("[controller]/[action]")] 
 public class HomeController : Controller
@@ -887,10 +978,10 @@ public class HomeController : Controller
   }
 
   [Route("{id?}")]
-  public IActionResult Details(int? id) <= 여기
+  public IActionResult Details(int? id) <= 여기!
   {
     ...
-    Employee = _employeeRepository.GetEmployee(id??1) <= 여기 id가 null이면 1!
+    Employee = _employeeRepository.GetEmployee(id??1) <= 여기! id가 null이면 1!
     ...
   }
 }
@@ -912,8 +1003,13 @@ _ViewImports에 대부분 넣는다.
 
 a링크를 만드는 방법들
 <a href="/home/details/@employee.Id">View</a> //그냥 string연결을 쓰는 방법
-@Html.ActionLink("View", "details", "home", new { id = employee.Id}) //ActionLink HTML helper 쓰는방법
-<a href="@Url.Action("details", "home", new { id = employee.Id})" class="...">View</a> //@Url.Action 을써서 url string만을 만드는 방법
+
+@Html.ActionLink("View", "details", "home", new { id = employee.Id}) //ActionLink HTML helper 쓰는방법, a tag 전체를 생성한다. class등을 쓸수가 없다.
+만약 전체 태그가 아닌 href부분만 생성하고 싶다면 @Url.Action을 사용
+
+<a href="@Url.Action("details", "home", new { id = employee.Id})" class="...">View</a> //@Url.Action 을써서 url string만을 만드는 방법, 
+class를 사용하여 styling이 가능해졌다.
+
 <a asp-controller="home" asp-action="details" asp-route-id="@employee.Id">View</a> //anchor tag helper 쓰는 방법 asp-route-{param name}
 
 
@@ -932,7 +1028,7 @@ app.UseMvc(routes =>{
 string에 의해 생성되는 링크는 pragim/이 앞에 붙지 않는다! 
 
 <a asp-controller="home" asp-action="details" asp-route-id="@employee.Id">View</a> //anchor tag helper 쓰는 방법 asp-route-{param name}
-위의 tag helper 코드는 "pragim/{controller=Home}/{action=Index}/{id?}"를 항상 참조하며 링크주소를 생성한다.
+위의 tag helper 코드는 "pragim/{controller=Home}/{action=Index}/{id?}"를 항상 참고하여 링크주소를 생성한다.
 pragim/Home/Index 로 제대로 나올수 있다.
 
 
@@ -949,7 +1045,7 @@ Environment Tag Helper는 application environment에따라 다른 컨텐츠를 �
 evn에 따라 min js 혹은 non-min js 포함하도록 설정 가능
 
 ASPNETCORE_ENVIRONMENT : "Development" 변수 관련
-<environment include="Staging,Production">
+<environment include="Staging,Production">  <= Staging과 Production일경우 rendering
   <link rel ... />
 </environment>
 
@@ -957,7 +1053,16 @@ ASPNETCORE_ENVIRONMENT : "Development" 변수 관련
   <link rel ... />
 </environment>
 
-Subresouce Integrity (SRI)
+사실 include보다 exclude가 사용성이 좋다. 만약 새로운 env name이 생성된다면 exclude는 대부분 고칠필요가 없다.
+<environment include="Development">
+  <link rel ... />  <= non minified
+</environment>
+<environment exclude="Development">  <= Development가 아닐경우는 min으로 사용하도록!
+  <link rel ... /> <= minified
+</environment>
+
+
+SubResouce Integrity check(SRI)
 <script
   src="https://code.jquery.com/jquery-3.4.1.min.js"
   integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
@@ -970,24 +1075,30 @@ CDN이 다운되거나 SRI에 의해 다운로드 할수 없을때 fallback을 �
 <link rel="stylesheet"
 href="https://CDN"
 integrity-"sha384-dsfvjna..."
-asp-fallback-href="~/lib/..."  //우리 서버 다운로드 링크
+asp-fallback-href="~/lib/..."  //우리 서버 다운로드 링크 fallback download link
 asp-fallback-test-class="sr-only"
 asp-fallback-test-property="position"
 asp-fallback-test-value="absolute"
 asp-supress-fallback-integrity="true">
 
+asp-fallback-test-class, asp-fallback-test-property, asp-fallback-test-value는 이름이 의미하듯 원래의 href로 부터 다운로드를 잘 받았는지 js가 체크하는데 쓰인다.
+이는 tag helper가 custom js를 inject하여 3개의 property의 존재를 체크한다. 존재한다면 다운로드 성공, 아니라면 fallback이다.
+
+asp-supress-fallback-integrity : integrity check를 끈다! 우리의 server로 부터 다운로드 받을때는 integrity check를 하지 않는다는 의미~
+만약 false로 두게 되면 우리 server에서 받는 것도 integrity check를 해서 실패하게된다.
 
 39강 Bootstrap navigation menu in asp net core application
 걍 부트스트랩 강의 스킵!
 
 40강 Form tag helpers in asp net core
-form tag helper (form 자체에 쓰임)
-input, label, select, textarea tag helper
-validation tag helper (validation과 model binding에 쓰인다.)
+form 관련 tag helper 종류
+-form tag helper (form tag 자체를 만드는 tag helper)
+-input, label, select, textarea tag helper (form안의 각각의 요소를 만드는 tag helper)
+-validation tag helper (validation과 model binding에 쓰인다.)
 
 form tag helper
 <form asp-controller="Home" asp-action="Create" method="post"></form>
-=> 
+=> form tag 자체만 변환된다.
 <form action="/Home/Create" method="post">
   <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
 </form>
@@ -996,11 +1107,11 @@ form tag helper
 input tag helper
 @model Employee
 <form asp-controller="Home" asp-action="Create" method="post">
-  <input asp-for="Name"> <= 이 element를 Employee.Name과 연결 시킨다.
+  <input asp-for="Name"> <= 이 element를 Employee.Name과 연결 시킨다. Employee.Name을 위한 input이다라는 선언인듯!
 </form>
 =>
 <form action="/Home/Create" method="post">
-  <input type="text" id="Name" name="Name" value="" /> <= 이렇게 변환된다! asp-for의 값때문! name Attribute는 model binding에 쓰인다.
+  <input type="text" id="Name" name="Name" value="" /> <= id, name이 Name으로 변환된다! asp-for의 값때문! name Attribute는 model binding에 쓰인다.
   <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
 </form>
 
@@ -1012,7 +1123,7 @@ label tag helper
 </form>
 =>
 <form action="/Home/Create" method="post">
-  <label for="Name">Name</label>
+  <label for="Name">Name</label> <= id="Name"을 참조한다.
   <input type="text" id="Name" name="Name" value="" />
   <input name="__RequestVerificationToken" type="hidden" value="asdfaxvbcbniutguier"/>
 </form>
@@ -1020,8 +1131,25 @@ label tag helper
 msdn 예제 찾아보는게 다 나을듯...
 asp-for는 Model의 property들을 기준으로 뭔가 기능을 하게된다!
 
+Model인 Employee의 모든 Property들과 바인딩 해주자
 
-Dept enum type;
+<form asp-controller="Home" asp-action="Create" method="post">
+  <div>
+    <label asp-for="Name"></label>
+    <input asp-for="Name">
+  </div>
+  <div>
+    <label asp-for="Email"></label>
+    <input asp-for="Email">
+  </div>
+  <div>
+    <label asp-for="Department"></label>
+    <select asp-for="Department"></select>  <= 만약 Department가 enum으로 정의 되어 있다면?
+  </div>
+</form>
+
+
+Dept enum type; asp-items를 사용하여 처리한다.
 <select asp-for="Department" asp-items="Html.GetEnumSelectList<Dept>()"></select>
 
 
@@ -1029,6 +1157,7 @@ Dept enum type;
 => 모델 바인딩은 HTTP request에 있는 data를 controller action method parameter들로 매핑한다.
 => action parameter들은 int, string같은 simple type일수도 있고 Customer, Employee처럼 complex type일수도 있다.
 모델 바인딩이 없다면 data들을 action parameter로 매핑하는 많은 코드들을 만들어야하며 귀찮고 에러를 일으키기 쉽다.
+=> 모델 바인딩은 name에 의해 매핑된다.
 
 http://localhost/home/details/2 => Home::Details(int? id); model binding이 url의 2를 id로 매핑 시켜준다. 이는 mvc에의해 자동으로 이루어 진다.
 model binding은 parameter를 이름을 통해서 binding 시켜준다.
@@ -1047,15 +1176,17 @@ http://localhost/home/details?name1=pragim&id=5 => id = 5 (querystring에서 id�
 
 
 Complex type일 경우
-[HttpPost]
-public RedirectToActionResult Create(Employee employee)
+[HttpPost]  <= 기존의 get이 아니라 form으로부터의 post대응을 위해 필요하다~! 기존의 get Create()에는 [HttpGet]을 붙여주자.
+public RedirectToActionResult Create(Employee employee)  <= return 값이 ViewResult가 아니다.
 {
   Employee newEmployee = _employeeRepository.Add(employee);
-  return RedirectToActionResult("details", new { id = newEmployee.Id });
+  return RedirectToActionResult("details", new { id = newEmployee.Id });  string actionName, object routeValues
 }
 
 <form>안의 <input> 의 name="Name" name="Email" 등의 이름을 보고 Employee.Name Employee.Email등에 값을 바인딩해준다.
 값을 매핑시켜주는데 이름이 사용되기때문에 html control안의 name Attribute의 값은 모델바인딩에 있어 매우 중요하다.
+
+submit했을경우 form validation이 현재 작동하지 않기때문에 빈값등으로 현재 입력이 되는 문제가 있다.
 
 
 42강 ASP NET Core model validation
@@ -1079,7 +1210,7 @@ public class Employee
 매핑시 validation attribute에 맞는지 체크, ModelState.IsValid를 세팅해준다.
 
 [HttpPost]
-public IActionResult Create(Employee employee)
+public IActionResult Create(Employee employee)  <= 리턴값이 IActionResult로 바뀌었다. 이는 RedirectToActionResult혹은 ViewResult를 리턴하기때문이다.
 {
   if(ModelState.IsValid) //validation 통과?
   {
@@ -1112,7 +1243,7 @@ public class Employee
   public string Name { get; set; }
   [Required]
   [ReqularExpression(@"^[a-zA-Z0-9+.+-]", ErrorMessage="디폴트 메세지가 맘에 안들면 여기에 에러메세지를 넣는다.")] //reg exp
-  [Display(Name="관련된 label의 텍스트 내용")]
+  [Display(Name="관련된 label의 텍스트 내용")]  <= 참고로 prop이 아닐경우 작동 안함..
   public string Email { get; set; }
   public Dept Department { get; set; }
 }
@@ -1135,7 +1266,7 @@ public class Employee
 }
 
 <select asp-for="Department" asp-items="Html.GetEnumSelectList<Dept>()">
-  <option value="">선택해주세요</option> <= 추가
+  <option value="">선택해주세요</option> <= place holder 같은 항목을 추가할때 쉬운 한가지 방법!
 </select>
 <span asp-validation-for="Department"></span>
 
@@ -1227,7 +1358,7 @@ HomeController, view는 각각 자신만의 IEmployeeRepository instance를 가�
 
 
 45강 Introduction to entity framework core
-=>ORM (Object-Relational Mapper)
+=>ORM (Object-Relational Mapper) => Business object로 database를 사용할수 있게 해준다.
 =>Microsoft's Official Data Access Platform
 =>Database와 application사이에서 Custom Data access code들을 제거해 준다(SQL문 같은거 안써도 되게...)
 =>Code First Approach와 Database First Approach가 있다. 현재 DB First는 기능이 제한적이다.
@@ -1326,13 +1457,13 @@ Controller는 어떤 구현을 사용할지 어떻게 아는가? Startup::Config
 
 ConfigureServices(IServiceCollection services)
 {
-  services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();  //AddScoped 사용한점 주목
+  services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();  //AddScoped 사용한점 주목! update를 attach로 한이유를 알았다!
 }
 
 이제 접속할 DB를 만들어보자!
 
 50강 Entity framework core migrations
-마이그레이션은 데이타베이스스키마와 어플리케이션 모델을 계속적으로 동기화 한다.
+마이그레이션은 데이타베이스스키마와 어플리케이션 모델(엔티티모델이라고도 한다)을 계속적으로 동기화 한다.
 
 현재 DB가 없으므로 DB를 create해야하며 마이그레이션은 DB를 만들수 있는 한 방법이다.
 일단 마이그레이션을 만들고 마이그레이션을 실행함으로서 DB를 만들수 있다.

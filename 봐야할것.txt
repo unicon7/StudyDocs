@@ -15,6 +15,10 @@ IConfigurationRoot.Refresh()도 나온다.
 https://www.strathweb.com/2016/09/strongly-typed-configuration-in-asp-net-core-without-ioptionst/
 
 
+z-index 작동방법
+https://bitsofco.de/how-z-index-works/
+
+
 https://exceptionnotfound.net/tag/aspnetcoredemystified/ => 전부 읽어볼것!
 
 https://www.youtube.com/watch?v=33okCuCK3Ik => Globalizing & Localizing your ASP.NET Core 2.1 Web App
@@ -101,3 +105,5 @@ https://andrewlock.net/asp-net-core-in-action-filters/
 
 
 https://www.youtube.com/watch?v=fBpPfPjxOhc&list=PLqq-6Pq4lTTaflXUL0v3TSm86nodn0c_u <= javascript Objects and Prototypes in depth
+
+https://medium.com/@jessgreb01/what-is-the-difference-between-a-process-a-container-and-a-vm-f36ba0f8a8f7
