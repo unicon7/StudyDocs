@@ -949,7 +949,7 @@ function DataFetching() {
 export default DataFetching
 
 
-React Hooks Tutorial - 12 - Fetching data with useEffect Part 1
+React Hooks Tutorial - 12 - Fetching data with useEffect Part 2
 id를 통해 특정 post만 가지고 오기, input에 타이핑할때마다 data를 가져온다!
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'

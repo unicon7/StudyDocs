@@ -1625,7 +1625,7 @@ public class EmployeeCreateViewModel <= viewModel
   [Required]
   public string Email { get; set; }
   public Dept? Department { get; set; }
-  public IFormFile Photo { get; set; } <= 요거(서버로 전송되는 화일을 Model binding을통해 접근할수 있는 인터페이스)
+  public IFormFile Photo { get; set; } <= 요거(서버로 전송되는 화일을 Model binding을통해 접근할수 있는 인터페이스 IFromFile)
 }
 
 왜 Employee가 아닌 EmployeeCreateViewModel을 다시 정의했나?
@@ -1634,10 +1634,13 @@ IFromFile은 complex object이기때문에 EF Core의 navigation property의 생
 
 .cshtml
 <form enctype="multipart/form-data" ...> 추가 필요!
-<input asp-for="Photo"> Photo가 IFromFile과 바인딩 되므로 fileupdate Control로 바꿔준다. <input type="file">
+<input asp-for="Photo"> Photo가 IFromFile과 바인딩 되므로 tag helper는 fileupdate Control로 출력해준다. <input type="file">
+
+또한 wwwroot의 path를 알아내려면 IHostingEnvironment를 inject해서 사용하면 된다.
 
 public Class HomeController : Controller
 {
+
   [HttpPost]
   public IActionResult Create(EmployeeCreateViewModel model)
   {
@@ -1702,15 +1705,19 @@ public Class HomeController : Controller
       }
     }
   }
+
 }
+만약 여러 PhotoPath가 필요하다면 EmployeePhoto같은 테이블을 만들어 분리한뒤  one to manay relationship을 만드는 것이 낫다.
+db 작업을 안하고 간단함을 위해 업로드 테스트만 하고 multiple관련 코드는 삭제한다.
+
 
 
 55강 Edit view in asp net core mvc
-내용은 기존 유저 정보를 Edit하는 Controller, View를 만드는 내용..
+내용은 기존 유저 정보를 Edit하는 Controller, View를 만드는 내용.. 상당히 길다..볼것.
 
 .cshtml
 <a href="#" asp-action="edit" asp-controller="home" asp-route-id="@Model.Employee.Id">Edit</a>
-위으 문장은 에러난다. tag helper를 썼을때 a태그의 href가 있으면 exception 발생한다.
+위의 문장은 에러난다. tag helper를 썼을때 a태그의 href가 있으면 exception 발생한다.
 <a asp-action="edit" asp-controller="home" asp-route-id="@Model.Employee.Id">Edit</a>
 
 HomeController: Controller
@@ -1819,7 +1826,7 @@ private string ProcessUploadedFile(EmployeeCreateViewModel model)
 
 57강 Handling 404 not found in asp net core mvc
 현재까지 작업한 소스에서 404 에러가 날수 있는 상황은 2가지가 있다.
-1.명시된 ID가 존재하지 않는 리소스(http://localhost/home/details/9999  Edit, Deatail등에 Employee id가 없는 경우)
+1.명시된 ID가 존재하지 않는 리소스(http://localhost/home/details/9999  Edit, Deatail등에 Employee id가 없는 경우) <= 사실은 예외가 난다. 404에러로 처리함이 좋다.
 2.URL이 어떠한 route와도 매치되지 않을때.(http://localhost/foo/bar)
 
 
@@ -1840,8 +1847,10 @@ public class HomeController : Controller
 }
 
 58걍 Centralised 404 error handling in ASP NET Core
+지금 route가 없는 주소를 브루우저에 입력하면 브라우저 디폴트 404 페이지가 뜨고 있다.
+
 아래 3가지 미들웨어는 400~599(nonsuccess)사이의 에러를 인터셉트하는데 쓰인다.
-UseStatusCodePages <= 아주 심플한 text만 보여주는 페이지 미들웨어(Status Code:404; Not Found) 실제로 쓰긴 힘들다.
+UseStatusCodePages <= 아주 심플한 text만 보여주는 페이지 미들웨어(Status Code:404; Not Found 이런식으로 자동 출력!) 실제로 쓰긴 힘들다.
 UseStatusCodePagesWithRedirects
 UseStatusCodePagesWithReExecute
 
@@ -1865,7 +1874,7 @@ Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
 public class ErrorController : Controller
 {
   //[Route("Error/404")]
-  [Route("Error/{statusCode}")]
+  [Route("Error/{statusCode}")]  <= route에 statusCode를 쓰고 parameter로 넘긴것을 주목~
   public IActionResult HttpStatusCodeHandler(int statusCode)
   {
     switch(statusCode)
@@ -1881,8 +1890,9 @@ public class ErrorController : Controller
 
 59강 UseStatusCodePagesWithRedirects vs UseStatusCodePagesWithReExecute
 UseStatusCodePagesWithRedirects
-=> 리다이렉트가 발생하기때문에 주소창의 주소가 바뀐다.
-=> 최종적으로 statusCode 200을 리턴하기때문에 의미적으로 맞지 않다.
+=> 리다이렉트가 발생하기때문에 주소창의 주소가 바뀐다.(404 발생시 UseStatusCodePagesWithRedirects가 디텍트한뒤 302(Found)로 바꾸어준다.)
+302는 주소가 임시적으로 바뀌었다는 의미..뭘로? Error/{statusCode}로!
+=> 최종적으로 statusCode 200(Success)을 리턴하기때문에 의미적으로 맞지 않다.
 UseStatusCodePagesWithReExecute
 => 파이프라인을 재실행하며 원레 statusCode를 리턴해준다.
 => 파이프라인을 재실행하기때문에 redirect request를 발생시키지 않으며 원래 주소창의 주소를 보존한다.
@@ -1946,6 +1956,12 @@ public class ErrorController : Controller
   [Route("Error/{statusCode}")]
   public IActionResult HttpStatusCodeHandler(int statusCode)
   {
+    //404를 일으킨 path, query string을 얻을수도 있다.
+    var statusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
+    VeiwBag.Path = statusCodeResult.OriginalPath;
+    VeiwBag.QS = statusCodeResult.OriginalQueryString;
+
+
     switch(statusCode)
     {
       case 404:
@@ -1962,7 +1978,7 @@ public class ErrorController : Controller
 =>ErrorController를 구현
 =>ErrorView를 구현
 
-Production에서 프로그램에 exceoption이 발생하였을때 statusCode 500(Internal server error)가 발생. 브라우저 디폴트 화면이 보이니깐..처리하자...
+Production에서 프로그램에 exception이 발생하였을때 statusCode 500(Internal server error)가 발생. 브라우저 디폴트 화면이 보이니깐..처리하자...
 Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
 {
   if(env.IsDevelopment())
@@ -2015,8 +2031,8 @@ Error.cshtml 만들어서 보여줘라!
 
 
 61강 Logging in ASP NET Core
-default logging: debug시 Output에 찍히고 있다. OutOfProcess시 'dotnet.exe'가 프로세스 이름이다 로그를 찍는다. InPorcess시 'iisexpress.exe'로 찍힐거고...
-로그를 막기 위한 세팅
+default logging: debug시 Output window에 찍히고 있다. OutOfProcess시 'dotnet.exe'가 프로세스 이름이다 로그를 찍는다. InPorcess시 'iisexpress.exe'로 찍힐거고...
+디버그시 프로세스 로그를 막기 위한 세팅
 => /Tools/Options/Debugging/Output Window 선택
 => General Ouput Setting의 모든 Message를 Off 선택
 디버그시 프로세스 관련 로그는 아무것도 안나온다.
@@ -2049,6 +2065,7 @@ ASP.NET Core logging provider 종류
 => Console Logging Provider : Console에서 로그 출력
 => Debug Logging Provider : vs debug window에 로그 출력
 
+이전에 Main()안의 CreateWebHostBuilder()의 중요성에대해 이야기한적이 있다.
 CreateWebHostBuilder()->WebHost.CreateDefaultBuilder()는 asp.net이 스타팅되는동안 몇가지 tasks를 수행한다.
 webserver setup, load application configuration, configuring logging
 
@@ -2084,20 +2101,22 @@ Exception이 났을때 로그 남기자. 일단 DI부터 시작하자.
 public class ErrorController : Controller
 {
   private readonly ILogger<ErrorController> logger;
-  public ErrorController(ILogger<ErrorController> logger) <=ErrorController클래스 타입을 넘기는 이유 : 타입을 넘김으로서 로그 카테고리 생성가능.complete namesapce + class name이 로그카테고리가 되어야 한다  
+  public ErrorController(ILogger<ErrorController> logger) <=ErrorController클래스 타입을 넘기는 이유 : 타입을 넘김으로서 로그 카테고리 생성가능. complete namesapce + class name이 로그카테고리가 되어야 한다 (namespace.ErrorController)
   {
+    //
     this.logger = logger;
   }
 
   [Route("Error/{statusCode}")]
   public IActionResult HttpStatusCodeHandler(int statusCode)
   {
-    var statusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>(); <= 요기
+    var statusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
 
     switch(statusCode)
     {
       case 404:
         ViewBag.ErrorMessage = "resource not found";
+        //c#6 string interpolation ($로 시작!)
         logger.LogWarning($"404 Error Occured. Path = {statusCodeResult.OriginalPath}" + $"and QueryString = {statusCodeResult.OriginalQueryString}");<= 요기
         break;
     }
@@ -2109,10 +2128,10 @@ public class ErrorController : Controller
   [AllowAnonymous]
   public IActionResult Error()
   {
-    var exceptionDetails = HttpContext.Features.Get<IExceptionhandlerPathFeature>();<= 요기
+    var exceptionDetails = HttpContext.Features.Get<IExceptionhandlerPathFeature>();
 
-    //c#6 string interpolation
-    logger.logError($"The path {exceptionDetails.Path} threw an exceoption {exceoptionDetails.Error}" + $...);<= 요기
+    //c#6 string interpolation ($로 시작!)
+    logger.logError($"The path {exceptionDetails.Path} threw an exceoption {exceoptionDetails.Error}");<= 요기
 
     ViewBag.ExceptionPath = exceptionDetails.Path;
     ViewBag.ExceptionMessage = exceptionDetails.Error.Message;
@@ -2182,11 +2201,11 @@ appsettings.json
   }
 }
 
-또한 logging provider를 기준으로 로그를 필터링 할수도 있다.
+또한 logging provider를 기준으로 로그를 필터링 할수도 있다.(Debugging logging provider, console logging provider)
 appsettings.json
 {
   "Logging": {
-    "Debug":{  <= Debug logging Provider용 세팅!
+    "Debug":{  <= Debug logging Provider용 세팅! (visual studio의 output에 찍는 logging provider)
       "LogLevel": {
         "Default": "Warning",
         "EmployeeManagement.Controllers.HomeController":"Warning",
@@ -2195,7 +2214,7 @@ appsettings.json
       }
     },
 
-    "LogLevel": { <= Debug logging provider이외의 다른 provider용 세팅 (cmd 에서 출력해 보면 위와 다르게 나오는것이 확인가능하다.)
+    "LogLevel": { <= Debug logging provider이외의 다른 provider용 세팅 (cmd 에서 출력해 보면(console logging provider일경우) 위와 다르게 나오는것이 확인가능하다.)
       "Default": "Trace",
       "EmployeeManagement.Controllers.HomeController":"Trace",
       "EmployeeManagement.Models.SQLEmployeeRepository":"Trace",
@@ -2219,7 +2238,7 @@ appsettings.Developmenst.json
 =>로그들은 Log Category, Logging Provider, 혹은 둘 다 로 필터링 되어질수 있다.
 
 65강 ASP NET Core Identity tutorial from scratch
-ASP NET Core Ident ity : Built-in membership system
+ASP NET Core Identity : Built-in membership system
 => CRUD user account
 => Account confirmation
 => Authentication & Authorization
@@ -2256,7 +2275,7 @@ Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
   }
   else
   {
-    app.UseExceptionHandler("/Error"); <= 요거 추가!
+    app.UseExceptionHandler("/Error");
     app.UseStatusCodePagesWithReExecute("/Error/{0}");    
   }
 
@@ -2269,7 +2288,7 @@ Startup::Configure(IApplicationBuilder app, IHostingEnvironment env)
 }
 
 Stop4 : ASP.NET Core Identity 테이블들을 생성한다.
-Add-Migration AddingIdentity엔터
+Add-Migration AddingIdentity 엔터
 IdentityUserLogin<string> requires a primary key to be defined 에러가 난다면
 OnModelCreateing()에서 base.OnModelCreating()을 호출하지 않아서 일것이다.
 
@@ -2321,7 +2340,7 @@ SignInAsync, SignOutAsync, IsSignedIn, Etc...
 
 public class AccountController : Controller
 {
-  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) <= DI
+  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) <= DI를 통해 가져온다.
 
   [HttpGet]
   public IActionResult Register() ...
@@ -2336,25 +2355,27 @@ public class AccountController : Controller
       var result = await userManager.CreateAsync(user, model.Password);
       if(result.Succeeded)
       {
-        await signInManager.SignInAsync(user, isPersistent:false);
+        await signInManager.SignInAsync(user, isPersistent:false);  <= isPersistent : session cookie를 생성할것인가? permenent cookie를 생성할것인가?
         return RedirectToAction("index", "home");
       }
 
       foreach(var error in result.Errors)
       {
-        ModelState.AddModelError("", error.Description);
+        ModelState.AddModelError("", error.Description);  <= 이렇게 추가한 error 메세지는 asp-validation-summary="All"을 가진 div에 찍힌다.
       }
     }
 
-    return View(model);
+    return View(model);  <= View에 ModelState.IsValid가 false인 model을 넣으므로서 validation error들을 표시한 View를 리턴한다.
   }
 }
+
+password input에 password complexity에 맞지않는 password가 들어오면 에러를 밷어낸다.
 
 
 68강 ASP NET core identity password complexity
 password를 validation하는 default validation rule들은 어디에 정의되어 있나?
 IdentityOptions안에 PasswordOptions등 많은 옵션들이 있다.
-public class IdentityOptions
+public class IdentityOptions   <= Identity에서 사용할수 있는 옵션들이 정의되어 있다. 그중에 PasswordOptions가 password complexity를 조정하는 옵션이다.
 {
   public ClaimsIdentityOptions ClaimsIdentity { get; set; }
   public UserOptions User { get; set; }
@@ -2391,11 +2412,13 @@ ConfigureServices(IServiceCollection services)
 
 
 69강 Show or hide login and logout links based on login status
+View에서 login여부를 확인하기 위해 signInManager가 필요하다.
+
 _Layout.cshtml
 @using Microsoft.AspNetCore.Identity; <= _ViewImports에 옮기는게 좋다.
 @inject SignInManager<IdentityUser> signInManager;
 
-IsSignedIn: ClaimsPrincipal parameter를 요구한다. ClaimsPrincipal을 로그인된 User로 간주해라...
+IsSignedIn: ClaimsPrincipal parameter를 요구한다. ClaimsPrincipal을 로그인된 User로 생각하라...
 <body>
 ...
 @if(signInManager.IsSignedIn(User)) <= User는 RazorPageBase에 정의되어 있으며 현재 로그인된 유저다!
@@ -2408,7 +2431,7 @@ else
   여기서 밑의 AccountController Logout() 호출하는 링크 태크 만들기
 }
 
-
+logout도 만들어본다.
 public class AccountController : Controller
 {
   ...
@@ -2487,6 +2510,11 @@ public class HomeController : Controller
   public ViewResult Edit();
 }
 
+[Authorize] 어트리뷰트때문에 /home/Create, /home/Edit 을 로그인 안하고 접근시 /Account/Login으로 리다이렉트가 자동으로 되게 된다.
+또한 주소가 http://localhost/Account/Login?ReturnUrl=%2Fhome%2Feidt%2F1과 같은 모양으로 된다.(URL Encoding되어 있다.)
+디코딩 하면 http://localhost/Account/Login?ReturnUrl=/home/edit/1으로 나오게된다. ReturnUrl은 로그인 성공뒤 원래 접근하려고 했던 URL이다. 이는 나중에 살펴본다.
+
+
 ControllerLevel에서 [Authorize]를 쓸수 있다.
 [Authorize] <= 모든 action은 인증해야 실행가능하다!
 public Class HomeController : Controller
@@ -2513,7 +2541,7 @@ ConfigureServices()
   }).AddXmlSerializerFormatters();
 }
 
-문제가 있다! Global하게 [Authorize]를 주었기 때문에 Account:Login()쪽에 로그인되지 않은 유저가 접근할수 없다.
+문제가 있다! Global하게 [Authorize]를 주었기 때문에 Account:Login()쪽에 로그인되지 않은 유저가 접근할수 없다. 결국 무한 ReturnUrl이 생기게 되며 query string too long error 발생한다.
 [HttpGet]
 [AllowAnonymous] <= 추가(post에도 추가 해야된다.)
 public IActionResult Login()
@@ -2527,11 +2555,11 @@ Account:Register()도 [AllowAnonymous]가 필요하다
 http://localhost/Account/Login?ReturnUrl=/home/edit/1
 
 현재는 RequireAuthenticatedUser()로 AuthenticatedUser로 Authorization을 한것이다.
-이외에 
+
+asp.net core는 위와 같은 단순 로그인을 체크하는 Authorization뿐만 아니라 다음과 같은
 Role based Authorization => Claims based Authorization => Policy based Authorization 이 있다.
 
 72강 Redirect user to original url after login
-
 http://localhost/Account/Login?ReturnUrl=/home/edit/1가 작동 가능하도록 만들자.
 
 public class AccountController : Controller
@@ -2666,7 +2694,7 @@ public class RegisterViewModel
   public string Email { get; set; }
 
   [Required]
-  [DataType(DataType.Password)] <= DataType은 Validation에 쓰이진 않는다.The DataType attributes only provide hints for the view engine to format the data (and supplies elements/attributes such as <a> for URL's and <a href="mailto:EmailAddress.com"> for email. 
+  [DataType(DataType.Password)]
   public string Password { get; set; }
 
   [DataType(DataType.Password)]
@@ -2678,7 +2706,7 @@ public class RegisterViewModel
 
 public class AccountController : Controller
 {
-  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) <= DI
+  public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
 
   [HttpGet]
   public IActionResult Register() ...
